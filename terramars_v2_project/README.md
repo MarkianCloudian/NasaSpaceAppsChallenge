@@ -8,7 +8,7 @@
 - Does not use synthetic example scores.
 
 ## Important scientific limitation
-This is a **terrain-only prototype**. It does not yet compare climate, mineralogy, soil chemistry or spectral signatures. Earth and Mars elevation datums are not interchangeable, so absolute mean elevation is deliberately excluded from the similarity metric. DEMs should cover comparable physical areas and be projected/resampled consistently before comparison. Roughness is currently a simple gradient-derived descriptor and depends on raster resolution.
+The terrain metric is complemented (in `/api/auto-compare`) by climate, mineralogy and spectral terms, but these are coarse proxies: Earth climate comes from NASA POWER climatology; Mars climate is a parametric latitude/elevation approximation (not a GCM); mineralogy uses curated literature mineral lists for catalogued Mars regions and the preset analog sites; the spectral term compares diagnostic VNIR/SWIR band centres of those minerals, not measured CRISM/spectral-library spectra. Soil chemistry is not compared. Terms unavailable for a site are dropped and weights renormalised. Earth and Mars elevation datums are not interchangeable, so absolute mean elevation is deliberately excluded from the similarity metric. DEMs should cover comparable physical areas and be projected/resampled consistently before comparison. Roughness is currently a simple gradient-derived descriptor and depends on raster resolution.
 
 ## Data sources
 - NASA MOLA / PDS Geosciences Node: https://pds-geosciences.wustl.edu/missions/mgs/mola.html
@@ -63,3 +63,7 @@ Weighted normalized distance:
 where each `d_i` is the absolute difference divided by a documented scale constant. Similarity index: `100 * (1 - D)`.
 
 This is a prototype ranking score, not a probability and not a validated planetary similarity measure. Calibrate scales/weights with published analog sites and sensitivity analysis before using it in a scientific conclusion.
+
+
+## Multi-factor score (auto mode)
+Weights: terrain 0.50 (elevation SD, slope, roughness), climate 0.30 (temperature 0.12, log pressure 0.08, precipitation 0.10), mineralogy 0.12 (Jaccard distance of mineral sets), spectral 0.08 (Jaccard distance of binned absorption bands). Each result includes a `components` breakdown. Weights/scales are unvalidated and live in `app.py` (`WEIGHTS`) and `science.py`. The Mars catalogue (`MARS_REGIONS`) and analog minerals should be reviewed by a domain expert. Network calls (NASA POWER, MOLA, Copernicus) were not tested in CI.

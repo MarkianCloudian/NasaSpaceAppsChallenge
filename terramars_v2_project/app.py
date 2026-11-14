@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from functools import lru_cache
 import math
 from rasterio.windows import from_bounds
+import science
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -80,7 +81,11 @@ def safe_stats(path: Path, radius_m: float = EARTH_R):
         raise ValueError(f"Cannot read raster: {e}")
 
 SCALES = {"elevation_std": 5000.0, "slope_mean": 45.0, "roughness_mean": 1.0}
-WEIGHTS = {"elevation_std": .35, "slope_mean": .35, "roughness_mean": .30}
+# Terrain 0.50, climate 0.30, mineralogy 0.12, spectral 0.08. Terms missing for a
+# site are dropped and the remaining weights renormalised.
+WEIGHTS = {"elevation_std": .175, "slope_mean": .175, "roughness_mean": .15,
+           "temp_K": .12, "pressure_log10": .08, "precip_mm_day": .10,
+           "mineral_jaccard": .12, "spectral_bands": .08}
 
 def rank_sites(m, earth):
     # Absolute mean elevation is excluded: Earth sea-level and Mars areoid datums differ.
@@ -90,13 +95,16 @@ def rank_sites(m, earth):
         for k, scale in SCALES.items():
             a, b = m.get(k), e.get(k)
             if a is not None and b is not None and np.isfinite(a) and np.isfinite(b):
-                terms.append((WEIGHTS[k], min(abs(a - b) / scale, 1.0)))
+                terms.append((k, min(abs(a - b) / scale, 1.0)))
+        terms += [(k, v) for k, v in science.extra_distances(m, e).items() if v is not None]
         if not terms:
             continue
-        wsum = sum(w for w, _ in terms)
-        dist = float(np.sqrt(sum(w * d ** 2 for w, d in terms) / wsum))
+        wsum = sum(WEIGHTS[k] for k, _ in terms)
+        dist = float(np.sqrt(sum(WEIGHTS[k] * d ** 2 for k, d in terms) / wsum))
         results.append({"name": e["name"], "similarity_index": round(100 * (1 - dist), 2),
-                        "distance": round(dist, 5), "earth": e})
+                        "distance": round(dist, 5), "earth": e,
+                        "components": {k: round(d, 4) for k, d in terms},
+                        "terms_used": len(terms)})
     results.sort(key=lambda x: x["similarity_index"], reverse=True)
     return results
 
@@ -114,20 +122,21 @@ GDAL_ENV = dict(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", CPL_VSIL_CURL_ALLOWED_
 
 # Well-known terrestrial Mars-analog areas (used when the user gives no sites).
 ANALOG_SITES = [
-    {"name": "Atacama Desert, Chile", "lat": -23.5, "lon": -68.0},
-    {"name": "Dry Valleys, Antarctica", "lat": -77.5, "lon": 162.5},
-    {"name": "Devon Island, Canada", "lat": 75.4, "lon": -89.8},
-    {"name": "Death Valley, USA", "lat": 36.5, "lon": -117.1},
-    {"name": "Dallol / Danakil, Ethiopia", "lat": 14.2, "lon": 40.3},
-    {"name": "Krafla / Askja, Iceland", "lat": 65.0, "lon": -16.8},
-    {"name": "Hanksville (MDRS), Utah", "lat": 38.4, "lon": -110.8},
-    {"name": "Rio Tinto, Spain", "lat": 37.7, "lon": -6.6},
-    {"name": "Lut Desert, Iran", "lat": 30.5, "lon": 58.5},
-    {"name": "Tibesti, Chad", "lat": 21.0, "lon": 17.5},
+    {"name": "Atacama Desert, Chile", "lat": -23.5, "lon": -68.0, "minerals": ['gypsum', 'perchlorate', 'chloride', 'hematite']},
+    {"name": "Dry Valleys, Antarctica", "lat": -77.5, "lon": 162.5, "minerals": ['pyroxene', 'plagioclase', 'gypsum', 'chloride']},
+    {"name": "Devon Island, Canada", "lat": 75.4, "lon": -89.8, "minerals": ['carbonate', 'gypsum', 'silica']},
+    {"name": "Death Valley, USA", "lat": 36.5, "lon": -117.1, "minerals": ['carbonate', 'gypsum', 'chloride', 'smectite']},
+    {"name": "Dallol / Danakil, Ethiopia", "lat": 14.2, "lon": 40.3, "minerals": ['olivine', 'pyroxene', 'plagioclase', 'gypsum', 'chloride', 'jarosite']},
+    {"name": "Krafla / Askja, Iceland", "lat": 65.0, "lon": -16.8, "minerals": ['olivine', 'pyroxene', 'plagioclase', 'smectite', 'silica']},
+    {"name": "Hanksville (MDRS), Utah", "lat": 38.4, "lon": -110.8, "minerals": ['smectite', 'gypsum', 'hematite']},
+    {"name": "Rio Tinto, Spain", "lat": 37.7, "lon": -6.6, "minerals": ['jarosite', 'hematite', 'gypsum']},
+    {"name": "Lut Desert, Iran", "lat": 30.5, "lon": 58.5, "minerals": ['gypsum', 'chloride', 'plagioclase']},
+    {"name": "Tibesti, Chad", "lat": 21.0, "lon": 17.5, "minerals": ['olivine', 'pyroxene', 'plagioclase']},
 ]
 
 class Site(BaseModel):
     name: str = "site"
+    minerals: list[str] = []
     lat: float = Field(ge=-85, le=85)
     lon: float = Field(ge=-180, le=180)
 
@@ -197,6 +206,18 @@ def fetch_mars_patch(lat, lon, size_km, name):
                              {"lat": lat, "lon": lon, "size_km": size_km,
                               "source": "MGS MOLA global DEM 463 m (USGS Astropedia / NASA)"})
 
+def enrich(stats, planet, notes):
+    """Attach climate + mineralogy + spectral descriptors; failures are non-fatal."""
+    lat, lon = stats["lat"], stats["lon"]
+    try:
+        stats.update(science.earth_climate(lat, lon) if planet == "earth"
+                     else science.mars_climate(lat, stats["elevation_mean"]))
+    except ValueError as e:
+        notes.append({"name": stats["name"], "warning": str(e)})
+    if planet == "mars":
+        stats.update(science.mars_minerals(lat, lon if lon <= 180 else lon - 360))
+    return science.add_descriptors(stats)
+
 @app.get("/api/earth-presets")
 def earth_presets():
     return ANALOG_SITES
@@ -208,19 +229,24 @@ def auto_compare(req: AutoRequest):
         mars = fetch_mars_patch(req.mars_lat, req.mars_lon, req.size_km, req.mars_name)
     except ValueError as e:
         raise HTTPException(502, str(e))
+    errors = []
+    enrich(mars, "mars", errors)
     sites = list(req.earth_sites)
     if req.include_presets or not sites:
         sites += [Site(**s) for s in ANALOG_SITES]
-    earth, errors = [], []
+    earth = []
     for s in sites:
         try:
-            earth.append(fetch_earth_patch(s, req.size_km))
+            p = fetch_earth_patch(s, req.size_km)
+            if s.minerals:
+                p["minerals"], p["mineral_source"] = s.minerals, "Literature catalogue (analog site)"
+            earth.append(enrich(p, "earth", errors))
         except Exception as e:
             errors.append({"name": s.name, "error": str(e)})
     if not earth:
         raise HTTPException(502, f"No Earth DEM could be fetched: {errors}")
-    return {"mars": mars, "method": "Weighted normalized terrain distance (auto-fetched open data)",
-            "caveat": "Terrain-only prototype. Absolute elevation is excluded because planetary vertical datums differ. Similarity index is not a probability. Both patches are resampled to 463 m/pixel and the same physical size.",
+    return {"mars": mars, "method": "Weighted normalized distance: terrain 0.50, climate 0.30, mineralogy 0.12, spectral 0.08 (missing terms dropped, weights renormalised)",
+            "caveat": "Prototype. Climate for Mars is a parametric approximation, not a GCM; mineralogy/spectral terms use curated literature mineral lists and diagnostic band centres, only for catalogued Mars regions and preset analog sites (not measured CRISM spectra). Absolute elevation is excluded because planetary vertical datums differ. Similarity index is not a probability. Both patches are resampled to 463 m/pixel and the same physical size.",
             "results": rank_sites(mars, earth), "errors": errors}
 
 @app.post("/api/analyze")
