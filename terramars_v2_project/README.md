@@ -36,7 +36,16 @@ Rasterio may require platform-specific wheels; use a recent pip and Python versi
 - Prefer same projected pixel size (metres per pixel), comparable patch dimensions and consistent resampling.
 - NoData must be correctly defined.
 
+## Autonomous mode (no manual file uploads)
+`POST /api/auto-compare` downloads only the needed DEM windows from open sources:
+- Mars: MGS MOLA global DEM 463 m (USGS Astropedia GeoTIFF; override with env `MOLA_DEM_URL`).
+- Earth: Copernicus GLO-30 DEM COG tiles on the public AWS Open Data bucket (no account or key).
+
+Both patches are resampled to 463 m/pixel and the same physical size (`size_km`, 20–200), slopes use real metre spacing (geographic degrees are converted using each body's radius), then ranked with the metric below. Candidates are the user's sites plus a built-in list of known Mars-analog areas (`GET /api/earth-presets`). Requires internet access from the server. Example body: `{"mars_lat":-18.4,"mars_lon":77.7,"size_km":50,"earth_sites":[{"name":"X","lat":-23.5,"lon":-68}]}`.
+
 ## API
+- `POST /api/auto-compare` — autonomous mode (see above)
+- `GET /api/earth-presets`
 - `GET /api/health`
 - `GET /api/sources`
 - `GET /api/mola-info`
