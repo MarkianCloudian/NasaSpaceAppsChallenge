@@ -1,0 +1,1 @@
+Uses public data sources; respect each dataset's license and citation requirements. OpenStreetMap map tiles require attribution. No third-party dataset is bundled in this project.
