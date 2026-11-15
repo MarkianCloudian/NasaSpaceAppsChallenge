@@ -1,6 +1,33 @@
 {% extends "base.html.j2" %}
 {% block title %}{{ profile.reference_site.name }} analogs on Earth — Earth Analog Finder{% endblock %}
 {% block content %}
+{% macro results_table(items, caption, extra_class="") %}
+<table class="results sortable{{ extra_class }}" data-profile="{{ profile.profile_id }}">
+<caption>{{ caption }} — profile {{ profile.profile_id }}@{{ profile.version }}</caption>
+<thead><tr>
+  {% if not preview %}<th scope="col" data-sort="num">Rank</th>{% endif %}
+  <th scope="col">Location</th>
+  <th scope="col" data-sort="num">{{ "Upper bound" if preview else "Match (overall score)" }}</th>
+  <th scope="col" data-sort="num">Confidence</th>
+  <th scope="col">Limiting criterion</th>
+  <th scope="col" data-sort="num">Area km²</th>
+  <th scope="col">Label</th>
+</tr></thead>
+<tbody>
+{% for r in items %}
+<tr{% if r.c.label %} class="{{ r.c.label }}"{% endif %}>
+  {% if not preview %}<td>{{ r.c.rank }}</td>{% endif %}
+  <td><a href="{{ base }}{{ r.href }}">{{ r.coords }}</a></td>
+  <td>{{ r.bound if preview else r.score }}</td>
+  <td>{{ r.confidence }}</td>
+  <td>{{ r.limiting }}</td>
+  <td>{{ r.c.area_km2 | num }}</td>
+  <td>{{ r.label }}{% if r.c.known_site %}: {{ r.c.known_site }}{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endmacro %}
 <h1>Earth analogs of {{ profile.reference_site.name }} ({{ profile.body }})</h1>
 <p class="lead">Profile <code>{{ profile.profile_id }}@{{ profile.version }}</code>, purpose
   <em>{{ profile.purpose | replace("_", " ") }}</em>. Each place on Earth is compared with the Mars
@@ -36,32 +63,21 @@
   ({{ counts.evaluated_cells | default("?") }} land cells evaluated). See the
   <a href="{{ root }}about.html">run record</a> for counts per rejecting criterion.</p>
 {% else %}
-<table class="results sortable" data-profile="{{ profile.profile_id }}">
-<caption>{{ "Screened areas by upper score bound" if preview else "Ranked candidate areas" }}
-  — profile {{ profile.profile_id }}@{{ profile.version }}</caption>
-<thead><tr>
-  {% if not preview %}<th scope="col" data-sort="num">Rank</th>{% endif %}
-  <th scope="col">Location</th>
-  <th scope="col" data-sort="num">{{ "Upper bound" if preview else "Match (overall score)" }}</th>
-  <th scope="col" data-sort="num">Confidence</th>
-  <th scope="col">Limiting criterion</th>
-  <th scope="col" data-sort="num">Area km²</th>
-  <th scope="col">Label</th>
-</tr></thead>
-<tbody>
-{% for r in rows %}
-<tr>
-  {% if not preview %}<td>{{ r.c.rank }}</td>{% endif %}
-  <td><a href="{{ base }}{{ r.href }}">{{ r.coords }}</a></td>
-  <td>{{ r.bound if preview else r.score }}</td>
-  <td>{{ r.confidence }}</td>
-  <td>{{ r.limiting }}</td>
-  <td>{{ r.c.area_km2 | num }}</td>
-  <td>{{ r.label }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
+{% if preview %}
+{{ results_table(rows, "Screened areas by upper score bound") }}
+{% elif dedup_applied %}
+{% set new_rows = rows | selectattr("c.label", "equalto", "new_candidate") | list %}
+{% set known_rows = rows | selectattr("c.label", "equalto", "known_analog") | list %}
+<h2 id="new">New candidates ({{ new_rows | length }})</h2>
+<p>Ranked areas that lie outside the radius of every known analog site: places not yet recognised as analogs.</p>
+{% if new_rows %}{{ results_table(new_rows, "New candidate areas", " new") }}{% else %}<p class="empty">No ranked area is new.</p>{% endif %}
+{% if rr.dedup and rr.dedup.note %}<p class="note">Fewer than 3 new candidates: {{ rr.dedup.note }}.</p>{% endif %}
+<h2 id="known">Known analogs ({{ known_rows | length }})</h2>
+<p>Ranked areas within the radius of a known analog site (kept for comparison, not removed).</p>
+{% if known_rows %}{{ results_table(known_rows, "Candidate areas at known analog sites", " known") }}{% else %}<p class="empty">No ranked area coincides with a known analog site.</p>{% endif %}
+{% else %}
+{{ results_table(rows, "Ranked candidate areas") }}
+{% endif %}
 {% endif %}
 <p class="note">Match = weighted geometric mean of per-criterion scores (0–100 %). Confidence = share of
   criterion weight backed by Earth data. <a href="{{ root }}method.html">How scores are computed</a>.</p>
