@@ -82,4 +82,3 @@ versions, licences and citations are in `config/sources.json` and on the website
 | Published website | `public/` (deployed by `.github/workflows/pages.yml`) |
 
 `terramars_v2_project/` is an earlier, separate prototype and not part of the application.
-Contributors: see `CLAUDE.md` → *Working on a task*.
