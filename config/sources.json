@@ -245,7 +245,7 @@
       "licence": "verify",
       "citation": "USGS Astrogeology Science Center. (verify)",
       "docs_url": "https://stac.astrogeology.usgs.gov/docs/",
-      "notes": "STAC API root responded 200. Collections seen: mro_ctx_controlled_usgs_dtms, mro_hirise_socet_dtms. Only one collection can be named here; HiRISE collection handling, asset format and licence: verify."
+      "notes": "STAC API root responded 200. Collections seen: mro_ctx_controlled_usgs_dtms, mro_hirise_socet_dtms. Only one collection can be named here; HiRISE collection handling, asset format and licence: verify. Verified 2026-11-15 (T072): CTX items carry a 'dtm' asset (cloud-optimized GeoTIFF, float32, nodata -32767, ~20 m, Equirectangular clon=0 on the Mars 2015 sphere R 3396190 m); 50+ items intersect the Jezero 20 km footprint."
     },
     {
       "source_id": "mola-hrsc-blend",
@@ -254,7 +254,7 @@
       "dataset_version": "verify",
       "body": "Mars",
       "route": "http",
-      "endpoint": "https://astrogeology.usgs.gov/search/map/mars_mgs_mola_mex_hrsc_blended_dem_global_200m",
+      "endpoint": "https://planetarymaps.usgs.gov/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
       "login": "none",
       "request_unit": "file",
       "format": "GeoTIFF (windowed range requests)",
@@ -269,7 +269,7 @@
       "licence": "verify",
       "citation": "Fergason et al. 2018, USGS Astrogeology. (verify)",
       "docs_url": "https://astrogeology.usgs.gov/search/map/mars_mgs_mola_mex_hrsc_blended_dem_global_200m",
-      "notes": "endpoint is the catalogue page; verify the direct file URL, that the server supports HTTP range requests, and the citation."
+      "notes": "Verified 2026-11-15 (T072): endpoint is the direct file URL; HTTP 302 to https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif, 11,384,463,908 bytes, Accept-Ranges: bytes (range request -> 206); GeoTIFF int16, geographic Mars 2000 sphere (R 3396190 m), 0.003374120830641 deg pixels, nodata -32768, striped (not tiled), overviews 2/4/8/16. Only the footprint window is read. Licence and citation: verify."
     },
     {
       "source_id": "era5-cds",
