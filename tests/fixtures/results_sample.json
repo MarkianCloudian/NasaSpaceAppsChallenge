@@ -1,0 +1,1564 @@
+{
+ "run_record": {
+  "run_id": "a10793070306fdb6",
+  "profile": {
+   "id": "mars-rover-jezero",
+   "version": "1.0.0",
+   "content_hash": "1c35925a630ceca649feba8686d2d2983c8d4e7437129c37e1c16a6f59b1732e"
+  },
+  "grid_id": "5ca1ab1e5ca1ab1e",
+  "settings": {
+   "grid": {
+    "cell_size_deg": 0.05,
+    "lat_range": [
+     -90,
+     90
+    ],
+    "reference_years": [
+     2023
+    ]
+   },
+   "screen_min_score": 0.3,
+   "max_area_km2": 2500,
+   "refine": {
+    "batch": 10,
+    "max_terrain_areas": 200,
+    "max_mineral_areas": 60,
+    "bound_margin": 0.05,
+    "terrain_hint": true
+   },
+   "site_top_n": 30,
+   "stability": {
+    "draws": 500,
+    "range": 0.25,
+    "seed": 42,
+    "top_k": 10
+   },
+   "known_radius_default_km": 50,
+   "cleanup_keep": {
+    "grids": 2,
+    "runs": 5
+   },
+   "paths": {
+    "data": "data",
+    "public": "public"
+   },
+   "earth_impossible_quantities": [
+    "surface_pressure",
+    "gravity",
+    "radiation_dose",
+    "lunar_surface_temp"
+   ],
+   "footprint": {
+    "min_valid_fraction": 0.5,
+    "benchmark_budget_s": 180
+   },
+   "coverage": {
+    "min_coverage_fraction": 0.5
+   },
+   "emit": {
+    "min_band_depth": 0.02,
+    "min_cluster_pixels": 4,
+    "max_granules_per_area": 5
+   },
+   "http": {
+    "timeout_s": 60
+   }
+  },
+  "sources": [
+   {
+    "source_id": "emit-l2b-min",
+    "dataset_version": "002",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "etopo-2022",
+    "dataset_version": "2022",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "modis-mcd12c1",
+    "dataset_version": "061",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "modis-mod11c3",
+    "dataset_version": "061",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "modis-mod13c2",
+    "dataset_version": "061",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "nasa-power",
+    "dataset_version": "verify",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "nasadem-pc",
+    "dataset_version": "verify",
+    "accessed": "2026-11-15"
+   }
+  ],
+  "started_at": "2026-11-15T20:37:29+00:00",
+  "finished_at": "2026-11-15T20:37:29+00:00",
+  "stages": [
+   {
+    "name": "grid",
+    "status": "complete",
+    "seconds": 0.0,
+    "fingerprint": "5ca1ab1e5ca1ab1e"
+   },
+   {
+    "name": "screen",
+    "status": "complete",
+    "seconds": 0.017,
+    "fingerprint": "dfeab3a906c40fac"
+   },
+   {
+    "name": "refine",
+    "status": "complete",
+    "seconds": 0.003,
+    "fingerprint": "5e5a1da7a1da07cc"
+   },
+   {
+    "name": "rank",
+    "status": "complete",
+    "fingerprint": "d90ad20cd3624f7e"
+   }
+  ],
+  "counts": {
+   "evaluated_cells": 760,
+   "rejected_by_constraint": 12,
+   "rejected_by_criterion": {
+    "no_vegetation": 683,
+    "hyperarid": 0
+   },
+   "areas": 5,
+   "refined": 3,
+   "insufficient_data": 1,
+   "ranked": 3
+  },
+  "placeholder_values": true,
+  "dedup_applied": false,
+  "percentile_population": {
+   "name": "eligible",
+   "cells": 748
+  },
+  "stage_fingerprints": {
+   "grid": "5ca1ab1e5ca1ab1e",
+   "screen": "dfeab3a906c40fac",
+   "refine": "5e5a1da7a1da07cc",
+   "rank": "d90ad20cd3624f7e"
+  },
+  "refinement": {
+   "stop": "bound_reached",
+   "proven_top": 3,
+   "terrain_areas": 3,
+   "mineral_areas": 3,
+   "emit_covered_areas": 3
+  }
+ },
+ "candidates": [
+  {
+   "area_id": "mars-rover-jezero-23.27_11.47",
+   "rank": 1,
+   "status": "ranked",
+   "centroid": {
+    "lat": 23.275,
+    "lon": 11.549999999999999
+   },
+   "representative": {
+    "lat": 23.275,
+    "lon": 11.475
+   },
+   "n_cells": 4,
+   "area_km2": 113.58105201745381,
+   "bbox": [
+    11.45,
+    23.25,
+    11.65,
+    23.299999999999997
+   ],
+   "overall_score": 0.8392370040600317,
+   "confidence": 1.0,
+   "limiting_criterion": "roughness",
+   "rejected_by": null,
+   "analogy_limits": [
+    "relative to eligible on Earth, not absolute: hyperarid (precip_annual)",
+    "relative to eligible on Earth, not absolute: dry_air (rh2m_mean)",
+    "relative to eligible on Earth, not absolute: thermal_swing (lst_diurnal_amplitude)",
+    "regional_slope: grid baseline is 926 m north-south but 851 m east-west at 23.3° (geographic 30″ grid, research D-020)",
+    "not reproducible on Earth: pressure (surface_pressure)",
+    "not reproducible on Earth: gravity (gravity)",
+    "not reproducible on Earth: thermal_inertia (thermal_inertia)"
+   ],
+   "label": null,
+   "known_site": null,
+   "results": [
+    {
+     "criterion_id": "hyperarid",
+     "state": "known",
+     "relative": true,
+     "earth_value": 3.0000000000000013,
+     "unit": "mm/yr",
+     "target": {
+      "percentile": 0.0
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.08424,
+     "scale_used": "grid",
+     "source_id": "nasa-power",
+     "note": ""
+    },
+    {
+     "criterion_id": "dry_air",
+     "state": "known",
+     "relative": true,
+     "earth_value": 10.000000000000005,
+     "unit": "percent",
+     "target": {
+      "percentile": 0.0
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.02808,
+     "scale_used": "grid",
+     "source_id": "nasa-power",
+     "note": ""
+    },
+    {
+     "criterion_id": "no_vegetation",
+     "state": "known",
+     "relative": false,
+     "earth_value": 0.05000000074505806,
+     "unit": "index",
+     "target": {
+      "min": null,
+      "max": 0.15
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.034014,
+     "scale_used": "grid",
+     "source_id": "modis-mod13c2",
+     "note": ""
+    },
+    {
+     "criterion_id": "barren_ground",
+     "state": "known",
+     "relative": false,
+     "earth_value": 0.9499999880790717,
+     "unit": "fraction",
+     "target": {
+      "min": 0.7,
+      "max": null
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.038662,
+     "scale_used": "grid",
+     "source_id": "modis-mcd12c1",
+     "note": ""
+    },
+    {
+     "criterion_id": "thermal_swing",
+     "state": "known",
+     "relative": true,
+     "earth_value": 35.0,
+     "unit": "degC",
+     "target": {
+      "percentile": 1.0
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.080574,
+     "scale_used": "grid",
+     "source_id": "modis-mod11c3",
+     "note": ""
+    },
+    {
+     "criterion_id": "regional_slope",
+     "state": "known",
+     "relative": false,
+     "earth_value": 2.0,
+     "unit": "deg",
+     "target": {
+      "min": 0,
+      "max": 6.2
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.054535,
+     "scale_used": "grid",
+     "source_id": "etopo-2022",
+     "note": ""
+    },
+    {
+     "criterion_id": "traverse_slope",
+     "state": "known",
+     "relative": false,
+     "earth_value": 6.0,
+     "unit": "deg",
+     "target": {
+      "min": 0,
+      "max": 12.0
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.345126,
+     "scale_used": "refinement",
+     "source_id": "nasadem-pc",
+     "note": ""
+    },
+    {
+     "criterion_id": "roughness",
+     "state": "known",
+     "relative": false,
+     "earth_value": 2.0,
+     "unit": "m",
+     "target": {
+      "min": 0.37,
+      "max": 0.37
+     },
+     "deviation": 1.63,
+     "deviation_ratio": 0.5433333333333333,
+     "score": 0.45666666666666667,
+     "weight_effective": 0.163605,
+     "scale_used": "refinement",
+     "source_id": "nasadem-pc",
+     "note": ""
+    },
+    {
+     "criterion_id": "mineral_classes",
+     "state": "known",
+     "relative": false,
+     "earth_value": {
+      "fe_mg_smectite": 0.1,
+      "carbonate": 0.04
+     },
+     "unit": "fraction",
+     "target": {
+      "classes": [
+       "fe_mg_smectite",
+       "carbonate",
+       "olivine"
+      ]
+     },
+     "deviation": 1.0,
+     "deviation_ratio": 0.3333333333333333,
+     "score": 0.6666666666666666,
+     "weight_effective": 0.115986,
+     "scale_used": "refinement",
+     "source_id": "emit-l2b-min",
+     "note": ""
+    },
+    {
+     "criterion_id": "aqueous_minerals",
+     "state": "known",
+     "relative": false,
+     "earth_value": true,
+     "unit": "boolean",
+     "target": {
+      "value": true
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.055178,
+     "scale_used": "refinement",
+     "source_id": "emit-l2b-min",
+     "note": ""
+    },
+    {
+     "criterion_id": "pressure",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "kPa",
+     "target": {
+      "value": 0.72
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    },
+    {
+     "criterion_id": "gravity",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "m/s2",
+     "target": {
+      "value": 3.73
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    },
+    {
+     "criterion_id": "thermal_inertia",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "J m-2 K-1 s-1/2",
+     "target": {
+      "min": 200,
+      "max": 450
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    }
+   ],
+   "footprint": {
+    "lat": 23.275,
+    "lon": 11.475,
+    "radius_km": 20.0
+   },
+   "upper_bound": 0.8392370040600317,
+   "refinement_level": "full"
+  },
+  {
+   "area_id": "mars-rover-jezero-23.73_10.28",
+   "rank": 2,
+   "status": "ranked",
+   "centroid": {
+    "lat": 23.725,
+    "lon": 10.325000000000001
+   },
+   "representative": {
+    "lat": 23.725,
+    "lon": 10.275
+   },
+   "n_cells": 3,
+   "area_km2": 84.89537322076521,
+   "bbox": [
+    10.25,
+    23.700000000000003,
+    10.4,
+    23.75
+   ],
+   "overall_score": 0.8258239811299272,
+   "confidence": 1.0,
+   "limiting_criterion": "roughness",
+   "rejected_by": null,
+   "analogy_limits": [
+    "relative to eligible on Earth, not absolute: hyperarid (precip_annual)",
+    "relative to eligible on Earth, not absolute: dry_air (rh2m_mean)",
+    "relative to eligible on Earth, not absolute: thermal_swing (lst_diurnal_amplitude)",
+    "regional_slope: grid baseline is 926 m north-south but 848 m east-west at 23.7° (geographic 30″ grid, research D-020)",
+    "not reproducible on Earth: pressure (surface_pressure)",
+    "not reproducible on Earth: gravity (gravity)",
+    "not reproducible on Earth: thermal_inertia (thermal_inertia)"
+   ],
+   "label": null,
+   "known_site": null,
+   "results": [
+    {
+     "criterion_id": "hyperarid",
+     "state": "known",
+     "relative": true,
+     "earth_value": 8.0,
+     "unit": "mm/yr",
+     "target": {
+      "percentile": 0.0
+     },
+     "deviation": 0.007405632387791735,
+     "deviation_ratio": 0.1481126477558347,
+     "score": 0.8518873522441653,
+     "weight_effective": 0.08424,
+     "scale_used": "grid",
+     "source_id": "nasa-power",
+     "note": ""
+    },
+    {
+     "criterion_id": "dry_air",
+     "state": "known",
+     "relative": true,
+     "earth_value": 12.000000000000002,
+     "unit": "percent",
+     "target": {
+      "percentile": 0.0
+     },
+     "deviation": 0.008868653695078072,
+     "deviation_ratio": 0.08868653695078071,
+     "score": 0.9113134630492192,
+     "weight_effective": 0.02808,
+     "scale_used": "grid",
+     "source_id": "nasa-power",
+     "note": ""
+    },
+    {
+     "criterion_id": "no_vegetation",
+     "state": "known",
+     "relative": false,
+     "earth_value": 0.05000000074505806,
+     "unit": "index",
+     "target": {
+      "min": null,
+      "max": 0.15
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.034014,
+     "scale_used": "grid",
+     "source_id": "modis-mod13c2",
+     "note": ""
+    },
+    {
+     "criterion_id": "barren_ground",
+     "state": "known",
+     "relative": false,
+     "earth_value": 0.9499999880790708,
+     "unit": "fraction",
+     "target": {
+      "min": 0.7,
+      "max": null
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.038662,
+     "scale_used": "grid",
+     "source_id": "modis-mcd12c1",
+     "note": ""
+    },
+    {
+     "criterion_id": "thermal_swing",
+     "state": "known",
+     "relative": true,
+     "earth_value": 35.0,
+     "unit": "degC",
+     "target": {
+      "percentile": 1.0
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.080574,
+     "scale_used": "grid",
+     "source_id": "modis-mod11c3",
+     "note": ""
+    },
+    {
+     "criterion_id": "regional_slope",
+     "state": "known",
+     "relative": false,
+     "earth_value": 2.0,
+     "unit": "deg",
+     "target": {
+      "min": 0,
+      "max": 6.2
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.054535,
+     "scale_used": "grid",
+     "source_id": "etopo-2022",
+     "note": ""
+    },
+    {
+     "criterion_id": "traverse_slope",
+     "state": "known",
+     "relative": false,
+     "earth_value": 6.0,
+     "unit": "deg",
+     "target": {
+      "min": 0,
+      "max": 12.0
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.345126,
+     "scale_used": "refinement",
+     "source_id": "nasadem-pc",
+     "note": ""
+    },
+    {
+     "criterion_id": "roughness",
+     "state": "known",
+     "relative": false,
+     "earth_value": 2.0,
+     "unit": "m",
+     "target": {
+      "min": 0.37,
+      "max": 0.37
+     },
+     "deviation": 1.63,
+     "deviation_ratio": 0.5433333333333333,
+     "score": 0.45666666666666667,
+     "weight_effective": 0.163605,
+     "scale_used": "refinement",
+     "source_id": "nasadem-pc",
+     "note": ""
+    },
+    {
+     "criterion_id": "mineral_classes",
+     "state": "known",
+     "relative": false,
+     "earth_value": {
+      "fe_mg_smectite": 0.1,
+      "carbonate": 0.04
+     },
+     "unit": "fraction",
+     "target": {
+      "classes": [
+       "fe_mg_smectite",
+       "carbonate",
+       "olivine"
+      ]
+     },
+     "deviation": 1.0,
+     "deviation_ratio": 0.3333333333333333,
+     "score": 0.6666666666666666,
+     "weight_effective": 0.115986,
+     "scale_used": "refinement",
+     "source_id": "emit-l2b-min",
+     "note": ""
+    },
+    {
+     "criterion_id": "aqueous_minerals",
+     "state": "known",
+     "relative": false,
+     "earth_value": true,
+     "unit": "boolean",
+     "target": {
+      "value": true
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.055178,
+     "scale_used": "refinement",
+     "source_id": "emit-l2b-min",
+     "note": ""
+    },
+    {
+     "criterion_id": "pressure",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "kPa",
+     "target": {
+      "value": 0.72
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    },
+    {
+     "criterion_id": "gravity",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "m/s2",
+     "target": {
+      "value": 3.73
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    },
+    {
+     "criterion_id": "thermal_inertia",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "J m-2 K-1 s-1/2",
+     "target": {
+      "min": 200,
+      "max": 450
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    }
+   ],
+   "footprint": {
+    "lat": 23.725,
+    "lon": 10.275,
+    "radius_km": 20.0
+   },
+   "upper_bound": 0.8258239811299272,
+   "refinement_level": "full"
+  },
+  {
+   "area_id": "mars-rover-jezero-23.27_10.68",
+   "rank": 3,
+   "status": "ranked",
+   "centroid": {
+    "lat": 23.169749863311402,
+    "lon": 10.849999999999998
+   },
+   "representative": {
+    "lat": 23.275,
+    "lon": 10.675
+   },
+   "n_cells": 58,
+   "area_km2": 1648.2202579274904,
+   "bbox": [
+    10.6,
+    23.0,
+    11.1,
+    23.349999999999998
+   ],
+   "overall_score": 0.8208306934450259,
+   "confidence": 0.8876799999999999,
+   "limiting_criterion": "roughness",
+   "rejected_by": null,
+   "analogy_limits": [
+    "relative to eligible on Earth, not absolute: hyperarid (precip_annual)",
+    "no Earth data: hyperarid (no data)",
+    "relative to eligible on Earth, not absolute: dry_air (rh2m_mean)",
+    "no Earth data: dry_air (no data)",
+    "relative to eligible on Earth, not absolute: thermal_swing (lst_diurnal_amplitude)",
+    "regional_slope: grid baseline is 926 m north-south but 851 m east-west at 23.3° (geographic 30″ grid, research D-020)",
+    "not reproducible on Earth: pressure (surface_pressure)",
+    "not reproducible on Earth: gravity (gravity)",
+    "not reproducible on Earth: thermal_inertia (thermal_inertia)"
+   ],
+   "label": null,
+   "known_site": null,
+   "results": [
+    {
+     "criterion_id": "hyperarid",
+     "state": "unknown",
+     "relative": true,
+     "earth_value": null,
+     "unit": "mm/yr",
+     "target": {
+      "percentile": 0.0
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": "grid",
+     "source_id": "nasa-power",
+     "note": "no data"
+    },
+    {
+     "criterion_id": "dry_air",
+     "state": "unknown",
+     "relative": true,
+     "earth_value": null,
+     "unit": "percent",
+     "target": {
+      "percentile": 0.0
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": "grid",
+     "source_id": "nasa-power",
+     "note": "no data"
+    },
+    {
+     "criterion_id": "no_vegetation",
+     "state": "known",
+     "relative": false,
+     "earth_value": 0.05000000074505806,
+     "unit": "index",
+     "target": {
+      "min": null,
+      "max": 0.15
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.0383178622927181,
+     "scale_used": "grid",
+     "source_id": "modis-mod13c2",
+     "note": ""
+    },
+    {
+     "criterion_id": "barren_ground",
+     "state": "known",
+     "relative": false,
+     "earth_value": 0.9499999880790717,
+     "unit": "fraction",
+     "target": {
+      "min": 0.7,
+      "max": null
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.043553983417447734,
+     "scale_used": "grid",
+     "source_id": "modis-mcd12c1",
+     "note": ""
+    },
+    {
+     "criterion_id": "thermal_swing",
+     "state": "known",
+     "relative": true,
+     "earth_value": 35.0,
+     "unit": "degC",
+     "target": {
+      "percentile": 1.0
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.09076919610670514,
+     "scale_used": "grid",
+     "source_id": "modis-mod11c3",
+     "note": ""
+    },
+    {
+     "criterion_id": "regional_slope",
+     "state": "known",
+     "relative": false,
+     "earth_value": 2.0,
+     "unit": "deg",
+     "target": {
+      "min": 0,
+      "max": 6.2
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.06143542718096612,
+     "scale_used": "grid",
+     "source_id": "etopo-2022",
+     "note": ""
+    },
+    {
+     "criterion_id": "traverse_slope",
+     "state": "known",
+     "relative": false,
+     "earth_value": 6.0,
+     "unit": "deg",
+     "target": {
+      "min": 0,
+      "max": 12.0
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.38879551189617884,
+     "scale_used": "refinement",
+     "source_id": "nasadem-pc",
+     "note": ""
+    },
+    {
+     "criterion_id": "roughness",
+     "state": "known",
+     "relative": false,
+     "earth_value": 2.0,
+     "unit": "m",
+     "target": {
+      "min": 0.37,
+      "max": 0.37
+     },
+     "deviation": 1.63,
+     "deviation_ratio": 0.5433333333333333,
+     "score": 0.45666666666666667,
+     "weight_effective": 0.18430628154289835,
+     "scale_used": "refinement",
+     "source_id": "nasadem-pc",
+     "note": ""
+    },
+    {
+     "criterion_id": "mineral_classes",
+     "state": "known",
+     "relative": false,
+     "earth_value": {
+      "fe_mg_smectite": 0.1,
+      "carbonate": 0.04
+     },
+     "unit": "fraction",
+     "target": {
+      "classes": [
+       "fe_mg_smectite",
+       "carbonate",
+       "olivine"
+      ]
+     },
+     "deviation": 1.0,
+     "deviation_ratio": 0.3333333333333333,
+     "score": 0.6666666666666666,
+     "weight_effective": 0.1306619502523432,
+     "scale_used": "refinement",
+     "source_id": "emit-l2b-min",
+     "note": ""
+    },
+    {
+     "criterion_id": "aqueous_minerals",
+     "state": "known",
+     "relative": false,
+     "earth_value": true,
+     "unit": "boolean",
+     "target": {
+      "value": true
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.06215978731074261,
+     "scale_used": "refinement",
+     "source_id": "emit-l2b-min",
+     "note": ""
+    },
+    {
+     "criterion_id": "pressure",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "kPa",
+     "target": {
+      "value": 0.72
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    },
+    {
+     "criterion_id": "gravity",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "m/s2",
+     "target": {
+      "value": 3.73
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    },
+    {
+     "criterion_id": "thermal_inertia",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "J m-2 K-1 s-1/2",
+     "target": {
+      "min": 200,
+      "max": 450
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    }
+   ],
+   "footprint": {
+    "lat": 23.275,
+    "lon": 10.675,
+    "radius_km": 20.0
+   },
+   "upper_bound": 0.8208306934450259,
+   "refinement_level": "full"
+  },
+  {
+   "area_id": "mars-rover-jezero--24.10_-69.95",
+   "rank": null,
+   "status": "insufficient_data",
+   "centroid": {
+    "lat": -24.1,
+    "lon": -69.95
+   },
+   "representative": {
+    "lat": -24.1,
+    "lon": -69.95
+   },
+   "n_cells": 58,
+   "area_km2": 1648.2202579274904,
+   "bbox": [
+    10.6,
+    23.0,
+    11.1,
+    23.349999999999998
+   ],
+   "overall_score": null,
+   "confidence": 0.42,
+   "limiting_criterion": null,
+   "rejected_by": null,
+   "analogy_limits": [
+    "relative to eligible on Earth, not absolute: hyperarid (precip_annual)",
+    "no Earth data: hyperarid (no data)",
+    "relative to eligible on Earth, not absolute: dry_air (rh2m_mean)",
+    "no Earth data: dry_air (no data)",
+    "relative to eligible on Earth, not absolute: thermal_swing (lst_diurnal_amplitude)",
+    "regional_slope: grid baseline is 926 m north-south but 851 m east-west at 23.3° (geographic 30″ grid, research D-020)",
+    "not reproducible on Earth: pressure (surface_pressure)",
+    "not reproducible on Earth: gravity (gravity)",
+    "not reproducible on Earth: thermal_inertia (thermal_inertia)"
+   ],
+   "label": null,
+   "known_site": null,
+   "results": [
+    {
+     "criterion_id": "hyperarid",
+     "state": "unknown",
+     "relative": true,
+     "earth_value": null,
+     "unit": "mm/yr",
+     "target": {
+      "percentile": 0.0
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": "grid",
+     "source_id": "nasa-power",
+     "note": "no data"
+    },
+    {
+     "criterion_id": "dry_air",
+     "state": "unknown",
+     "relative": true,
+     "earth_value": null,
+     "unit": "percent",
+     "target": {
+      "percentile": 0.0
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": "grid",
+     "source_id": "nasa-power",
+     "note": "no data"
+    },
+    {
+     "criterion_id": "no_vegetation",
+     "state": "known",
+     "relative": false,
+     "earth_value": 0.05000000074505806,
+     "unit": "index",
+     "target": {
+      "min": null,
+      "max": 0.15
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.0383178622927181,
+     "scale_used": "grid",
+     "source_id": "modis-mod13c2",
+     "note": ""
+    },
+    {
+     "criterion_id": "barren_ground",
+     "state": "known",
+     "relative": false,
+     "earth_value": 0.9499999880790717,
+     "unit": "fraction",
+     "target": {
+      "min": 0.7,
+      "max": null
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.043553983417447734,
+     "scale_used": "grid",
+     "source_id": "modis-mcd12c1",
+     "note": ""
+    },
+    {
+     "criterion_id": "thermal_swing",
+     "state": "known",
+     "relative": true,
+     "earth_value": 35.0,
+     "unit": "degC",
+     "target": {
+      "percentile": 1.0
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.09076919610670514,
+     "scale_used": "grid",
+     "source_id": "modis-mod11c3",
+     "note": ""
+    },
+    {
+     "criterion_id": "regional_slope",
+     "state": "known",
+     "relative": false,
+     "earth_value": 2.0,
+     "unit": "deg",
+     "target": {
+      "min": 0,
+      "max": 6.2
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.06143542718096612,
+     "scale_used": "grid",
+     "source_id": "etopo-2022",
+     "note": ""
+    },
+    {
+     "criterion_id": "traverse_slope",
+     "state": "unknown",
+     "relative": false,
+     "earth_value": null,
+     "unit": "deg",
+     "target": {
+      "min": 0,
+      "max": 12.0
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": "refinement",
+     "source_id": "nasadem-pc",
+     "note": "no DEM / EMIT coverage"
+    },
+    {
+     "criterion_id": "roughness",
+     "state": "unknown",
+     "relative": false,
+     "earth_value": null,
+     "unit": "m",
+     "target": {
+      "min": 0.37,
+      "max": 0.37
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": "refinement",
+     "source_id": "nasadem-pc",
+     "note": "no DEM / EMIT coverage"
+    },
+    {
+     "criterion_id": "mineral_classes",
+     "state": "unknown",
+     "relative": false,
+     "earth_value": null,
+     "unit": "fraction",
+     "target": {
+      "classes": [
+       "fe_mg_smectite",
+       "carbonate",
+       "olivine"
+      ]
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": "refinement",
+     "source_id": "emit-l2b-min",
+     "note": "no DEM / EMIT coverage"
+    },
+    {
+     "criterion_id": "aqueous_minerals",
+     "state": "unknown",
+     "relative": false,
+     "earth_value": null,
+     "unit": "boolean",
+     "target": {
+      "value": true
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": "refinement",
+     "source_id": "emit-l2b-min",
+     "note": "no DEM / EMIT coverage"
+    },
+    {
+     "criterion_id": "pressure",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "kPa",
+     "target": {
+      "value": 0.72
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    },
+    {
+     "criterion_id": "gravity",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "m/s2",
+     "target": {
+      "value": 3.73
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    },
+    {
+     "criterion_id": "thermal_inertia",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "J m-2 K-1 s-1/2",
+     "target": {
+      "min": 200,
+      "max": 450
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    }
+   ],
+   "footprint": {
+    "lat": -24.1,
+    "lon": -69.95,
+    "radius_km": 20.0
+   },
+   "upper_bound": 0.8208306934450259,
+   "refinement_level": "none"
+  },
+  {
+   "area_id": "mars-rover-jezero-30.50_31.20",
+   "rank": null,
+   "status": "rejected",
+   "centroid": {
+    "lat": 30.5,
+    "lon": 31.2
+   },
+   "representative": {
+    "lat": 30.5,
+    "lon": 31.2
+   },
+   "n_cells": 58,
+   "area_km2": 1648.2202579274904,
+   "bbox": [
+    10.6,
+    23.0,
+    11.1,
+    23.349999999999998
+   ],
+   "overall_score": null,
+   "confidence": 0.8876799999999999,
+   "limiting_criterion": "no_vegetation",
+   "rejected_by": "no_vegetation",
+   "analogy_limits": [
+    "relative to eligible on Earth, not absolute: hyperarid (precip_annual)",
+    "no Earth data: hyperarid (no data)",
+    "relative to eligible on Earth, not absolute: dry_air (rh2m_mean)",
+    "no Earth data: dry_air (no data)",
+    "relative to eligible on Earth, not absolute: thermal_swing (lst_diurnal_amplitude)",
+    "regional_slope: grid baseline is 926 m north-south but 851 m east-west at 23.3° (geographic 30″ grid, research D-020)",
+    "not reproducible on Earth: pressure (surface_pressure)",
+    "not reproducible on Earth: gravity (gravity)",
+    "not reproducible on Earth: thermal_inertia (thermal_inertia)"
+   ],
+   "label": null,
+   "known_site": null,
+   "results": [
+    {
+     "criterion_id": "hyperarid",
+     "state": "unknown",
+     "relative": true,
+     "earth_value": null,
+     "unit": "mm/yr",
+     "target": {
+      "percentile": 0.0
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": "grid",
+     "source_id": "nasa-power",
+     "note": "no data"
+    },
+    {
+     "criterion_id": "dry_air",
+     "state": "unknown",
+     "relative": true,
+     "earth_value": null,
+     "unit": "percent",
+     "target": {
+      "percentile": 0.0
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": "grid",
+     "source_id": "nasa-power",
+     "note": "no data"
+    },
+    {
+     "criterion_id": "no_vegetation",
+     "state": "known",
+     "relative": false,
+     "earth_value": 0.31,
+     "unit": "index",
+     "target": {
+      "min": null,
+      "max": 0.15
+     },
+     "deviation": 0.16,
+     "deviation_ratio": 1.6,
+     "score": 0.0,
+     "weight_effective": 0.0383178622927181,
+     "scale_used": "grid",
+     "source_id": "modis-mod13c2",
+     "note": ""
+    },
+    {
+     "criterion_id": "barren_ground",
+     "state": "known",
+     "relative": false,
+     "earth_value": 0.9499999880790717,
+     "unit": "fraction",
+     "target": {
+      "min": 0.7,
+      "max": null
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.043553983417447734,
+     "scale_used": "grid",
+     "source_id": "modis-mcd12c1",
+     "note": ""
+    },
+    {
+     "criterion_id": "thermal_swing",
+     "state": "known",
+     "relative": true,
+     "earth_value": 35.0,
+     "unit": "degC",
+     "target": {
+      "percentile": 1.0
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.09076919610670514,
+     "scale_used": "grid",
+     "source_id": "modis-mod11c3",
+     "note": ""
+    },
+    {
+     "criterion_id": "regional_slope",
+     "state": "known",
+     "relative": false,
+     "earth_value": 2.0,
+     "unit": "deg",
+     "target": {
+      "min": 0,
+      "max": 6.2
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.06143542718096612,
+     "scale_used": "grid",
+     "source_id": "etopo-2022",
+     "note": ""
+    },
+    {
+     "criterion_id": "traverse_slope",
+     "state": "known",
+     "relative": false,
+     "earth_value": 6.0,
+     "unit": "deg",
+     "target": {
+      "min": 0,
+      "max": 12.0
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.38879551189617884,
+     "scale_used": "refinement",
+     "source_id": "nasadem-pc",
+     "note": ""
+    },
+    {
+     "criterion_id": "roughness",
+     "state": "known",
+     "relative": false,
+     "earth_value": 2.0,
+     "unit": "m",
+     "target": {
+      "min": 0.37,
+      "max": 0.37
+     },
+     "deviation": 1.63,
+     "deviation_ratio": 0.5433333333333333,
+     "score": 0.45666666666666667,
+     "weight_effective": 0.18430628154289835,
+     "scale_used": "refinement",
+     "source_id": "nasadem-pc",
+     "note": ""
+    },
+    {
+     "criterion_id": "mineral_classes",
+     "state": "known",
+     "relative": false,
+     "earth_value": {
+      "fe_mg_smectite": 0.1,
+      "carbonate": 0.04
+     },
+     "unit": "fraction",
+     "target": {
+      "classes": [
+       "fe_mg_smectite",
+       "carbonate",
+       "olivine"
+      ]
+     },
+     "deviation": 1.0,
+     "deviation_ratio": 0.3333333333333333,
+     "score": 0.6666666666666666,
+     "weight_effective": 0.1306619502523432,
+     "scale_used": "refinement",
+     "source_id": "emit-l2b-min",
+     "note": ""
+    },
+    {
+     "criterion_id": "aqueous_minerals",
+     "state": "known",
+     "relative": false,
+     "earth_value": true,
+     "unit": "boolean",
+     "target": {
+      "value": true
+     },
+     "deviation": 0.0,
+     "deviation_ratio": 0.0,
+     "score": 1.0,
+     "weight_effective": 0.06215978731074261,
+     "scale_used": "refinement",
+     "source_id": "emit-l2b-min",
+     "note": ""
+    },
+    {
+     "criterion_id": "pressure",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "kPa",
+     "target": {
+      "value": 0.72
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    },
+    {
+     "criterion_id": "gravity",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "m/s2",
+     "target": {
+      "value": 3.73
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    },
+    {
+     "criterion_id": "thermal_inertia",
+     "state": "not_comparable",
+     "relative": false,
+     "earth_value": null,
+     "unit": "J m-2 K-1 s-1/2",
+     "target": {
+      "min": 200,
+      "max": 450
+     },
+     "deviation": null,
+     "deviation_ratio": null,
+     "score": null,
+     "weight_effective": null,
+     "scale_used": null,
+     "source_id": null,
+     "note": ""
+    }
+   ],
+   "footprint": {
+    "lat": 30.5,
+    "lon": 31.2,
+    "radius_km": 20.0
+   },
+   "upper_bound": 0.8208306934450259,
+   "refinement_level": "full"
+  }
+ ]
+}
