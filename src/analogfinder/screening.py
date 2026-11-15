@@ -167,6 +167,7 @@ def run(ctx: StageContext) -> ScreeningResult:
     )
 
     d = Path(ctx.stage_dir)
+    d.mkdir(parents=True, exist_ok=True)
     stage_io.write_json(
         d / "screening.json",
         {
