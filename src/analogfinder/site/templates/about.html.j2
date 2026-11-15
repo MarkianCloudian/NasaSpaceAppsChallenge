@@ -19,6 +19,38 @@
 <h2>Calibration against known analogs</h2>
 {% if calibration %}
 <p>Flag for review: {{ "yes — " ~ (calibration.flag_reasons | join(", ")) if calibration.flag_for_review else "no" }}.</p>
+<p>Each known site is scored on a {{ calibration.known_sites[0].footprint.radius_km | num if calibration.known_sites else "profile-radius" }} km circle centred on its own coordinates.
+Ranks are conservative: an area that was not fully refined counts ahead of the site when its upper bound exceeds the site's score
+({{ calibration.areas_passed_screening | default("—") }} areas passed screening).</p>
+<table class="calibration">
+<thead><tr><th scope="col">Known site</th><th scope="col">In scope</th><th scope="col">Rank</th><th scope="col">Percentile</th>
+<th scope="col">Score</th><th scope="col">Limiting criterion</th><th scope="col">Vetoed by</th><th scope="col">Area</th></tr></thead>
+<tbody>
+{% for k in calibration.known_sites %}
+<tr><td>{{ k.name or k.site_id }}<br><small>{{ "%.2f, %.2f" | format(k.footprint.lat, k.footprint.lon) }}</small></td>
+<td>{% if k.in_scope %}yes{% else %}no<br><small>{{ k.out_of_scope_reason }}</small>{% endif %}</td>
+<td>{{ k.rank if k.rank is not none else "—" }}</td><td>{{ k.percentile_rank | pct }}</td>
+<td>{{ k.overall_score | num }}</td><td>{{ k.limiting_criterion or "—" }}</td><td>{{ k.rejected_by or "—" }}</td>
+<td>{% if k.area_id %}<code>{{ k.area_id }}</code>{% else %}—{% endif %}</td></tr>
+{% else %}
+<tr><td colspan="8">No known analog site is relevant to this profile.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% if calibration.stability %}{% set st = calibration.stability %}
+<h3>Weight stability</h3>
+<p>{{ st.draws }} draws, category weights multiplied by U(1 − {{ st.range }}, 1 + {{ st.range }}), seed {{ st.seed }}:
+share of draws in which each of the top {{ st.top_k }} areas stays in the top {{ st.top_k }}.</p>
+{% if st.candidates %}
+<table class="stability">
+<thead><tr><th scope="col">Area</th><th scope="col">Share in top {{ st.top_k }}</th></tr></thead>
+<tbody>
+{% for c in st.candidates %}<tr><td><code>{{ c.area_id }}</code></td><td>{{ c.share_in_top_k | pct }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}<p>No ranked areas.</p>{% endif %}
+{% endif %}
 {% else %}
 <p>Calibration was not run for this result; scores are not validated against known Earth analog sites.</p>
 {% endif %}

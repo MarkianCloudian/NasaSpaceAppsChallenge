@@ -144,3 +144,51 @@ def test_weight_stability_deterministic_and_fast(tmp_path):
     # range 0: weights unchanged, the baseline top k stays in the top k in every draw
     flat = weight_stability(results, profile, dict(cfg, range=0.0))
     assert all(c["share_in_top_k"] == 1.0 for c in flat["candidates"])
+
+
+def test_run_writes_calibration_and_about_page_shows_it(tmp_path):
+    """T079: `analog run` on the synthetic fixture writes calibration.json; about.html shows it."""
+    import json
+
+    from analogfinder.site import build
+
+    cfg = tmp_path / "config"
+    shutil.copytree(ROOT / "config", cfg)
+    known = json.loads((cfg / "known_analogs.json").read_text())
+    known["sites"].append(
+        {
+            "site_id": "blob-b",
+            "name": "Synthetic blob B",
+            "lat": 23.3,
+            "lon": 11.5,
+            "bodies": ["Mars"],
+            "purposes": [],
+            "analog_for": "test",
+            "reference": "test",
+        }
+    )
+    (cfg / "known_analogs.json").write_text(json.dumps(known))
+    prof = tmp_path / "profiles"
+    prof.mkdir()
+    shutil.copy(ROOT / "profiles" / "mars-rover-jezero.json", prof)
+    freeze(prof / "mars-rover-jezero.json", cfg, prof)
+    opts = pipeline.Options(config_dir=cfg, data_dir=tmp_path / "data", profiles_dir=prof)
+    res = pipeline.run_all(REF, opts, synthetic_hooks())
+    assert [s["name"] for s in res.stages][-1] == "calibrate"
+    cal_path = opts.data_dir / "runs" / res.run_id / "calibration.json"
+    cal = json.loads(cal_path.read_text())
+    assert cal == res.calibration
+    sites = {s["site_id"]: s for s in cal["known_sites"]}
+    assert len(sites) == 10
+    assert sites["blob-b"]["in_scope"] and sites["blob-b"]["rank"] is not None
+    # the real sites lie outside the small synthetic grid
+    assert not sites["atacama-yungay"]["in_scope"]
+    assert sites["atacama-yungay"]["out_of_scope_reason"]
+
+    d, _ = build.build_site(opts.data_dir, cfg, prof, res.run_id)
+    about = (d / "about.html").read_text()
+    assert "Synthetic blob B" in about and "Weight stability" in about
+    assert "Calibration was not run" not in about
+
+    again = pipeline.run_all(REF, opts, synthetic_hooks())
+    assert again.reused and again.run_id == res.run_id and again.calibration == cal

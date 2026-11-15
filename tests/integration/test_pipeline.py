@@ -84,10 +84,16 @@ def test_interrupt_in_refine_then_resume(opts, caplog):
 def test_run_directory_and_index(opts):
     res = pipeline.run_all(REF, opts, hooks())
     rdir = opts.data_dir / "runs" / res.run_id
-    assert set(files(rdir)) == {"_COMPLETE", "run_record.json", "results.json", "results.csv"}
+    assert set(files(rdir)) == {
+        "_COMPLETE",
+        "run_record.json",
+        "results.json",
+        "results.csv",
+        "calibration.json",
+    }
     rec = json.loads((rdir / "run_record.json").read_text())
     assert rec["run_id"] == res.run_id == res.results["run_record"]["run_id"]
-    assert set(rec["stage_fingerprints"]) == {"grid", "screen", "refine", "rank"}
+    assert set(rec["stage_fingerprints"]) == {"grid", "screen", "refine", "rank", "calibrate"}
     index = json.loads((opts.data_dir / "runs" / "index.json").read_text())
     assert [r["run_id"] for r in index[REF]] == [res.run_id]
     assert pipeline.resolve_ref(opts.data_dir, latest=True) == REF
@@ -106,6 +112,9 @@ def test_skip_refine_is_a_screening_preview(opts):
     assert all(x["upper_bound"] is not None for x in c if x["status"] == "screened_only")
     assert res.results["run_record"]["refinement"]["stop"] == "skipped"
     assert res.exit_code == errors.NO_CANDIDATES
+    assert {s["name"]: s["status"] for s in res.stages}["calibrate"] == "skipped"  # D-025
+    assert res.calibration is None
+    assert not (opts.data_dir / "runs" / res.run_id / "calibration.json").exists()
 
 
 def test_overrides_change_refine_fingerprint_only(opts):

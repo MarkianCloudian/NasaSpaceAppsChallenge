@@ -1,6 +1,7 @@
 """Stage orchestration, stage cache and run records (research D-011, D-023, D-025, task T054).
 
-`run_all(profile_ref, options)` executes `check → grid → screen → refine → rank` for a frozen
+`run_all(profile_ref, options)` executes `check → grid → screen → refine → rank → calibrate`
+for a frozen
 profile (`id@version`; drafts are refused). Every stage output lives once in
 `data/stages/<stage>/<stage_fp>/` (atomic, `_COMPLETE`); a complete entry is reused and logged
 "reused". Stage fingerprints follow the D-011 table:
@@ -10,6 +11,7 @@ profile (`id@version`; drafts are refused). Every stage output lives once in
             criteria, hash of config/mineral_classes.json, settings emit.*, coverage.*,
             refine.* (after CLI overrides), site_top_n
   rank    ← refine fp (with `--skip-refine`: screen fp + "skipped")
+  calibrate ← rank fp, hash of config/known_analogs.json, settings stability.* (T079)
 
 `run_id` = fingerprint of the ordered (stage, fingerprint) list. `data/runs/<run_id>/` holds
 `run_record.json` (with `stage_fingerprints`) and hard links (or copies) of the final files;
@@ -18,11 +20,12 @@ already complete prints "reused <run_id>" and writes nothing. Stage code only re
 output directory through `StageContext.stage_dir` and never builds paths itself.
 
 `--skip-refine` = screening preview (D-025): no refinement, `refinement.stop = "skipped"`,
-every area `screened_only` with its `upper_bound`, nothing ranked.
+every area `screened_only` with its `upper_bound`, nothing ranked, `calibrate` skipped.
 
 The stage functions are replaceable (`Hooks`) so tests can run the orchestration on synthetic
 data; by default they are `grid.build.build_grid`, `screening.run` + `grouping.group` (T048,
-T049), `refine.scheduler.schedule` (T052) and `rank.rank` (T053). The `check` stage runs
+T049), `refine.scheduler.schedule` (T052), `rank.rank` (T053) and `calibrate.calibrate`
+(T077, T078). The `check` stage runs
 `sources.check.run(ctx)` (T023) when that module exists, else it is reported as skipped.
 """
 
@@ -47,6 +50,7 @@ from .types import Profile, StageContext
 log = logging.getLogger("analogfinder.pipeline")
 
 FINAL_FILES = ("results.json", "results.csv")
+CALIBRATION_FILES = ("calibration.json",)
 DEFAULT_HOOKS = None  # tests may set a Hooks instance used when run_all gets none
 INDEX = "index.json"
 
@@ -59,7 +63,7 @@ class Options:
     skip_refine: bool = False
     max_terrain_areas: int | None = None
     max_mineral_areas: int | None = None
-    until: str = "rank"  # last stage to execute: screen | refine | rank
+    until: str = "calibrate"  # last stage to execute: screen | refine | rank | calibrate
 
 
 def _missing(name: str, task: str):
@@ -87,6 +91,7 @@ class Hooks:
     group: Callable[[Any, StageContext], list] | None = None  # -> list[CandidateArea]
     refine: Callable[..., tuple] | None = None  # (areas, ctx) -> (areas, summary)
     rank: Callable[..., dict] | None = None
+    calibrate: Callable[..., dict] | None = None  # (results, screening, ctx, areas=...) -> dict
     sources: Callable[[Options], Any] | None = None  # -> SourceRegistry
 
     def resolved(self) -> Hooks:
@@ -114,6 +119,7 @@ class Hooks:
             group=self.group or _import("analogfinder.grouping:group", "T049"),
             refine=self.refine or _import("analogfinder.refine.scheduler:schedule", "T052"),
             rank=self.rank or _import("analogfinder.rank:rank", "T053"),
+            calibrate=self.calibrate or _import("analogfinder.calibrate:calibrate", "T077"),
             sources=self.sources or sources_default,
         )
 
@@ -167,6 +173,16 @@ def rank_fp(refine: str | None, screen: str) -> str:
     if refine is None:
         return storage.fingerprint({"screen": screen, "refine": "skipped"})
     return storage.fingerprint({"refine": refine})
+
+
+def calibrate_fp(rank: str, settings, known_analogs) -> str:
+    return storage.fingerprint(
+        {
+            "rank": rank,
+            "known_analogs": storage.fingerprint(known_analogs),
+            "stability": settings["stability"],
+        }
+    )
 
 
 def run_id_of(stage_fps: list[tuple[str, str]]) -> str:
@@ -245,6 +261,7 @@ class RunResult:
     stages: list[dict] = field(default_factory=list)
     results: dict | None = None
     exit_code: int = errors.OK
+    calibration: dict | None = None
 
 
 def run_all(profile_ref: str, options: Options, hooks: Hooks | None = None) -> RunResult:
@@ -344,11 +361,18 @@ def run_all(profile_ref: str, options: Options, hooks: Hooks | None = None) -> R
 
     kfp = rank_fp(rfp, sfp)
     fps.append(("rank", kfp))
+    cfp = None
+    if refine_dir is not None and options.until == "calibrate":  # preview: skipped (D-025)
+        cfp = calibrate_fp(kfp, settings, config.load_known_analogs(options.config_dir))
+        fps.append(("calibrate", cfp))
     run_id = run_id_of(fps)
     if storage.is_complete(storage.run_dir(data_dir, run_id)):
         log.info("reused %s", run_id)
-        res = stage_io.read_json(storage.run_dir(data_dir, run_id) / "results.json")
-        return RunResult(run_id, True, stages, res, _exit(res))
+        rdir = storage.run_dir(data_dir, run_id)
+        res = stage_io.read_json(rdir / "results.json")
+        cal = rdir / CALIBRATION_FILES[0]
+        cal = stage_io.read_json(cal) if cal.exists() else None
+        return RunResult(run_id, True, stages, res, _exit(res), cal)
 
     def do_rank(tmp: Path) -> None:
         kctx = replace(ctx, stage="rank", stage_dir=tmp)
@@ -384,7 +408,30 @@ def run_all(profile_ref: str, options: Options, hooks: Hooks | None = None) -> R
             "fingerprint": kfp,
         }
     )
-    return _finish(profile_ref, profile, data_dir, fps, stages, kdir, started)
+    if cfp is None:
+        if refine_dir is None:
+            stages.append({"name": "calibrate", "status": "skipped", "fingerprint": kfp})
+        return _finish(profile_ref, profile, data_dir, fps, stages, kdir, started)
+
+    def do_calibrate(tmp: Path) -> None:
+        cctx = replace(ctx, stage="calibrate", stage_dir=tmp)
+        h.calibrate(
+            stage_io.read_json(kdir / "results.json"),
+            stage_io.load_screening(sdir),
+            cctx,
+            areas=stage_io.load_areas(refine_dir / "areas.json"),
+        )
+
+    cdir, reused, secs = _stage(data_dir, "calibrate", cfp, do_calibrate)
+    stages.append(
+        {
+            "name": "calibrate",
+            "status": "reused" if reused else "complete",
+            "seconds": secs,
+            "fingerprint": cfp,
+        }
+    )
+    return _finish(profile_ref, profile, data_dir, fps, stages, kdir, started, cdir)
 
 
 def _exit(results: dict | None) -> int:
@@ -395,13 +442,15 @@ def _exit(results: dict | None) -> int:
     return exit_code(results)
 
 
-def _finish(ref, profile, data_dir, fps, stages, kdir, started) -> RunResult:
+def _finish(ref, profile, data_dir, fps, stages, kdir, started, cdir=None) -> RunResult:
     run_id = run_id_of(fps)
     rdir = storage.run_dir(data_dir, run_id)
     results = stage_io.read_json(kdir / "results.json") if kdir else None
+    cal = cdir / CALIBRATION_FILES[0] if cdir else None
+    calibration = stage_io.read_json(cal) if cal is not None and cal.exists() else None
     if storage.is_complete(rdir):
         log.info("reused %s", run_id)
-        return RunResult(run_id, True, stages, results, _exit(results))
+        return RunResult(run_id, True, stages, results, _exit(results), calibration)
     if rdir.exists():
         rdir.rename(rdir.with_name(f"{rdir.name}.partial-stale-{int(time.time())}"))
     if results is not None:
@@ -429,9 +478,12 @@ def _finish(ref, profile, data_dir, fps, stages, kdir, started) -> RunResult:
         for name in FINAL_FILES if kdir else ():
             if (kdir / name).exists():
                 _materialise(kdir / name, tmp / name)
+        for name in CALIBRATION_FILES if cdir else ():
+            if (cdir / name).exists():
+                _materialise(cdir / name, tmp / name)
     _write_index(data_dir, ref, run_id)
     log.info("run: %s", run_id)
-    return RunResult(run_id, False, stages, results, _exit(results))
+    return RunResult(run_id, False, stages, results, _exit(results), calibration)
 
 
 def run_stage(name: str, ctx: StageContext) -> Path:  # contract signature (internal-api.md)
@@ -453,4 +505,18 @@ def print_summary(res: RunResult, out=None) -> None:
         ranked = [c for c in res.results["candidates"] if c["status"] == "ranked"]
         print(
             json.dumps({"ranked": len(ranked), "top": [c["area_id"] for c in ranked[:5]]}), file=out
+        )
+    if res.calibration is not None:
+        cal = res.calibration
+        print(
+            json.dumps(
+                {
+                    "calibration": {
+                        "flag_for_review": cal["flag_for_review"],
+                        "flag_reasons": cal["flag_reasons"],
+                        "known_sites": {s["site_id"]: s["rank"] for s in cal["known_sites"]},
+                    }
+                }
+            ),
+            file=out,
         )
