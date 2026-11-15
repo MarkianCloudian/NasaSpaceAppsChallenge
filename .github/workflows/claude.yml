@@ -25,16 +25,30 @@ jobs:
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
+      # Spec Kit task issues (label "speckit") are developed on branch dev-app-v1:
+      # check it out so CLAUDE.md, the spec and the contracts are visible, and branch from it.
+      # All other issues and pull requests keep the default behaviour.
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          ref: ${{ contains(github.event.issue.labels.*.name, 'speckit') && 'dev-app-v1' || '' }}
+
+      - name: Install uv (Python toolchain for Earth Analog Finder tasks)
+        if: contains(github.event.issue.labels.*.name, 'speckit')
+        uses: astral-sh/setup-uv@v6
 
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          # Spec Kit task issues: new branches start from dev-app-v1 (empty = repository default)
+          base_branch: ${{ contains(github.event.issue.labels.*.name, 'speckit') && 'dev-app-v1' || '' }}
+
+          # Let Claude run the project's toolchain to meet each task's "Done" checks
+          claude_args: '--allowedTools "Bash(uv:*),Bash(uvx:*),Bash(git:*),Bash(ruff:*),Bash(pytest:*),Bash(python:*)"'
 
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
