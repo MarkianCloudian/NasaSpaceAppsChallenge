@@ -7,6 +7,8 @@
 * `grid_id` = fingerprint of {cell definition, all layer fingerprints};
 * a complete grid with that id is reused untouched;
 * otherwise layers whose fingerprint exists in another grid version are copied, the rest built;
+* a failing primary builder is retried with the entry's `fallback` (same outputs; the manifest
+  layers name the fallback `source_id`);
 * a failing layer is recorded in `missing_layers` (status `partial`), other layers are kept
   (FR-012); a partial grid is retried on the next call, reusing its good layers;
 * no percentiles are computed here (they are per run, research D-021).
@@ -41,7 +43,7 @@ BUILDERS: dict[str, str] = {
     "climatology_rest": "analogfinder.grid.builders.climatology_rest:ClimatologyRestBuilder",
     "landcover_fractions": "analogfinder.grid.builders.landcover_fractions:LandcoverBuilder",
     "dem_block_stats": "analogfinder.grid.builders.dem_block_stats:DemBlockStatsBuilder",
-    "gridded_netcdf": "analogfinder.grid.builders.gridded_netcdf:GridNetcdfBuilder",
+    "gridded_netcdf": "analogfinder.grid.builders.gridded_netcdf:GriddedNetcdfBuilder",
 }
 
 
@@ -77,7 +79,32 @@ def layer_fingerprint(entry: Mapping, versions: Mapping[str, str]) -> str:
     sid = entry["source_id"]
     if sid not in versions:
         raise ConfigError(f"layers.json: layer {entry['layer_id']!r} uses unknown source {sid!r}")
-    return storage.fingerprint({"entry": entry, "dataset_version": versions[sid]})
+    key = {"entry": entry, "dataset_version": versions[sid]}
+    fb = entry.get("fallback")
+    if fb:
+        fsid = fb["source_id"]
+        if fsid not in versions:
+            raise ConfigError(
+                f"layers.json: fallback of {entry['layer_id']!r} uses unknown source {fsid!r}"
+            )
+        key["fallback_dataset_version"] = versions[fsid]
+    return storage.fingerprint(key)
+
+
+def fallback_entry(entry: Mapping) -> dict | None:
+    """The registry entry to build when the primary builder fails (research D-008, D-019).
+
+    The `fallback` block names only `builder`, `source_id`, `params` (and optionally
+    `resampling`); the primary's `layer_id` and `outputs` are kept so exactly the same layers
+    are written. Returns None when the entry has no fallback."""
+    fb = entry.get("fallback")
+    if not fb:
+        return None
+    merged = {k: v for k, v in entry.items() if k != "fallback"}
+    merged.update(builder=fb["builder"], source_id=fb["source_id"], params=fb.get("params", {}))
+    if "resampling" in fb:
+        merged["resampling"] = fb["resampling"]
+    return merged
 
 
 def resolve_builder(name: str, builders: Mapping | None = None):
@@ -152,7 +179,25 @@ def _build(entry: dict, fp: str, ctx: StageContext, builders, candidates) -> lis
             shutil.copy2(src_dir / layer["file"], ctx.stage_dir / layer["file"])
         log.info("%s: copied from grid %s", entry["layer_id"], src_dir.name)
         return [dict(layer) for layer in layers]
-    layers = resolve_builder(entry["builder"], builders).build(entry, ctx)
+    try:
+        layers = resolve_builder(entry["builder"], builders).build(entry, ctx)
+    except Exception as exc:  # noqa: BLE001 - any primary failure may be rescued by the fallback
+        fb = fallback_entry(entry)
+        if fb is None:
+            raise
+        log.warning(
+            "%s: primary %s/%s failed (%s); building fallback %s/%s",
+            entry["layer_id"],
+            entry["builder"],
+            entry["source_id"],
+            exc,
+            fb["builder"],
+            fb["source_id"],
+        )
+        try:
+            layers = resolve_builder(fb["builder"], builders).build(fb, ctx)
+        except Exception as exc2:  # noqa: BLE001
+            raise RuntimeError(f"primary failed: {exc}; fallback failed: {exc2}") from exc2
     got = {layer["layer_id"] for layer in layers}
     if got != set(expected):
         raise RuntimeError(f"builder returned layers {sorted(got)}, expected {sorted(expected)}")

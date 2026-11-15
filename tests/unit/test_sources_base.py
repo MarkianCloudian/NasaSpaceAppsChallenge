@@ -131,7 +131,7 @@ def test_registry_routes_and_manual(tmp_path, monkeypatch):
     cfg = {
         "sources": [
             dict(entry("lit"), route="manual"),
-            dict(entry("web"), route="http"),
+            dict(entry("web"), route="ftp"),  # a route with no adapter
             dict(entry("fake"), route="fake-route"),
         ]
     }
@@ -145,7 +145,7 @@ def test_registry_routes_and_manual(tmp_path, monkeypatch):
     assert isinstance(reg.get("lit"), ManualSource)
     with pytest.raises(SourceError, match="manual source cannot be fetched"):
         reg.get("lit").fetch({"x": 1})
-    with pytest.raises(SourceError, match="no adapter registered for route 'http'"):
+    with pytest.raises(SourceError, match="no adapter registered for route 'ftp'"):
         reg.get("web")
     with pytest.raises(SourceError, match="unknown source"):
         reg.get("nope")

@@ -13,6 +13,8 @@ one adapter per entry.
 from __future__ import annotations
 
 import abc
+import importlib
+import logging
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,6 +22,8 @@ from pathlib import Path
 from .. import storage
 from ..errors import SourceError
 from ..types import FetchResult
+
+log = logging.getLogger("analogfinder.sources.base")
 
 
 @dataclass
@@ -130,6 +134,26 @@ class ManualSource(Source):
 
 ADAPTERS: dict[str, type[Source]] = {"manual": ManualSource}
 
+# Modules whose import registers the adapter of each route. `SourceRegistry.from_config` imports
+# them, so a real run sees every adapter without the caller importing them first.
+ROUTE_MODULES: dict[str, str] = {
+    "http": "analogfinder.sources.http",
+    "stac": "analogfinder.sources.stac",
+    "earthdata": "analogfinder.sources.earthdata",
+    "rest": "analogfinder.sources.power",
+}
+
+
+def load_adapters() -> None:
+    """Import every adapter module in ROUTE_MODULES (each registers itself)."""
+    for route, module in ROUTE_MODULES.items():
+        if route in ADAPTERS:
+            continue
+        try:
+            importlib.import_module(module)
+        except ImportError as e:  # route stays unregistered; `get` reports it per source
+            log.warning("adapter for route %r not available: %s", route, e)
+
 
 def register_adapter(route: str):
     """Class decorator: `@register_adapter("http")` makes the route available to registries."""
@@ -150,7 +174,9 @@ class SourceRegistry:
 
     @classmethod
     def from_config(cls, sources_config: dict, data_dir, adapters: dict | None = None):
-        """`adapters` maps route -> adapter class (default: everything registered)."""
+        """`adapters` maps route -> adapter class (default: every adapter in ROUTE_MODULES)."""
+        if adapters is None:
+            load_adapters()
         table = ADAPTERS if adapters is None else adapters
         out, missing = {}, {}
         for e in sources_config["sources"]:
