@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 import traceback
+from pathlib import Path
 
 from . import errors
 
@@ -109,7 +110,87 @@ def _freeze(args) -> int:
     return errors.OK
 
 
-HANDLERS = {"validate": _validate, "freeze": _freeze}  # command name -> callable(args) -> int
+def _grid(args) -> int:
+    """`analog grid`: build or reuse the global grid version."""
+    import json
+    import logging
+
+    from . import config
+    from .grid.build import build_grid
+    from .sources.base import SourceRegistry
+    from .types import StageContext
+
+    p = argparse.ArgumentParser(prog="analog grid")
+    p.parse_args(args.rest)
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.WARNING if args.quiet else logging.INFO,
+        stream=sys.stderr,
+    )
+    settings = config.load_settings(args.config_dir)
+    sources = SourceRegistry.from_config(config.load_sources(args.config_dir), args.data_dir)
+    ctx = StageContext(
+        stage="grid",
+        stage_dir=Path(args.data_dir),
+        data_dir=Path(args.data_dir),
+        config_dir=Path(args.config_dir),
+        settings=settings,
+        profile=None,
+        grid=None,
+        sources=sources,
+        log=logging.getLogger("analogfinder.grid"),
+    )
+    result = build_grid(ctx)
+    m = result.grid.manifest
+    missing = [x["layer_id"] for x in m.get("missing_layers", [])]
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "grid_id": result.grid.grid_id,
+                    "reused": result.reused,
+                    "status": m["status"],
+                    "missing_layers": missing,
+                }
+            )
+        )
+    else:
+        verb = "reused" if result.reused else "built"
+        print(f"{verb} {result.grid.grid_id}")
+        if missing:
+            print(f"partial: missing layers {', '.join(missing)}", file=sys.stderr)
+    return errors.PARTIAL_RESULT if m["status"] == "partial" else errors.OK
+
+
+def _status(args) -> int:
+    """`analog status`: grid versions, runs and stage-cache entries with completeness."""
+    import json
+
+    from .grid.build import status_report
+
+    rep = status_report(args.data_dir)
+    if args.json:
+        print(json.dumps(rep, indent=1))
+        return errors.OK
+    print(f"grids ({len(rep['grids'])}):")
+    for g in rep["grids"]:
+        extra = f" missing: {', '.join(g['missing_layers'])}" if g["missing_layers"] else ""
+        state = g["status"] if g["complete"] else "INCOMPLETE"
+        print(f"  {g['grid_id']}  {state}  {g['layers']} layers{extra}")
+    print(f"runs ({len(rep['runs'])}):")
+    for r in rep["runs"]:
+        print(f"  {r['run_id']}  {'complete' if r['complete'] else 'INCOMPLETE'}")
+    print(f"stage cache ({len(rep['stages'])}):")
+    for s in rep["stages"]:
+        print(f"  {s['stage']}/{s['fingerprint']}  {'complete' if s['complete'] else 'INCOMPLETE'}")
+    return errors.OK
+
+
+HANDLERS = {
+    "validate": _validate,
+    "freeze": _freeze,
+    "grid": _grid,
+    "status": _status,
+}  # command name -> callable(args) -> int
 
 
 def main(argv=None) -> int:
