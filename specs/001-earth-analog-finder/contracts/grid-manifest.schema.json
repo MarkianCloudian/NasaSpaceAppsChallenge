@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "grid-manifest.schema.json",
+  "title": "Grid version manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grid_id",
+    "cell",
+    "land_mask",
+    "layers",
+    "built_at",
+    "status"
+  ],
+  "properties": {
+    "grid_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    },
+    "cell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "size_deg",
+        "width",
+        "height",
+        "crs",
+        "origin"
+      ],
+      "properties": {
+        "size_deg": {
+          "type": "number"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "crs": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "land_mask": {
+      "type": "string"
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/layer"
+      }
+    },
+    "built_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "build_seconds": {
+      "type": "number"
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "partial"
+      ]
+    },
+    "missing_layers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "layer_id",
+          "reason"
+        ],
+        "properties": {
+          "layer_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer_id",
+        "quantity",
+        "unit",
+        "statistic",
+        "source_id",
+        "dataset_version",
+        "resampling",
+        "file",
+        "fingerprint"
+      ],
+      "properties": {
+        "layer_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "quantity": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "statistic": {
+          "type": "string"
+        },
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "dataset_version": {
+          "type": "string"
+        },
+        "reference_period": {
+          "type": "string"
+        },
+        "resampling": {
+          "enum": [
+            "none",
+            "bilinear",
+            "area_mean",
+            "block_stats",
+            "majority"
+          ]
+        },
+        "baseline_m": {
+          "type": "number"
+        },
+        "file": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "nodata": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "qc_rule": {
+          "type": "string",
+          "description": "Quality-control rule applied to the source data (e.g. MODIS QC bit decoding)"
+        },
+        "registration": {
+          "type": "object",
+          "description": "Source raster registration handled by the builder (dem_block_stats, research D-023)",
+          "additionalProperties": false,
+          "required": ["kind", "half_pixel_offset_deg"],
+          "properties": {
+            "kind": {"enum": ["cell", "grid"]},
+            "half_pixel_offset_deg": {"type": "number"}
+          }
+        }
+      }
+    }
+  }
+}

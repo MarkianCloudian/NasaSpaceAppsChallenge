@@ -1,0 +1,165 @@
+{
+ "run_record": {
+  "run_id": "a10793070306fdb6",
+  "profile": {
+   "id": "mars-rover-jezero",
+   "version": "1.0.0",
+   "content_hash": "1c35925a630ceca649feba8686d2d2983c8d4e7437129c37e1c16a6f59b1732e"
+  },
+  "grid_id": "5ca1ab1e5ca1ab1e",
+  "settings": {
+   "grid": {
+    "cell_size_deg": 0.05,
+    "lat_range": [
+     -90,
+     90
+    ],
+    "reference_years": [
+     2023
+    ]
+   },
+   "screen_min_score": 0.3,
+   "max_area_km2": 2500,
+   "refine": {
+    "batch": 10,
+    "max_terrain_areas": 200,
+    "max_mineral_areas": 60,
+    "bound_margin": 0.05,
+    "terrain_hint": true
+   },
+   "site_top_n": 30,
+   "stability": {
+    "draws": 500,
+    "range": 0.25,
+    "seed": 42,
+    "top_k": 10
+   },
+   "known_radius_default_km": 50,
+   "cleanup_keep": {
+    "grids": 2,
+    "runs": 5
+   },
+   "paths": {
+    "data": "data",
+    "public": "public"
+   },
+   "earth_impossible_quantities": [
+    "surface_pressure",
+    "gravity",
+    "radiation_dose",
+    "lunar_surface_temp"
+   ],
+   "footprint": {
+    "min_valid_fraction": 0.5,
+    "benchmark_budget_s": 180
+   },
+   "coverage": {
+    "min_coverage_fraction": 0.5
+   },
+   "emit": {
+    "min_band_depth": 0.02,
+    "min_cluster_pixels": 4,
+    "max_granules_per_area": 5
+   },
+   "http": {
+    "timeout_s": 60
+   }
+  },
+  "sources": [
+   {
+    "source_id": "emit-l2b-min",
+    "dataset_version": "002",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "etopo-2022",
+    "dataset_version": "2022",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "modis-mcd12c1",
+    "dataset_version": "061",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "modis-mod11c3",
+    "dataset_version": "061",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "modis-mod13c2",
+    "dataset_version": "061",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "nasa-power",
+    "dataset_version": "verify",
+    "accessed": "2026-11-15"
+   },
+   {
+    "source_id": "nasadem-pc",
+    "dataset_version": "verify",
+    "accessed": "2026-11-15"
+   }
+  ],
+  "started_at": "2026-11-15T20:37:29+00:00",
+  "finished_at": "2026-11-15T20:37:29+00:00",
+  "stages": [
+   {
+    "name": "grid",
+    "status": "complete",
+    "seconds": 0.0,
+    "fingerprint": "5ca1ab1e5ca1ab1e"
+   },
+   {
+    "name": "screen",
+    "status": "complete",
+    "seconds": 0.017,
+    "fingerprint": "dfeab3a906c40fac"
+   },
+   {
+    "name": "refine",
+    "status": "complete",
+    "seconds": 0.003,
+    "fingerprint": "5e5a1da7a1da07cc"
+   },
+   {
+    "name": "rank",
+    "status": "complete",
+    "fingerprint": "d90ad20cd3624f7e"
+   }
+  ],
+  "counts": {
+   "evaluated_cells": 760,
+   "rejected_by_constraint": 12,
+   "rejected_by_criterion": {
+    "no_vegetation": 683,
+    "hyperarid": 0
+   },
+   "areas": 0,
+   "refined": 0,
+   "insufficient_data": 0,
+   "ranked": 0
+  },
+  "placeholder_values": false,
+  "dedup_applied": false,
+  "percentile_population": {
+   "name": "eligible",
+   "cells": 748
+  },
+  "stage_fingerprints": {
+   "grid": "5ca1ab1e5ca1ab1e",
+   "screen": "dfeab3a906c40fac",
+   "refine": "5e5a1da7a1da07cc",
+   "rank": "d90ad20cd3624f7e"
+  },
+  "refinement": {
+   "stop": "bound_reached",
+   "proven_top": 3,
+   "terrain_areas": 3,
+   "mineral_areas": 3,
+   "emit_covered_areas": 3
+  }
+ },
+ "candidates": []
+}

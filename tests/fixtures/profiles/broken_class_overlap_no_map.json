@@ -1,0 +1,207 @@
+{
+  "profile_id": "fixture-minimal",
+  "version": "1.0.0",
+  "body": "Mars",
+  "purpose": "rover_expedition",
+  "reference_site": {
+    "name": "fixture",
+    "lat": 18.44,
+    "lon": 77.45,
+    "radius_km": 20
+  },
+  "search_constraints": {
+    "lat_range": [
+      -52,
+      52
+    ]
+  },
+  "min_confidence": 0.6,
+  "percentile_population": "eligible",
+  "criteria": [
+    {
+      "unit": "mm/yr",
+      "value_status": "placeholder",
+      "sources": {
+        "target": [
+          {
+            "source_id": "fx-literature",
+            "citation": "fixture"
+          }
+        ],
+        "earth": [
+          "fx-climate"
+        ]
+      },
+      "justification": "fixture",
+      "id": "hyperarid",
+      "category": "atmosphere",
+      "quantity": "precip_annual",
+      "statistic": "annual total",
+      "evaluation_scale": "grid",
+      "comparison": "normalized",
+      "scoring_rule": "percentile",
+      "target": {
+        "percentile": 0.0
+      },
+      "tolerance": {
+        "percentile": 0.05
+      },
+      "veto": 0.2,
+      "rank_in_category": 1,
+      "footprint_statistic": "mean"
+    },
+    {
+      "unit": "deg",
+      "value_status": "placeholder",
+      "sources": {
+        "target": [
+          {
+            "source_id": "fx-literature",
+            "citation": "fixture"
+          }
+        ],
+        "earth": [
+          "fx-dem"
+        ]
+      },
+      "justification": "fixture",
+      "id": "regional_slope",
+      "category": "terrain",
+      "quantity": "slope_p90",
+      "statistic": "p90",
+      "baseline_m": 926,
+      "evaluation_scale": "grid",
+      "comparison": "absolute",
+      "scoring_rule": "trapezoid",
+      "target": {
+        "min": 0,
+        "max": 5
+      },
+      "tolerance": {
+        "high": 5
+      },
+      "veto": null,
+      "rank_in_category": 1,
+      "footprint_statistic": "p90"
+    },
+    {
+      "unit": "deg",
+      "value_status": "placeholder",
+      "sources": {
+        "target": [
+          {
+            "source_id": "fx-literature",
+            "citation": "fixture"
+          }
+        ],
+        "earth": [
+          "fx-fine-dem"
+        ]
+      },
+      "justification": "fixture",
+      "id": "traverse_slope",
+      "category": "operations",
+      "quantity": "slope_p90",
+      "statistic": "p90",
+      "baseline_m": 30,
+      "evaluation_scale": "refinement",
+      "comparison": "absolute",
+      "scoring_rule": "trapezoid",
+      "target": {
+        "min": 0,
+        "max": 15
+      },
+      "tolerance": {
+        "high": 10
+      },
+      "veto": 0.3,
+      "rank_in_category": 1,
+      "footprint_statistic": "p90"
+    },
+    {
+      "unit": "1",
+      "value_status": "placeholder",
+      "sources": {
+        "target": [
+          {
+            "source_id": "fx-literature",
+            "citation": "fixture"
+          }
+        ],
+        "earth": [
+          "fx-emit"
+        ]
+      },
+      "justification": "fixture",
+      "id": "mineral_classes",
+      "category": "geology",
+      "quantity": "mineral_class_fractions",
+      "statistic": "fractions",
+      "evaluation_scale": "refinement",
+      "comparison": "absolute",
+      "scoring_rule": "class_overlap",
+      "target": {
+        "classes": [
+          "fe_mg_smectite",
+          "carbonate"
+        ]
+      },
+      "veto": null,
+      "rank_in_category": 1,
+      "footprint_statistic": "mean",
+      "valid_bands": "fixture"
+    },
+    {
+      "unit": "1",
+      "value_status": "placeholder",
+      "sources": {
+        "target": [
+          {
+            "source_id": "fx-literature",
+            "citation": "fixture"
+          }
+        ],
+        "earth": [
+          "fx-emit"
+        ]
+      },
+      "justification": "fixture",
+      "id": "aqueous_minerals",
+      "category": "resources",
+      "quantity": "aqueous_mineral_present",
+      "statistic": "any",
+      "evaluation_scale": "refinement",
+      "comparison": "absolute",
+      "scoring_rule": "boolean",
+      "target": {
+        "value": true
+      },
+      "veto": null,
+      "rank_in_category": 1,
+      "footprint_statistic": "fraction_true"
+    },
+    {
+      "unit": "m/s2",
+      "value_status": "placeholder",
+      "sources": {
+        "target": [
+          {
+            "source_id": "fx-literature",
+            "citation": "fixture"
+          }
+        ],
+        "earth": []
+      },
+      "justification": "fixture",
+      "id": "gravity",
+      "category": "operations",
+      "quantity": "gravity",
+      "statistic": "surface value",
+      "evaluation_scale": "grid",
+      "comparison": "not_comparable",
+      "target": {
+        "value": 3.71
+      }
+    }
+  ]
+}

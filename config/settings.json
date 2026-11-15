@@ -1,0 +1,53 @@
+{
+  "grid": {
+    "cell_size_deg": 0.05,
+    "lat_range": [-90, 90],
+    "reference_years": [2023]
+  },
+  "screen_min_score": 0.3,
+  "max_area_km2": 2500,
+  "refine": {
+    "batch": 10,
+    "max_terrain_areas": 200,
+    "max_mineral_areas": 60,
+    "bound_margin": 0.05,
+    "terrain_hint": true
+  },
+  "site_top_n": 30,
+  "stability": {
+    "draws": 500,
+    "range": 0.25,
+    "seed": 42,
+    "top_k": 10
+  },
+  "known_radius_default_km": 50,
+  "cleanup_keep": {
+    "grids": 2,
+    "runs": 5
+  },
+  "paths": {
+    "data": "data",
+    "public": "public"
+  },
+  "earth_impossible_quantities": [
+    "surface_pressure",
+    "gravity",
+    "radiation_dose",
+    "lunar_surface_temp"
+  ],
+  "footprint": {
+    "min_valid_fraction": 0.5,
+    "benchmark_budget_s": 180
+  },
+  "coverage": {
+    "min_coverage_fraction": 0.5
+  },
+  "emit": {
+    "min_band_depth": 0.02,
+    "min_cluster_pixels": 4,
+    "max_granules_per_area": 5
+  },
+  "http": {
+    "timeout_s": 60
+  }
+}

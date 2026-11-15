@@ -1,0 +1,51 @@
+{% extends "base.html.j2" %}
+{% set c = row.c %}
+{% block title %}{{ row.coords }} — Earth Analog Finder{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="../index.html">← all candidates ({{ profile.profile_id }})</a></p>
+<h1>{% if c.rank %}#{{ c.rank }} · {% endif %}{{ row.coords }}</h1>
+<dl class="facts">
+  <dt>Overall score (match)</dt><dd>{{ row.score }}</dd>
+  {% if c.upper_bound is not none %}<dt>Upper bound</dt><dd>{{ row.bound }}</dd>{% endif %}
+  <dt>Confidence</dt><dd>{{ row.confidence }}</dd>
+  <dt>Limiting criterion</dt><dd>{{ row.limiting }}</dd>
+  <dt>Status</dt><dd>{{ c.status | replace("_", " ") }}{% if c.rejected_by %} (rejected by {{ c.rejected_by }}){% endif %}</dd>
+  <dt>Label</dt><dd>{{ row.label }}{% if c.known_site %} — matches {{ c.known_site }}{% endif %}</dd>
+  <dt>Representative point</dt><dd>{{ c.representative.lat | num(5) }}, {{ c.representative.lon | num(5) }}</dd>
+  <dt>Evaluated circle</dt><dd>radius {{ c.footprint.radius_km }} km around the representative point</dd>
+  <dt>Area</dt><dd>{{ c.area_km2 | num }} km² ({{ c.n_cells }} grid cells of 0.05°)</dd>
+  <dt>Refinement</dt><dd>{{ c.refinement_level }}</dd>
+</dl>
+
+<table class="criteria sortable">
+<caption>Per-criterion comparison with {{ profile.reference_site.name }}</caption>
+<thead><tr>
+  <th scope="col">Criterion</th><th scope="col">Category</th><th scope="col">Earth value</th>
+  <th scope="col">Mars target</th><th scope="col">Deviation</th>
+  <th scope="col" data-sort="num">Deviation / tolerance</th><th scope="col" data-sort="num">Score</th>
+  <th scope="col" data-sort="num">Weight</th><th scope="col">Comparison</th><th scope="col">Data source</th>
+</tr></thead>
+<tbody>
+{% for k in row.criteria %}
+<tr class="state-{{ k.state }}">
+  <td>{{ k.id }}</td><td>{{ k.category }}</td>
+  <td>{{ k.earth }}{% if k.state == "unknown" %} <span class="badge">no data</span>{% endif %}</td>
+  <td>{{ k.target }}</td><td>{{ k.deviation }}</td><td>{{ k.ratio }}</td><td>{{ k.score }}</td>
+  <td>{{ k.weight }}</td>
+  <td>{% if k.mode == "relative" %}<span class="badge rel">relative</span>{% else %}{{ k.mode }}{% endif %}</td>
+  <td>{{ k.source }}{% if k.scale %} ({{ k.scale }}){% endif %}{% if k.note %}<br><small>{{ k.note }}</small>{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+{% if c.analogy_limits %}
+<h2>Limits of the analogy</h2>
+<ul class="limits">
+{% for l in c.analogy_limits %}<li>{{ l }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+<p class="note">Scores: 1 = within the Mars target range, 0 = one tolerance or more outside.
+  Relative criteria compare percentiles within Earth's land population, not absolute values.</p>
+{% endblock %}

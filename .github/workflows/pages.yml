@@ -1,0 +1,35 @@
+# Deploys the committed static site in public/ to GitHub Pages (task T067, research D-022).
+# No Python and no pipeline run in CI: `analog publish` writes public/ locally, it is committed,
+# and a push to main that touches public/ (or a manual run) deploys it.
+# Repository setting required once: Settings -> Pages -> Source: "GitHub Actions".
+name: Deploy site to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["public/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+      - id: deployment
+        uses: actions/deploy-pages@v5

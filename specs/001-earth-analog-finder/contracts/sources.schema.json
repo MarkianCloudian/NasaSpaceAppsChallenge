@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sources.schema.json",
+  "title": "Data-source entries (research D-004)",
+  "type": "object",
+  "required": [
+    "sources"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_id",
+          "provider",
+          "dataset",
+          "dataset_version",
+          "body",
+          "route",
+          "login",
+          "request_unit",
+          "format",
+          "rate_limit",
+          "licence",
+          "citation",
+          "docs_url"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]*$"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "dataset": {
+            "type": "string"
+          },
+          "dataset_version": {
+            "type": "string"
+          },
+          "body": {
+            "enum": [
+              "Earth",
+              "Mars",
+              "Moon"
+            ]
+          },
+          "route": {
+            "enum": [
+              "stac",
+              "earthdata",
+              "http",
+              "rest",
+              "manual"
+            ]
+          },
+          "endpoint": {
+            "type": "string",
+            "format": "uri"
+          },
+          "collection": {
+            "type": "string"
+          },
+          "login": {
+            "enum": [
+              "none",
+              "earthdata",
+              "api_key"
+            ]
+          },
+          "request_unit": {
+            "enum": [
+              "tile",
+              "bbox",
+              "point",
+              "granule",
+              "file"
+            ]
+          },
+          "format": {
+            "type": "string"
+          },
+          "rate_limit": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "requests",
+              "per_seconds"
+            ],
+            "properties": {
+              "requests": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "per_seconds": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          },
+          "retries": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "fallback": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resolution": {
+            "type": "string"
+          },
+          "coverage": {
+            "type": "string"
+          },
+          "licence": {
+            "type": "string"
+          },
+          "citation": {
+            "type": "string"
+          },
+          "docs_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "route": {
+                  "not": {
+                    "const": "manual"
+                  }
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "endpoint"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

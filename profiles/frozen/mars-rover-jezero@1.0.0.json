@@ -1,0 +1,512 @@
+{
+  "profile_id": "mars-rover-jezero",
+  "version": "1.0.0",
+  "body": "Mars",
+  "purpose": "rover_expedition",
+  "reference_site": {
+    "name": "Jezero crater delta",
+    "lat": 18.44,
+    "lon": 77.45,
+    "radius_km": 20,
+    "crs": "IAU_2015:49900",
+    "citation": "Mars 2020 Perseverance landing site (Jezero crater western delta)"
+  },
+  "search_constraints": {
+    "lat_range": [
+      -52,
+      52
+    ],
+    "max_landcover_fraction": {
+      "urban": 0.1,
+      "cropland": 0.2,
+      "water": 0.5,
+      "snow_ice": 0.5
+    }
+  },
+  "min_confidence": 0.6,
+  "percentile_population": "eligible",
+  "criteria": [
+    {
+      "id": "hyperarid",
+      "category": "atmosphere",
+      "quantity": "precip_annual",
+      "statistic": "annual total",
+      "unit": "mm/yr",
+      "evaluation_scale": "grid",
+      "comparison": "normalized",
+      "scoring_rule": "percentile",
+      "target": {
+        "percentile": 0.0
+      },
+      "tolerance": {
+        "percentile": 0.05
+      },
+      "veto": 0.2,
+      "rank_in_category": 1,
+      "footprint_statistic": "mean",
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "mars-climate-db",
+            "citation": "Mars Climate Database v6.2 web interface (LMD/OU/IAA/ESA/CNES), climatology average solar scenario, 18.44N 77.45E, 10 m above surface, all Ls (0-345 by 15) x all local times; retrieved 2026-11-15: water vapour column annual mean 0.0126 kg/m2 (about 12.6 precipitable micrometres), volume mixing ratio annual mean 1.3e-4; no liquid precipitation in the present-day Mars climate; target = driest end of the Earth population (p* = 0)",
+            "version": "6.2",
+            "accessed": "2026-11-15"
+          },
+          {
+            "source_id": "literature",
+            "citation": "Haberle, R. M. et al. (2001) On the possibility of liquid water on present-day Mars. J. Geophys. Res. 106, doi:10.1029/2000JE001360 (surface liquid water at most transient; evaporation limits it)",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": [
+          "nasa-power",
+          "era5-cds"
+        ]
+      },
+      "justification": "Liquid precipitation on Mars is zero, which no Earth site reproduces in absolute terms; the analogue is the driest Earth land, so the criterion is a percentile of the eligible population (D-021).",
+      "note": "Design mapping: the Mars value (no liquid precipitation, ~12.6 precipitable micrometres of water vapour) lies below any Earth value, so the target is the driest Earth percentile, as for dry_air."
+    },
+    {
+      "id": "dry_air",
+      "category": "atmosphere",
+      "quantity": "rh2m_mean",
+      "statistic": "annual mean",
+      "unit": "percent",
+      "evaluation_scale": "grid",
+      "comparison": "normalized",
+      "scoring_rule": "percentile",
+      "target": {
+        "percentile": 0.0
+      },
+      "tolerance": {
+        "percentile": 0.1
+      },
+      "veto": null,
+      "rank_in_category": 2,
+      "footprint_statistic": "mean",
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "mars-climate-db",
+            "citation": "Mars Climate Database v6.2 web interface (LMD/OU/IAA/ESA/CNES), climatology average solar scenario, 18.44N 77.45E, 10 m above surface, all Ls (0-345 by 15) x all local times; retrieved 2026-11-15: water vapour column annual mean 0.0126 kg/m2 (about 12.6 precipitable micrometres), volume mixing ratio annual mean 1.3e-4; far drier than any Earth site, hence target percentile 0 (driest). MCD has no relative-humidity variable",
+            "version": "6.2",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": [
+          "nasa-power",
+          "era5-cds"
+        ]
+      },
+      "justification": "Very dry near-surface air controls weathering and dust behaviour along a rover traverse; Mars values are far below Earth's range, so the driest Earth percentile is the target."
+    },
+    {
+      "id": "no_vegetation",
+      "category": "biology",
+      "quantity": "ndvi_max",
+      "statistic": "max of calendar-month climatology",
+      "unit": "index",
+      "evaluation_scale": "grid",
+      "comparison": "absolute",
+      "scoring_rule": "trapezoid",
+      "target": {
+        "min": null,
+        "max": 0.15
+      },
+      "tolerance": {
+        "high": 0.1
+      },
+      "veto": 0.5,
+      "rank_in_category": 1,
+      "footprint_statistic": "p90",
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "literature",
+            "citation": "Mars has no vegetation cover; the Mars-equivalent NDVI is that of Earth bare ground",
+            "accessed": "2026-11-15"
+          },
+          {
+            "source_id": "modis-mod13c2",
+            "citation": "Earth bare-ground reference: annual max of the 2023 MOD13C2 v061 monthly NDVI (modis_cmg builder) over land cells with MCD12C1 2023 barren fraction > 0.9, |lat| <= 52: p50 0.106, p90 0.147, p95 0.166, p99 0.222 (n = 644004 cells). Target max = p90 rounded (0.15); tolerance 0.10 puts the veto (score 0.5) at NDVI 0.20, between p95 and p99",
+            "version": "061",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": [
+          "modis-mod13c2"
+        ]
+      },
+      "justification": "A Mars analogue for rover operations and remote sensing must be essentially plant-free; p90 over the footprint catches vegetated patches inside the circle.",
+      "note": "Was max 0.10 / tolerance 0.05 (data-model placeholder): that vetoed NDVI > 0.125, i.e. about half of MODIS-barren land, incl. Death Valley (footprint p90 0.148) and the MDRS area in Utah (0.149). Vegetated mineral analogs (Lake Salda 0.58, Rio Tinto 0.67, Pilbara 0.30) stay vetoed: this profile targets plant-free terrain for a rover expedition."
+    },
+    {
+      "id": "barren_ground",
+      "category": "geology",
+      "quantity": "lc_frac_barren",
+      "statistic": "class-group fraction (0-1)",
+      "unit": "fraction",
+      "evaluation_scale": "grid",
+      "comparison": "absolute",
+      "scoring_rule": "trapezoid",
+      "target": {
+        "min": 0.7,
+        "max": null
+      },
+      "tolerance": {
+        "low": 1.0
+      },
+      "veto": null,
+      "rank_in_category": 2,
+      "footprint_statistic": "mean",
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "literature",
+            "citation": "Jezero is bare rock and regolith with no vegetation, i.e. barren fraction 1 in IGBP terms",
+            "accessed": "2026-11-15"
+          },
+          {
+            "source_id": "modis-mcd12c1",
+            "citation": "Sulla-Menashe, D., Friedl, M. A. User Guide to Collection 6 MODIS Land Cover (MCD12Q1 and MCD12C1) Product, Table 3: IGBP class 16 Barren = at least 60% of area non-vegetated barren (sand, rock, soil) with less than 10% vegetation",
+            "version": "061",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": [
+          "modis-mcd12c1"
+        ]
+      },
+      "justification": "Exposed rock and regolith are needed both for geological analogy and for spectral detection of minerals.",
+      "note": "Team decision 2026-11-15 (option B): no veto, tolerance low 1.0, so a non-barren footprint lowers the score instead of excluding the site (barren 0 -> 0.3, 0.25 -> 0.55, >= 0.7 -> 1.0; a tolerance <= 0.7 would score 0 and act as a veto through the geometric mean). This keeps sparse, low-NDVI shrublands as candidates; vegetated sites are still excluded by the no_vegetation veto. Check on MCD12C1 2023, 20 km footprint mean: Atacama Yungay 1.00, Sahara 1.00, Namib 1.00, Danakil 1.00, Death Valley 0.92, MDRS Utah 0.73; Lake Salda, Rio Tinto, Pilbara 0.00 (open shrubland/grassland)."
+    },
+    {
+      "id": "thermal_swing",
+      "category": "thermal",
+      "quantity": "lst_diurnal_amplitude",
+      "statistic": "mean of monthly (day - night)",
+      "unit": "degC",
+      "evaluation_scale": "grid",
+      "comparison": "normalized",
+      "scoring_rule": "percentile",
+      "target": {
+        "percentile": 1.0
+      },
+      "tolerance": {
+        "percentile": 0.15
+      },
+      "veto": null,
+      "rank_in_category": 1,
+      "footprint_statistic": "mean",
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "mars-climate-db",
+            "citation": "Mars Climate Database v6.2 web interface (LMD/OU/IAA/ESA/CNES), climatology average solar scenario, 18.44N 77.45E, 10 m above surface, all Ls (0-345 by 15) x all local times; retrieved 2026-11-15: diurnal surface temperature amplitude, mean over Ls 84.7 K (75-95 K by season); larger than on Earth, hence target percentile 1 (largest)",
+            "version": "6.2",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": [
+          "modis-mod11c3"
+        ]
+      },
+      "justification": "Large day-night swings stress hardware and drive thermal weathering; the Mars amplitude exceeds Earth's range, so the largest Earth percentile is the target."
+    },
+    {
+      "id": "regional_slope",
+      "category": "terrain",
+      "quantity": "slope_p90",
+      "statistic": "block p90 of native slope",
+      "unit": "deg",
+      "baseline_m": 926,
+      "evaluation_scale": "grid",
+      "comparison": "absolute",
+      "scoring_rule": "trapezoid",
+      "target": {
+        "min": 0,
+        "max": 6.2
+      },
+      "tolerance": {
+        "high": 5
+      },
+      "veto": null,
+      "rank_in_category": 2,
+      "footprint_statistic": "p90",
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "mola-hrsc-blend",
+            "citation": "slope p90 = 6.2 deg at 926 m baseline over the 20 km footprint (coverage 1.00), planetary/dem.py (T072), Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+            "version": "verify",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": [
+          "etopo-2022"
+        ]
+      },
+      "justification": "Regional slope at ~1 km baseline screens out mountainous terrain before refinement; baseline equals the slope_p90_1km layer output (D-020).",
+      "note": "Target = upper bound at the Mars value (as traverse_slope)."
+    },
+    {
+      "id": "traverse_slope",
+      "category": "operations",
+      "quantity": "slope_p90",
+      "statistic": "p90 over footprint",
+      "unit": "deg",
+      "baseline_m": 30,
+      "evaluation_scale": "refinement",
+      "comparison": "absolute",
+      "scoring_rule": "trapezoid",
+      "target": {
+        "min": 0,
+        "max": 12.0
+      },
+      "tolerance": {
+        "high": 10
+      },
+      "veto": 0.3,
+      "rank_in_category": 1,
+      "footprint_statistic": "p90",
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "usgs-mars-dtm-stac",
+            "citation": "slope p90 = 12.0 deg at 30 m baseline over the 20 km footprint (coverage 1.00), planetary/dem.py (T072), mosaic of CTX DTMs F05_037752_2008_XN_20N282W__F05_037607_2008_XN_20N282W, K13_058574_1983_XN_18N282W__K13_058640_1983_XN_18N282W, J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W, D14_032794_1989_XN_18N282W__D15_033216_1989_XN_18N282W, J10_048842_1986_XN_18N282W__J11_048908_1986_XN_18N282W, F05_037818_1977_XN_17N282W__F04_037330_2008_XN_20N282W, F04_037396_1985_XN_18N282W__F17_042315_1986_XN_18N282W, K14_058996_1985_XN_18N282W__K14_058930_1986_XN_18N282W",
+            "version": "verify",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": [
+          "nasadem-pc",
+          "copdem-glo30-pc"
+        ]
+      },
+      "justification": "Traversability at rover scale is the top operational constraint for a rover expedition; slopes must be computed at the same 30 m baseline on both bodies.",
+      "note": "Target = upper bound at the Mars value: Earth terrain no steeper than the rover site; flatter is not penalised."
+    },
+    {
+      "id": "roughness",
+      "category": "terrain",
+      "quantity": "rms_roughness",
+      "statistic": "median over footprint",
+      "unit": "m",
+      "baseline_m": 30,
+      "evaluation_scale": "refinement",
+      "comparison": "absolute",
+      "scoring_rule": "trapezoid",
+      "target": {
+        "min": 0.37,
+        "max": 0.37
+      },
+      "tolerance": {
+        "low": 0.5,
+        "high": 3
+      },
+      "veto": null,
+      "rank_in_category": 1,
+      "footprint_statistic": "median",
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "usgs-mars-dtm-stac",
+            "citation": "median RMS of detrended neighbour differences = 0.37 m at 30 m baseline over the 20 km footprint (coverage 1.00), planetary/dem.py (T072), same CTX DTMs as traverse_slope",
+            "version": "verify",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": [
+          "nasadem-pc",
+          "copdem-glo30-pc"
+        ]
+      },
+      "justification": "Surface roughness at the 30 m baseline describes obstacle density and terrain texture relevant for rover navigation testing.",
+      "note": "Target at the Mars value; the existing tolerances (low 0.5 m, high 3 m) define the accepted band, so both much smoother and much rougher terrain lose score."
+    },
+    {
+      "id": "mineral_classes",
+      "category": "geology",
+      "quantity": "mineral_class_fractions",
+      "statistic": "class area fractions over valid pixels",
+      "unit": "fraction",
+      "evaluation_scale": "refinement",
+      "comparison": "absolute",
+      "scoring_rule": "class_overlap",
+      "target": {
+        "classes": [
+          "fe_mg_smectite",
+          "carbonate",
+          "olivine"
+        ]
+      },
+      "veto": null,
+      "rank_in_category": 1,
+      "footprint_statistic": "mean",
+      "value_status": "measured",
+      "class_map": "config/mineral_classes.json",
+      "valid_bands": "CRISM summary parameters D2300, MIN2295_2480, OLINDEX3 vs EMIT L2B 0.4-2.5 um; BD1900_2/BD1400 (Earth water vapour) and parameters beyond 2.5 um excluded (mineral_classes.json excluded_parameters)",
+      "sources": {
+        "target": [
+          {
+            "source_id": "literature",
+            "citation": "Goudge, T. A. et al. (2015) Assessing the mineralogy of the watershed and fan deposits of the Jezero crater paleolake system, Mars. J. Geophys. Res. Planets 120, 775-808, doi:10.1002/2014JE004782 (CRISM: western fan with Fe/Mg-smectite, Mg-carbonate and olivine)",
+            "accessed": "2026-11-15"
+          },
+          {
+            "source_id": "literature",
+            "citation": "Horgan, B. H. N. et al. (2020) The mineral diversity of Jezero crater: Evidence for possible lacustrine carbonates on Mars. Icarus 339, 113526, doi:10.1016/j.icarus.2019.113526 (CRISM: Marginal Carbonates near the western delta)",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": [
+          "emit-l2b-min"
+        ]
+      },
+      "justification": "Fe/Mg-smectite, carbonate and olivine co-occurring in the delta are the geological signature of Jezero's past lake; EMIT can detect the clay and carbonate classes on Earth.",
+      "note": "Target from published CRISM analyses (Goudge et al. 2015; Horgan et al. 2020). Supporting T073/T074 extraction over the 20 km footprint (FRT000047A3, FRT00005850): olivine 0.26, Fe/Mg-smectite 0.0058, carbonate 0.0005 of valid pixels; the CRISM thresholds are a project choice, not published values (research.md, T036), so these fractions are indicative only. EMIT cannot detect olivine."
+    },
+    {
+      "id": "aqueous_minerals",
+      "category": "resources",
+      "quantity": "aqueous_mineral_present",
+      "statistic": "any aqueous class present",
+      "unit": "boolean",
+      "evaluation_scale": "refinement",
+      "comparison": "absolute",
+      "scoring_rule": "boolean",
+      "target": {
+        "value": true
+      },
+      "veto": null,
+      "rank_in_category": 1,
+      "footprint_statistic": "fraction_true",
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "literature",
+            "citation": "Goudge, T. A. et al. (2015) Assessing the mineralogy of the watershed and fan deposits of the Jezero crater paleolake system, Mars. J. Geophys. Res. Planets 120, 775-808, doi:10.1002/2014JE004782 (CRISM: western fan with Fe/Mg-smectite, Mg-carbonate and olivine)",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": [
+          "emit-l2b-min"
+        ]
+      },
+      "justification": "Aqueous minerals are both a resource indicator and the scientific reason for visiting the site."
+    },
+    {
+      "id": "pressure",
+      "category": "atmosphere",
+      "quantity": "surface_pressure",
+      "statistic": "annual mean",
+      "unit": "kPa",
+      "evaluation_scale": "grid",
+      "comparison": "not_comparable",
+      "target": {
+        "value": 0.72
+      },
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "mars-climate-db",
+            "citation": "Mars Climate Database v6.2 web interface (LMD/OU/IAA/ESA/CNES), climatology average solar scenario, 18.44N 77.45E, 10 m above surface, all Ls (0-345 by 15) x all local times; retrieved 2026-11-15: surface pressure annual mean 723 Pa (615-827 Pa)",
+            "version": "6.2",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": []
+      },
+      "justification": "Earth surface pressure (~100 kPa) cannot reproduce Mars' thin atmosphere; kept for the analogy-limits statement."
+    },
+    {
+      "id": "gravity",
+      "category": "operations",
+      "quantity": "gravity",
+      "statistic": "surface value",
+      "unit": "m/s2",
+      "evaluation_scale": "grid",
+      "comparison": "not_comparable",
+      "target": {
+        "value": 3.73
+      },
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "literature",
+            "citation": "NASA NSSDCA Mars Fact Sheet (D. R. Williams), https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html, last updated 19 May 2025: surface gravity (mean) 3.73 m/s2 (equator 3.69, pole 3.73); Earth 9.82",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": []
+      },
+      "justification": "Gravity cannot be reproduced on Earth; it affects wheel-soil interaction and is stated as an analogy limit."
+    },
+    {
+      "id": "thermal_inertia",
+      "category": "thermal",
+      "quantity": "thermal_inertia",
+      "statistic": "footprint mean",
+      "unit": "J m-2 K-1 s-1/2",
+      "evaluation_scale": "grid",
+      "comparison": "not_comparable",
+      "target": {
+        "min": 200,
+        "max": 450
+      },
+      "value_status": "measured",
+      "sources": {
+        "target": [
+          {
+            "source_id": "literature",
+            "citation": "Martinez, G. M. et al. (2022) Thermal inertia and albedo at Jezero crater as observed from the Mars 2020 MEDA instrument. 53rd Lunar and Planetary Science Conference, abstract 2024: THEMIS (100 m/px) thermal inertia along the Perseverance traverse 200-450 SI units; MEDA in situ 200 (sand) - 600 (bedrock), first 221 sols",
+            "accessed": "2026-11-15"
+          }
+        ],
+        "earth": []
+      },
+      "justification": "No global Earth thermal-inertia layer exists in the grid; kept to describe surface material and as an analogy limit."
+    }
+  ],
+  "removed_criteria": [
+    {
+      "id": "wind",
+      "reason": "Low relevance for a rover expedition; Mars wind values are model-only (FR-005)."
+    },
+    {
+      "id": "landform",
+      "reason": "No automatic global Earth landform classification (delta, paleolake) available (FR-005)."
+    },
+    {
+      "id": "subsurface_feature",
+      "reason": "No global Earth dataset of pits or lava tubes (FR-005)."
+    }
+  ],
+  "notes": "v1 profile. All targets sourced (T036, 2026-11-15): terrain from T072 (CTX DTMs, MOLA+HRSC), mineral classes from published CRISM analyses (Goudge et al. 2015; Horgan et al. 2020), climate from the Mars Climate Database v6.2, gravity from the NSSDCA fact sheet, thermal inertia from THEMIS (Martinez et al. 2022); no_vegetation and barren_ground are Earth bare-ground equivalents checked on MODIS 2023 data (see criterion notes). hyperarid, dry_air and thermal_swing are percentile design mappings of Mars values outside the Earth range. Reviewed by MarkianCloudian, 15 November 2026.",
+  "weights": {
+    "hyperarid": 0.08424,
+    "dry_air": 0.02808,
+    "no_vegetation": 0.034014,
+    "mineral_classes": 0.115986,
+    "barren_ground": 0.038662,
+    "thermal_swing": 0.080574,
+    "roughness": 0.163605,
+    "regional_slope": 0.054535,
+    "traverse_slope": 0.345126,
+    "aqueous_minerals": 0.055178
+  },
+  "weights_method": "roc×roc",
+  "content_hash": "48d1c0b3a63c64fdeb79b6a2d761b53e382be597e07cbcbedd5cf0c7c600b964",
+  "frozen_at": "2026-11-15"
+}

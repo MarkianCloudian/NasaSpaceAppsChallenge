@@ -1,0 +1,22 @@
+{
+  "planet":"Moon",
+  "purpose": "Permanent Moonbase",
+  "contact": {
+    "email": "alice.w@example.com",
+    "criterias": {
+      "temperature": "+40C",
+      "humidity": "Anystate",
+      "zipCode": "12345"
+    },
+  "planet":"Mars", 
+  "purpose": "Rover Expiditions",
+  "contact": {
+    "email": "alice.w@example.com",
+    "criterias": {
+      "temperature": "+40C",
+      "humidity": "",
+      "zipCode": "12345"
+       }
+    }
+  }
+}

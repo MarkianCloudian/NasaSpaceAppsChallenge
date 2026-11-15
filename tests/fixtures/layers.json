@@ -1,0 +1,232 @@
+{
+  "layers": [
+    {
+      "layer_id": "mcd12c1_landcover",
+      "builder": "landcover_fractions",
+      "source_id": "fx-landcover",
+      "params": {
+        "fixture": true
+      },
+      "resampling": "none",
+      "outputs": [
+        {
+          "layer_id": "land_mask",
+          "quantity": "land_mask",
+          "unit": "boolean",
+          "statistic": "water fraction < 0.5"
+        },
+        {
+          "layer_id": "lc_frac_water",
+          "quantity": "lc_frac_water",
+          "unit": "fraction",
+          "statistic": "class-group fraction (0-1)"
+        },
+        {
+          "layer_id": "lc_frac_forest",
+          "quantity": "lc_frac_forest",
+          "unit": "fraction",
+          "statistic": "class-group fraction (0-1)"
+        },
+        {
+          "layer_id": "lc_frac_grass_shrub",
+          "quantity": "lc_frac_grass_shrub",
+          "unit": "fraction",
+          "statistic": "class-group fraction (0-1)"
+        },
+        {
+          "layer_id": "lc_frac_wetland",
+          "quantity": "lc_frac_wetland",
+          "unit": "fraction",
+          "statistic": "class-group fraction (0-1)"
+        },
+        {
+          "layer_id": "lc_frac_cropland",
+          "quantity": "lc_frac_cropland",
+          "unit": "fraction",
+          "statistic": "class-group fraction (0-1)"
+        },
+        {
+          "layer_id": "lc_frac_urban",
+          "quantity": "lc_frac_urban",
+          "unit": "fraction",
+          "statistic": "class-group fraction (0-1)"
+        },
+        {
+          "layer_id": "lc_frac_snow_ice",
+          "quantity": "lc_frac_snow_ice",
+          "unit": "fraction",
+          "statistic": "class-group fraction (0-1)"
+        },
+        {
+          "layer_id": "lc_frac_barren",
+          "quantity": "lc_frac_barren",
+          "unit": "fraction",
+          "statistic": "class-group fraction (0-1)"
+        }
+      ],
+      "notes": "year = latest of grid.reference_years in config/settings.json (T010: 2019-2023); keep in sync."
+    },
+    {
+      "layer_id": "mod11c3_lst",
+      "builder": "modis_cmg",
+      "source_id": "fx-lst",
+      "params": {
+        "fixture": true
+      },
+      "resampling": "none",
+      "outputs": [
+        {
+          "layer_id": "lst_day_max",
+          "quantity": "land_surface_temp_day",
+          "unit": "degC",
+          "statistic": "max of monthly means"
+        },
+        {
+          "layer_id": "lst_night_min",
+          "quantity": "land_surface_temp_night",
+          "unit": "degC",
+          "statistic": "min of monthly means"
+        },
+        {
+          "layer_id": "lst_mean",
+          "quantity": "land_surface_temp",
+          "unit": "degC",
+          "statistic": "mean of monthly means"
+        },
+        {
+          "layer_id": "lst_amp",
+          "quantity": "lst_diurnal_amplitude",
+          "unit": "degC",
+          "statistic": "mean of monthly (day - night)"
+        }
+      ]
+    },
+    {
+      "layer_id": "mod13c2_ndvi",
+      "builder": "modis_cmg",
+      "source_id": "fx-ndvi",
+      "params": {
+        "fixture": true
+      },
+      "resampling": "none",
+      "outputs": [
+        {
+          "layer_id": "ndvi_max",
+          "quantity": "ndvi_max",
+          "unit": "index",
+          "statistic": "max of calendar-month climatology"
+        }
+      ],
+      "notes": "QC SDS name and keep rule to be verified against the MOD13C2 user guide in T040 (verify)."
+    },
+    {
+      "layer_id": "power_climate",
+      "builder": "climatology_rest",
+      "source_id": "fx-climate",
+      "params": {
+        "fixture": true
+      },
+      "resampling": "bilinear",
+      "outputs": [
+        {
+          "layer_id": "t2m_mean",
+          "quantity": "t2m_mean",
+          "unit": "degC",
+          "statistic": "annual mean"
+        },
+        {
+          "layer_id": "t2m_min",
+          "quantity": "t2m_min",
+          "unit": "degC",
+          "statistic": "annual minimum"
+        },
+        {
+          "layer_id": "t2m_max",
+          "quantity": "t2m_max",
+          "unit": "degC",
+          "statistic": "annual maximum"
+        },
+        {
+          "layer_id": "rh2m_mean",
+          "quantity": "rh2m_mean",
+          "unit": "percent",
+          "statistic": "annual mean"
+        },
+        {
+          "layer_id": "ws10m_mean",
+          "quantity": "ws10m_mean",
+          "unit": "m/s",
+          "statistic": "annual mean"
+        },
+        {
+          "layer_id": "precip_annual",
+          "quantity": "precip_annual",
+          "unit": "mm/yr",
+          "statistic": "annual total"
+        },
+        {
+          "layer_id": "insolation_mean",
+          "quantity": "insolation_mean",
+          "unit": "kWh/m2/day",
+          "statistic": "annual mean"
+        }
+      ],
+      "fallback": {
+        "builder": "gridded_netcdf",
+        "source_id": "era5-cds",
+        "params": {
+          "variables": [
+            "2m_temperature",
+            "2m_dewpoint_temperature",
+            "total_precipitation",
+            "10m_u_component_of_wind",
+            "10m_v_component_of_wind",
+            "surface_solar_radiation_downwards"
+          ],
+          "derived": {
+            "rh2m_mean": "magnus(t2m, d2m)",
+            "ws10m_mean": "hypot(u10, v10)"
+          },
+          "reference_years": "settings:grid.reference_years"
+        }
+      }
+    },
+    {
+      "layer_id": "etopo_terrain",
+      "builder": "dem_block_stats",
+      "source_id": "fx-dem",
+      "params": {
+        "fixture": true
+      },
+      "resampling": "block_stats",
+      "outputs": [
+        {
+          "layer_id": "elev_mean",
+          "quantity": "elevation",
+          "unit": "m",
+          "statistic": "block mean"
+        },
+        {
+          "layer_id": "relief",
+          "quantity": "relief",
+          "unit": "m",
+          "statistic": "block max - min",
+          "baseline_m": 926
+        },
+        {
+          "layer_id": "slope_p90_1km",
+          "quantity": "slope_p90",
+          "unit": "deg",
+          "statistic": "block p90 of native slope",
+          "baseline_m": 926
+        },
+        {
+          "layer_id": "elev_std",
+          "quantity": "elevation_std",
+          "unit": "m",
+          "statistic": "block standard deviation"
+        }
+      ]
+    }
+  ]
+}

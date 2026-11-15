@@ -1,0 +1,75 @@
+{
+  "version": "1.0.0",
+  "description": "Mineral hierarchy and CRISM <-> EMIT crosswalk (research D-010). Classes used in mineral_class_fractions are the subgroup ids.",
+  "partial_credit": {
+    "same_species": 1.0,
+    "same_subgroup": 0.7,
+    "same_group": 0.4,
+    "otherwise": 0.0
+  },
+  "groups": {
+    "phyllosilicate": {
+      "subgroups": {
+        "fe_mg_smectite": ["nontronite", "saponite", "montmorillonite"],
+        "al_oh_clay": ["kaolinite", "illite_muscovite"]
+      }
+    },
+    "carbonate": {
+      "subgroups": {
+        "carbonate": ["calcite", "dolomite", "magnesite", "hydromagnesite"]
+      }
+    },
+    "sulfate": {
+      "subgroups": {
+        "sulfate": ["gypsum", "jarosite", "alunite"]
+      }
+    },
+    "mafic": {
+      "subgroups": {
+        "olivine": ["olivine"],
+        "pyroxene": ["pyroxene"]
+      }
+    },
+    "fe_oxide": {
+      "subgroups": {
+        "fe_oxide": ["hematite", "goethite"]
+      }
+    }
+  },
+  "aqueous_groups": ["phyllosilicate", "carbonate", "sulfate"],
+  "crism_rules": [
+    {"class": "fe_mg_smectite", "parameter": "D2300", "threshold": 0.015, "status": "project_choice", "reference": "Viviano-Beck et al. 2014, JGR Planets 119, 1403-1431", "note": "Not a published detection threshold: Viviano-Beck et al. 2014 sec. 5.3 give only display stretches (lower limit 0; upper = 99th percentile of a 100+ scene cumulative histogram or the local 99.9th, values not tabulated) and say parameter strength does not give abundance (research.md, T036). Viviano-Beck 2014 Table 2 caveat: Mg-carbonate is also strongly > 0."},
+    {"class": "al_oh_clay", "parameter": "BD2210_2", "threshold": 0.01, "status": "project_choice", "reference": "Viviano-Beck et al. 2014", "note": "Not a published detection threshold: Viviano-Beck et al. 2014 sec. 5.3 give only display stretches (lower limit 0; upper = 99th percentile of a 100+ scene cumulative histogram or the local 99.9th, values not tabulated) and say parameter strength does not give abundance (research.md, T036). Table 2 caveat: gypsum and alunite also respond."},
+    {"class": "carbonate", "parameter": "MIN2295_2480", "threshold": 0.01, "status": "project_choice", "reference": "Viviano-Beck et al. 2014", "note": "Not a published detection threshold: Viviano-Beck et al. 2014 sec. 5.3 give only display stretches (lower limit 0; upper = 99th percentile of a 100+ scene cumulative histogram or the local 99.9th, values not tabulated) and say parameter strength does not give abundance (research.md, T036). Table 2 caveat: hydroxylated silicate + zeolite mixtures also respond; both overtones must be present."},
+    {"class": "sulfate", "parameter": "SINDEX2", "threshold": 0.02, "status": "project_choice", "reference": "Viviano-Beck et al. 2014", "note": "Not a published detection threshold: Viviano-Beck et al. 2014 sec. 5.3 give only display stretches (lower limit 0; upper = 99th percentile of a 100+ scene cumulative histogram or the local 99.9th, values not tabulated) and say parameter strength does not give abundance (research.md, T036). Table 2 caveat: ices also respond."},
+    {"class": "olivine", "parameter": "OLINDEX3", "threshold": 0.1, "status": "project_choice", "reference": "Viviano-Beck et al. 2014", "note": "Not a published detection threshold: Viviano-Beck et al. 2014 sec. 5.3 give only display stretches (lower limit 0; upper = 99th percentile of a 100+ scene cumulative histogram or the local 99.9th, values not tabulated) and say parameter strength does not give abundance (research.md, T036). Table 2 caveat: high-Ca pyroxene and Fe-phyllosilicates also respond."}
+  ],
+  "emit_matching": "Names are lower-cased; oxidation-state prefixes (fe2+, fe3+, fe2+fe3+, fe3+fe2+, mn2+, fe3+mn) are removed; the first component of a mixture (text before the first '+') is matched against the rules in order; if nothing matches, the whole name is tried. First matching rule wins. species null = ignored (not a mineral class).",
+  "emit_names": [
+    {"pattern": "^organic|plastic|paint|fiberglass|cyanide|^ree_|methane|vegetation|drygrass|sludge|greenslime", "species": null},
+    {"pattern": "nontronite", "species": "nontronite"},
+    {"pattern": "saponite", "species": "saponite"},
+    {"pattern": "montmorillonite", "species": "montmorillonite"},
+    {"pattern": "hydromagnesite", "species": "hydromagnesite"},
+    {"pattern": "magnesite", "species": "magnesite"},
+    {"pattern": "dolomite|dolo\\b|dolom", "species": "dolomite"},
+    {"pattern": "calcite", "species": "calcite"},
+    {"pattern": "gypsum|gyp\\b", "species": "gypsum"},
+    {"pattern": "jarosite|^jar\\b", "species": "jarosite"},
+    {"pattern": "alun", "species": "alunite"},
+    {"pattern": "kaol|halloysite|dickite|nacrite|^dick\\b", "species": "kaolinite"},
+    {"pattern": "illite|muscov|musc", "species": "illite_muscovite"},
+    {"pattern": "olivine", "species": "olivine"},
+    {"pattern": "pyroxene|hypersthene|diopside|augite|enstatite|bronzite|pigeonite|hedenbergite", "species": "pyroxene"},
+    {"pattern": "hematite", "species": "hematite"},
+    {"pattern": "goeth", "species": "goethite"}
+  ],
+  "unmapped_note": "EMIT library entries such as chlorite, vermiculite, beidellite, pyrophyllite, siderite, aragonite, kieserite, serpentine and silica are not in this v1 hierarchy and are ignored; add species here (new version) to count them.",
+  "excluded_parameters": [
+    {"parameter": "BD1900_2", "reason": "1.9 um hydration band overlaps Earth atmospheric water vapour"},
+    {"parameter": "BD1400", "reason": "1.4 um hydration band overlaps Earth atmospheric water vapour"},
+    {"parameter": "BD3000", "reason": "beyond 2.5 um: no EMIT coverage"},
+    {"parameter": "BD3400_2", "reason": "beyond 2.5 um: no EMIT coverage"},
+    {"parameter": "MIN2345_2537", "reason": "needs bands beyond 2.5 um: no EMIT coverage"}
+  ]
+}

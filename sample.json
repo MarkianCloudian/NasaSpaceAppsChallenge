@@ -1,0 +1,20 @@
+{
+"planet":"Moon",
+  "purpose": "Permanent MoonbaseS",
+  "eval": {
+    "criterias": {
+      "temperature": {"low": "+30C", "label": "+45C"},
+      "humidity": "20%",
+      "wind": "10m/s"
+    },
+"planet":"Mars", 
+  "purpose": "Rover Expiditions",
+  "eval": {
+    "criterias": {
+      "temperature": "+40C",
+      "humidity": "20%",
+      "wind": "7m/s"
+       }
+    }
+  }
+}

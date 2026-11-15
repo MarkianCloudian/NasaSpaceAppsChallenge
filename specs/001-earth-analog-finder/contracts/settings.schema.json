@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "settings.schema.json",
+  "title": "Pipeline settings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grid",
+    "screen_min_score",
+    "max_area_km2",
+    "site_top_n",
+    "stability",
+    "known_radius_default_km",
+    "cleanup_keep",
+    "paths",
+    "footprint",
+    "coverage",
+    "emit",
+    "refine"
+  ],
+  "properties": {
+    "grid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cell_size_deg",
+        "reference_years"
+      ],
+      "properties": {
+        "cell_size_deg": {
+          "const": 0.05
+        },
+        "lat_range": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "reference_years": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 2000
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "screen_min_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "max_area_km2": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "site_top_n": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "stability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "draws",
+        "range",
+        "seed",
+        "top_k"
+      ],
+      "properties": {
+        "draws": {
+          "type": "integer",
+          "minimum": 10
+        },
+        "range": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 0.9
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "top_k": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "known_radius_default_km": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "cleanup_keep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grids",
+        "runs"
+      ],
+      "properties": {
+        "grids": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "runs": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data",
+        "public"
+      ],
+      "properties": {
+        "data": {
+          "type": "string"
+        },
+        "public": {
+          "type": "string"
+        }
+      }
+    },
+    "earth_impossible_quantities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "footprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min_valid_fraction",
+        "benchmark_budget_s"
+      ],
+      "properties": {
+        "min_valid_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "benchmark_budget_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min_coverage_fraction"
+      ],
+      "properties": {
+        "min_coverage_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "emit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min_band_depth",
+        "min_cluster_pixels",
+        "max_granules_per_area"
+      ],
+      "properties": {
+        "min_band_depth": {
+          "type": "number",
+          "minimum": 0
+        },
+        "min_cluster_pixels": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_granules_per_area": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "http": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeout_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "refine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "batch",
+        "max_terrain_areas",
+        "max_mineral_areas",
+        "bound_margin",
+        "terrain_hint"
+      ],
+      "description": "Bound-driven refinement (research D-024)",
+      "properties": {
+        "batch": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_terrain_areas": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_mineral_areas": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bound_margin": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.5
+        },
+        "terrain_hint": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

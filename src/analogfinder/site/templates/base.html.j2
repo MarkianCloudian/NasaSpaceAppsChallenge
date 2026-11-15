@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Earth Analog Finder{% endblock %}</title>
+<link rel="stylesheet" href="{{ root }}assets/style.css">
+<script src="{{ root }}assets/map.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="{{ root }}index.html">Earth Analog Finder</a>
+  <nav>
+    <a href="{{ root }}index.html">Results</a>
+    <a href="{{ root }}method.html">Method</a>
+    <a href="{{ root }}about.html">Data &amp; run</a>
+  </nav>
+</header>
+<main>
+{% if unvalidated %}
+<div class="banner warn" role="note"><strong>{{ unvalidated_title }}.</strong>
+  Reasons: {{ unvalidated | join(", ") }}. Scores have not been checked against known Earth analog sites.</div>
+{% endif %}
+{% if preview %}
+<div class="banner warn" role="note"><strong>Screening preview — not ranked.</strong>
+  Fine terrain and mineral data were not used; areas are listed by their upper score bound.</div>
+{% endif %}
+{% if placeholder %}
+<div class="banner warn" role="note"><strong>Placeholder values.</strong>
+  Some Mars target values in this profile are not yet sourced; treat scores as provisional.</div>
+{% endif %}
+{% block content %}{% endblock %}
+</main>
+<footer class="foot">
+  Run <code>{{ rr.run_id }}</code> · profile <code>{{ rr.profile.id }}@{{ rr.profile.version }}</code>
+  · grid <code>{{ rr.grid_id }}</code> · NASA Space Apps Challenge 2026
+</footer>
+</body>
+</html>

@@ -1,0 +1,68 @@
+{% extends "base.html.j2" %}
+{% block title %}{{ profile.reference_site.name }} analogs on Earth — Earth Analog Finder{% endblock %}
+{% block content %}
+<h1>Earth analogs of {{ profile.reference_site.name }} ({{ profile.body }})</h1>
+<p class="lead">Profile <code>{{ profile.profile_id }}@{{ profile.version }}</code>, purpose
+  <em>{{ profile.purpose | replace("_", " ") }}</em>. Each place on Earth is compared with the Mars
+  reference site over a circle of {{ profile.reference_site.radius_km }} km radius.
+  {{ n_ranked }} area(s) ranked; {{ refinement }}.</p>
+{% if not dedup_applied %}
+<p class="note">Deduplication not applied: candidates are not yet labelled as known analogs or new candidates.</p>
+{% endif %}
+
+<figure class="map">
+<svg id="map" viewBox="0 0 {{ view_w }} {{ view_h }}" role="img"
+     aria-label="World map with {{ rows | length }} candidate areas" preserveAspectRatio="xMidYMid meet">
+  <rect class="sea" x="0" y="0" width="{{ view_w }}" height="{{ view_h }}"/>
+  <path class="land" d="{{ land }}"/>
+  {% for r in rows %}
+  <a href="{{ base }}{{ r.href }}" class="marker{% if r.c.label %} {{ r.c.label }}{% endif %}"
+     data-name="{{ r.coords }}" data-score="{{ r.bound if preview else r.score }}"
+     data-rank="{{ r.c.rank if r.c.rank else '' }}" data-limiting="{{ r.limiting }}">
+    <circle cx="{{ r.x }}" cy="{{ r.y }}" r="{{ 16 if loop.index <= 3 else 11 }}">
+      <title>{% if r.c.rank %}#{{ r.c.rank }} {% endif %}{{ r.coords }} — {{ r.bound if preview else r.score }}</title>
+    </circle>
+  </a>
+  {% endfor %}
+</svg>
+<figcaption>Circles: candidate areas (larger = top 3). Select a circle or a table row for details.
+  <span class="map-controls" hidden><button type="button" data-zoom="in">+</button>
+  <button type="button" data-zoom="out">−</button><button type="button" data-zoom="reset">Reset</button></span>
+</figcaption>
+</figure>
+
+{% if not rows %}
+<p class="empty">No candidates: no place on Earth passed screening and ranking for this profile
+  ({{ counts.evaluated_cells | default("?") }} land cells evaluated). See the
+  <a href="{{ root }}about.html">run record</a> for counts per rejecting criterion.</p>
+{% else %}
+<table class="results sortable" data-profile="{{ profile.profile_id }}">
+<caption>{{ "Screened areas by upper score bound" if preview else "Ranked candidate areas" }}
+  — profile {{ profile.profile_id }}@{{ profile.version }}</caption>
+<thead><tr>
+  {% if not preview %}<th scope="col" data-sort="num">Rank</th>{% endif %}
+  <th scope="col">Location</th>
+  <th scope="col" data-sort="num">{{ "Upper bound" if preview else "Match (overall score)" }}</th>
+  <th scope="col" data-sort="num">Confidence</th>
+  <th scope="col">Limiting criterion</th>
+  <th scope="col" data-sort="num">Area km²</th>
+  <th scope="col">Label</th>
+</tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+  {% if not preview %}<td>{{ r.c.rank }}</td>{% endif %}
+  <td><a href="{{ base }}{{ r.href }}">{{ r.coords }}</a></td>
+  <td>{{ r.bound if preview else r.score }}</td>
+  <td>{{ r.confidence }}</td>
+  <td>{{ r.limiting }}</td>
+  <td>{{ r.c.area_km2 | num }}</td>
+  <td>{{ r.label }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+<p class="note">Match = weighted geometric mean of per-criterion scores (0–100 %). Confidence = share of
+  criterion weight backed by Earth data. <a href="{{ root }}method.html">How scores are computed</a>.</p>
+{% endblock %}
