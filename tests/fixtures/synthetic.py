@@ -5,7 +5,9 @@ Regions (row slice, column slice):
   blob_a        Mars-like (barren, dry, bare, large thermal swing, gentle slopes)
   blob_b        Mars-like and a little drier than blob_a (should rank first)
   veto_area     Mars-like except dense vegetation (fails the no_vegetation veto)
-  missing_area  Mars-like but climate layers are NaN (UNKNOWN, lowers confidence)
+  missing_area  Mars-like zone whose core (`missing_core`) has NaN climate layers: the core
+                cells' 20 km footprints are mostly NaN, so climate criteria are UNKNOWN and
+                confidence drops, while the Mars-like margin keeps other criteria passing
   sea           last two columns: not land
 Everything else is a vegetated, wetter background that should not survive screening.
 All numbers are invented test values, not data.
@@ -27,7 +29,8 @@ REGIONS = {
     "blob_a": (slice(2, 9), slice(2, 11)),
     "blob_b": (slice(11, 18), slice(26, 36)),
     "veto_area": (slice(2, 9), slice(15, 22)),
-    "missing_area": (slice(12, 18), slice(13, 20)),
+    "missing_area": (slice(10, 20), slice(10, 24)),
+    "missing_core": (slice(12, 19), slice(13, 21)),
     "sea": (slice(0, ROWS), slice(COLS - 2, COLS)),
 }
 
@@ -170,7 +173,7 @@ def build_synthetic_grid() -> SyntheticGrid:
     g.layers["lc_frac_forest"][veto] = 0.6
     g.layers["lc_frac_barren"][veto] = 0.05
     for k in CLIMATE:
-        g.layers[k][REGIONS["missing_area"]] = np.nan
+        g.layers[k][REGIONS["missing_core"]] = np.nan
     sea = REGIONS["sea"]
     for k in g.layers:
         g.layers[k][sea] = np.nan

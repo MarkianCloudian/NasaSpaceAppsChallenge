@@ -43,7 +43,8 @@ def test_regions():
     assert np.all(L["lc_frac_barren"][a] > 0.9) and np.all(L["ndvi_max"][b] < 0.1)
     assert L["precip_annual"][b].max() < L["precip_annual"][a].min()  # blob_b driest
     assert np.all(L["ndvi_max"][REGIONS["veto_area"]] >= 0.5)
-    assert np.isnan(L["precip_annual"][REGIONS["missing_area"]]).all()
+    assert np.isnan(L["precip_annual"][REGIONS["missing_core"]]).all()
+    assert np.all(L["ndvi_max"][REGIONS["missing_area"]] < 0.1)  # Mars-like margin
     assert not g.land_mask[REGIONS["sea"]].any()
     li = g.land_index()
     assert li.rows.size == 20 * 38 and np.isfinite(g.land_vector("lst_amp")).all()
