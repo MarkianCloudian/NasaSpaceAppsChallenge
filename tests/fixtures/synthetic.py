@@ -130,6 +130,35 @@ class SyntheticGrid:
         m[REGIONS[name]] = True
         return m
 
+    def as_grid_version(self, grid_id: str = "5ca1ab1e5ca1ab1e"):
+        """GridVersion-like view (grid_id, manifest["cell"], land_index, land_vector, layer)."""
+        g = self
+
+        class _Grid:
+            def __init__(self):
+                self.grid_id = grid_id
+                self.path = None
+                self.manifest = {
+                    "cell": {
+                        "size_deg": g.cell_deg,
+                        "width": g.shape[1],
+                        "height": g.shape[0],
+                        "crs": "EPSG:4326",
+                        "origin": [g.lon_left, g.lat_top],
+                    }
+                }
+
+            def layer(self, layer_id):
+                return g.layers[layer_id]
+
+            def land_index(self):
+                return g.land_index()
+
+            def land_vector(self, layer_id):
+                return g.land_vector(layer_id)
+
+        return _Grid()
+
     def write_geotiffs(self, directory: Path) -> dict[str, Path]:
         """One single-band float32 GeoTIFF per layer (EPSG:4326), for grid-reading tests."""
         import rasterio
