@@ -1,9 +1,10 @@
 # Machine-local Spec Kit state — not meant to be shared.
 # Managed by the Specify CLI; safe to edit (your changes are preserved on refresh).
 
-# Local pointer to the current feature directory. Rewritten every time you
-# switch features, so it is per-checkout state rather than something to share.
-feature.json
+# Local pointer to the current feature directory. Normally per-checkout state;
+# this repository commits it so /speckit-* commands work right after cloning
+# (single active feature: specs/001-earth-analog-finder).
+# feature.json
 
 # Per-machine extension config overrides.
 extensions/*/local-config.yml

@@ -619,3 +619,20 @@ work.
   `percentile_rank = rank_conservative / #areas that passed screening`; the site is "in the top
   20 %" if `percentile_rank ≤ 0.2` (SC-006). Same rule for `flag_reasons`
   `no_known_analog_in_top_20pct`.
+
+### D-026: Collaboration safeguards for parallel and agent-driven work
+
+- **Shared types and module signatures** are fixed in `contracts/internal-api.md` and implemented
+  once in `src/analogfinder/types.py` (task T007, first Foundational task); every later code
+  task depends on it. Changes to the contract go into that file in the same pull request.
+- **Code conventions**: Python 3.11, full type hints, `ruff` lint + format (configured in
+  `pyproject.toml`, T002/T005).
+- **Working rules for people and agents** are in `CLAUDE.md` (*Working on a task*): read-first
+  list, one task per branch/PR into `dev-app-v1`, check dependencies, never change contracts or
+  invent data values silently, run tests and ruff, ask on the issue when ambiguous.
+- **Status**: the GitHub issue (closed by "Closes #N" in the PR) is the task status; feature PRs
+  do not tick `tasks.md`; one maintainer ticks it in batches to avoid merge conflicts.
+- **`@claude` in issues**: the workflow on `main` checks out `dev-app-v1`, branches from it
+  (`base_branch`), installs `uv` and may run `uv`, `git`, `ruff`, `pytest` (see
+  `.github/workflows/claude.yml` on `main`).
+- **`.specify/feature.json`** is committed so `/speckit-*` commands work right after cloning.

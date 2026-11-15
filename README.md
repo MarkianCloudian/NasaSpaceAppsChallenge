@@ -16,7 +16,7 @@ specification, plan and task list only — no application code yet.
 | Research decisions | `specs/001-earth-analog-finder/research.md` |
 | Data model, contracts (CLI, site, JSON Schemas) | `specs/001-earth-analog-finder/data-model.md`, `contracts/` |
 | Validation guide | `specs/001-earth-analog-finder/quickstart.md` |
-| Tasks T001–T088 | `specs/001-earth-analog-finder/tasks.md` |
+| Tasks T001–T089 | `specs/001-earth-analog-finder/tasks.md` |
 | Project brief (English / Ukrainian) | `BRIEF.md` |
 | Background: solution ideas, dataset access report, analog methods | `solution_ideas.md`, `outputs/*.pdf` (LaTeX sources `outputs/*.tex`) |
 | Early profile drafts | `sample*.json` (`sample-edited.json` seeds the Mars profile) |
@@ -25,8 +25,17 @@ specification, plan and task list only — no application code yet.
 
 ### Working with Spec Kit
 
-1. Install the CLI: `uv tool install specify-cli` (Python ≥ 3.11 via uv).
-2. Point Spec Kit at the feature (machine-local file, not committed):
-   `echo '{"feature_directory": "specs/001-earth-analog-finder"}' > .specify/feature.json`
-3. In Claude Code, the `/speckit-*` commands (`.claude/skills/`) work from the repository root,
-   e.g. `/speckit-analyze`, `/speckit-implement`.
+1. Optional CLI: `uv tool install specify-cli` (Python ≥ 3.11 via uv) — the `/speckit-*`
+   commands in Claude Code work without it.
+2. The active feature is already set in `.specify/feature.json` (committed).
+3. In Claude Code, run commands from the repository root and always name the task, e.g.
+   `/speckit-implement only T037`.
+
+### Contributing a task
+
+Follow **`CLAUDE.md` → *Working on a task*** (applies to people and AI agents): one task = one
+issue = one branch `task/T0xx-…` off `dev-app-v1` = one PR into `dev-app-v1` with
+`Closes #<issue>`. Shared Python types and module signatures are fixed in
+`specs/001-earth-analog-finder/contracts/internal-api.md`. Do not tick checkboxes in `tasks.md`
+in feature PRs; the closed issue is the status. Without a local AI agent you can comment
+`@claude implement this issue following CLAUDE.md; open a PR into dev-app-v1.` on the issue.

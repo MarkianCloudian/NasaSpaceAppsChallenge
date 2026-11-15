@@ -99,6 +99,7 @@ specs/001-earth-analog-finder/
 ├── quickstart.md        # Setup + end-to-end validation scenarios
 ├── contracts/           # CLI contract, JSON Schemas, site contract
 │   ├── cli.md
+│   ├── internal-api.md      # shared types + module signatures (anti-drift)
 │   ├── site.md
 │   ├── profile.schema.json
 │   ├── purposes.schema.json
@@ -129,6 +130,7 @@ profiles/
 ├── mars-rover-jezero.json     # Editable draft profile
 └── frozen/                    # Frozen, versioned profiles (committed)
 src/analogfinder/
+├── types.py                   # shared types, exactly as contracts/internal-api.md
 ├── cli.py                     # argparse sub-commands (contracts/cli.md)
 ├── config.py                  # Load + schema-validate all config
 ├── storage.py                 # Fingerprints, atomic dirs, cache keys, cleanup
