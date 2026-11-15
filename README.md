@@ -17,6 +17,7 @@ specification, plan and task list only — no application code yet.
 | Data model, contracts (CLI, site, JSON Schemas) | `specs/001-earth-analog-finder/data-model.md`, `contracts/` |
 | Validation guide | `specs/001-earth-analog-finder/quickstart.md` |
 | Tasks T001–T088 | `specs/001-earth-analog-finder/tasks.md` |
+| Project brief (English / Ukrainian) | `BRIEF.md` |
 | Background: solution ideas, dataset access report, analog methods | `solution_ideas.md`, `outputs/*.pdf` (LaTeX sources `outputs/*.tex`) |
 | Early profile drafts | `sample*.json` (`sample-edited.json` seeds the Mars profile) |
 
