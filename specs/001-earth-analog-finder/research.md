@@ -243,8 +243,14 @@ Phases*); a failed verification triggers the listed fallback, not a redesign.
 - **Decision**: use the POWER climatology API (documented REST, JSON) with regional requests
   tiled over land; cache each tile response; resample to 0.05° bilinearly (continuous fields only).
   Parameters: T2M, T2M_MIN, T2M_MAX, RH2M, WS10M, PRECTOTCORR, ALLSKY_SFC_SW_DWN.
-- **Verify**: maximum regional box size and request limits from POWER docs. Estimate: with a
-  10° × 10° limit, global land needs ~250 tiles → ~8–10 min once at 1 request / 2 s, then cached.
+- **Verified (T022, 2026-11-15, live API error messages of `/api/temporal/climatology/regional`)**:
+  each side of the box must be 2°–10° ("at least a 2 degree range … otherwise use the point
+  endpoint"; "maximum of 10 degree range"), and **only 1 parameter per request**. The response is
+  a GeoJSON FeatureCollection, one Point feature per 0.5° × 0.625° cell, with
+  `properties.parameter.<NAME>.{JAN…DEC,ANN}`. Consequence: one request per (tile, parameter) →
+  7 parameters × ~250 land tiles ≈ 1 750 requests ≈ 1 h at 1 request / 2 s, once, then cached.
+  No numeric rate limit is documented (HTTP 429 exists); keep the conservative 1 request / 2 s in
+  `config/sources.json` `nasa-power` notes (T011).
 - **Fallback (analysis A2)**: ERA5 monthly means on single levels via the Copernicus CDS API
   (`cdsapi`, free account + key in `~/.cdsapirc`, never in the repo): dataset
   `reanalysis-era5-single-levels-monthly-means`, variables 2 m temperature, 2 m dewpoint
