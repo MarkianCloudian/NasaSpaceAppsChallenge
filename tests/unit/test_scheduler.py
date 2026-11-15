@@ -26,6 +26,16 @@ GRID_IDS = [
 ]
 GROUPS = sch.criterion_groups(PROFILE)
 REFINE_IDS = sorted(GROUPS)
+_C = {c.id: c for c in PROFILE.criteria}
+# terrain values derived from the profile so the tests do not depend on its current numbers
+GOOD_SLOPE = float(_C["traverse_slope"].target["max"]) / 2  # inside the range: score 1
+POOR_SLOPE = float(_C["traverse_slope"].target["max"]) + 0.6 * float(
+    _C["traverse_slope"].tolerance["high"]
+)  # 0.4
+VETO_SLOPE = float(_C["traverse_slope"].target["max"]) + 0.95 * float(
+    _C["traverse_slope"].tolerance["high"]
+)  # < veto
+GOOD_ROUGH = float(_C["roughness"].target["min"])  # score 1
 
 
 def known(s, d=0.0):
@@ -124,7 +134,10 @@ def fake_mineral(calls):
 
 def test_d024_example_mediocre_grid_excellent_terrain_wins():
     a, b = area("A", 0.7), area("B", 0.9)
-    truth = {"A": (5.0, 2.0), "B": (21.0, 2.0)}  # A: slope score 1; B: 0.4 (above veto 0.3)
+    truth = {
+        "A": (GOOD_SLOPE, GOOD_ROUGH),
+        "B": (POOR_SLOPE, GOOD_ROUGH),
+    }  # B slope score 0.4 > veto
     calls = []
     areas, summary = sch.schedule(
         [b, a],
@@ -138,7 +151,7 @@ def test_d024_example_mediocre_grid_excellent_terrain_wins():
     assert summary["confirmed"][0] == "A"
     assert all(x.upper_bound + 1e-12 >= x.aggregate.overall for x in areas)
     assert summary["values"]["B"]["traverse_slope"] == {
-        "value": 21.0,
+        "value": POOR_SLOPE,
         "source_id": "nasadem-pc",
         "coverage": 1.0,
     }
@@ -148,7 +161,11 @@ def test_no_emit_coverage_finalised_without_emit_pass():
     a = area("C", 0.9)
     calls = []
     areas, _ = sch.schedule(
-        [a], ctx(), fake_terrain({"C": (5.0, 2.0)}), fake_mineral(calls), lambda fp, c: False
+        [a],
+        ctx(),
+        fake_terrain({"C": (GOOD_SLOPE, GOOD_ROUGH)}),
+        fake_mineral(calls),
+        lambda fp, c: False,
     )
     assert calls == [] and areas[0].refinement_level == "full"
     assert areas[0].refined["mineral_classes"].state == "unknown"
@@ -157,7 +174,7 @@ def test_no_emit_coverage_finalised_without_emit_pass():
 def test_cap_reached_records_proven_top():
     good = [area(f"G{i}", 0.95) for i in range(2)]
     poor = [area(f"P{i}", 0.55) for i in range(3)]  # above vetoes, bound below the refined ones
-    truth = {x.area_id: (5.0, 2.0) for x in good + poor}
+    truth = {x.area_id: (GOOD_SLOPE, GOOD_ROUGH) for x in good + poor}
     s = {**SETTINGS, "site_top_n": 4}
     c = ctx(max_terrain_areas=2, terrain_hint=False)
     c.settings = {**s, "refine": c.settings["refine"]}
@@ -174,7 +191,7 @@ def test_cap_reached_records_proven_top():
 def test_deterministic_order_and_ties():
     def run(order):
         areas = [area(aid, 0.8) for aid in order]
-        truth = {aid: (5.0, 2.0) for aid in order}
+        truth = {aid: (GOOD_SLOPE, GOOD_ROUGH) for aid in order}
         _, summary = sch.schedule(
             areas, ctx(), fake_terrain(truth), fake_mineral([]), lambda fp, c: True
         )
@@ -187,6 +204,10 @@ def test_deterministic_order_and_ties():
 def test_vetoed_refinement_score_makes_area_unrankable():
     a = area("V", 0.9)
     areas, summary = sch.schedule(
-        [a], ctx(), fake_terrain({"V": (40.0, 2.0)}), fake_mineral([]), lambda fp, c: True
+        [a],
+        ctx(),
+        fake_terrain({"V": (VETO_SLOPE, GOOD_ROUGH)}),
+        fake_mineral([]),
+        lambda fp, c: True,
     )
     assert summary["confirmed"] == [] and areas[0].upper_bound == 0.0
