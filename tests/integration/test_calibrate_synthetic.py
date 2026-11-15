@@ -84,3 +84,63 @@ def test_known_site_in_best_blob_ranks_first(tmp_path):
     assert abs(site["overall_score"] - best["overall_score"]) < 1e-12
     assert not rep_["flag_for_review"] and rep_["flag_reasons"] == []
     assert (tmp_path / "cal" / "calibration.json").exists()
+    st = rep_["stability"]
+    assert st["candidates"][0] == {"area_id": best["area_id"], "share_in_top_k": 1.0}
+
+
+def _fake_results(n: int, profile, seed: int = 1) -> dict:
+    import numpy as np
+
+    rng = np.random.default_rng(seed)
+    crit = [c for c in profile.criteria if c.comparison != "not_comparable"]
+    cands = []
+    for i in range(n):
+        cands.append(
+            {
+                "area_id": f"a{i:04d}",
+                "status": "ranked",
+                "results": [
+                    {"criterion_id": c.id, "state": "known", "score": float(rng.uniform(0.6, 1))}
+                    for c in crit
+                ],
+            }
+        )
+    from analogfinder.scoring.aggregate import aggregate
+    from analogfinder.types import CriterionScore
+
+    for c in cands:
+        sc = {r["criterion_id"]: CriterionScore(r["score"], 0, 0, "known") for r in c["results"]}
+        c["overall_score"] = aggregate(sc, profile).overall
+    cands.sort(key=lambda c: (-c["overall_score"], c["area_id"]))
+    for i, c in enumerate(cands, 1):
+        c["rank"] = i
+    return {"candidates": cands}
+
+
+def test_weight_stability_deterministic_and_fast(tmp_path):
+    import time
+
+    from analogfinder.calibrate import weight_stability
+
+    prof = tmp_path / "profiles"
+    prof.mkdir()
+    shutil.copy(ROOT / "profiles" / "mars-rover-jezero.json", prof)
+    freeze(prof / "mars-rover-jezero.json", ROOT / "config", prof)
+    profile = load_frozen(REF, prof)
+    cfg = load_settings(ROOT / "config")["stability"]
+    results = _fake_results(300, profile)
+    t0 = time.monotonic()
+    a = weight_stability(results, profile, cfg)
+    assert time.monotonic() - t0 < 5.0
+    b = weight_stability(results, profile, cfg)
+    assert a == b
+    assert len(a["candidates"]) == cfg["top_k"]
+    assert [c["area_id"] for c in a["candidates"]] == [
+        c["area_id"] for c in results["candidates"][: cfg["top_k"]]
+    ]
+    assert all(0.0 <= c["share_in_top_k"] <= 1.0 for c in a["candidates"])
+    other = weight_stability(results, profile, dict(cfg, seed=cfg["seed"] + 1))
+    assert other != a
+    # range 0: weights unchanged, the baseline top k stays in the top k in every draw
+    flat = weight_stability(results, profile, dict(cfg, range=0.0))
+    assert all(c["share_in_top_k"] == 1.0 for c in flat["candidates"])

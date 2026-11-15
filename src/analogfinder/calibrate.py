@@ -26,7 +26,7 @@
      with enough confidence has `percentile_rank ≤ 0.2`, tested as `rank ≤ max(1, ⌊0.2·n⌋)`
      (identical for n ≥ 5 areas; with fewer areas rank 1 still counts, see `in_top`).
 
-`stability` (T078) is added by `weight_stability`.
+  8. `stability`: weight stability of the ranked areas (`weight_stability`, T078).
 """
 
 from __future__ import annotations
@@ -295,6 +295,7 @@ def calibrate(
         "known_sites": out,
         "flag_for_review": bool(reasons),
         "flag_reasons": reasons,
+        "stability": weight_stability(results, profile, ctx.settings["stability"]),
     }
     log.info(
         "calibration: %d relevant sites, %d in scope, %d in top 20%%, flag=%s",
@@ -308,3 +309,61 @@ def calibrate(
         d.mkdir(parents=True, exist_ok=True)
         stage_io.write_json(d / "calibration.json", report)
     return report
+
+
+def weight_stability(results: dict, profile: Profile, cfg: Mapping[str, Any]) -> dict:
+    """Weight stability (plan G3, research D-014, T078).
+
+    `cfg` = settings `stability` {draws, range, seed, top_k}. Each draw multiplies every category
+    weight by U(1 − range, 1 + range) (numpy default_rng(seed)), keeps the within-category split
+    and re-aggregates the stored per-criterion scores of the ranked areas (weighted geometric
+    mean over KNOWN scores, as scoring.aggregate; no new data access). Ranked areas passed their
+    vetoes, which do not depend on weights. Reported: for each of the baseline top `top_k`
+    areas the share of draws in which it stays in the top `top_k`.
+    """
+    draws, r, seed, k = int(cfg["draws"]), float(cfg["range"]), int(cfg["seed"]), int(cfg["top_k"])
+    ranked = sorted(
+        (c for c in results.get("candidates", []) if c["status"] == "ranked"),
+        key=lambda c: c["rank"],
+    )
+    crit = [
+        c
+        for c in profile.criteria
+        if c.comparison != "not_comparable" and profile.weights.get(c.id)
+    ]
+    cats = sorted({c.category for c in crit})
+    out = {"draws": draws, "range": r, "seed": seed, "top_k": k, "candidates": []}
+    if not ranked or not crit:
+        return out
+    s = np.full((len(ranked), len(crit)), np.nan)
+    pos = {c.id: j for j, c in enumerate(crit)}
+    for i, cand in enumerate(ranked):
+        for res in cand["results"]:
+            j = pos.get(res["criterion_id"])
+            if j is not None and res["state"] == "known" and res["score"] is not None:
+                s[i, j] = float(res["score"])
+    known = np.isfinite(s)
+    pos_ok = known & (np.nan_to_num(s, nan=1.0) > 0)
+    zero = (known & ~pos_ok).any(axis=1)  # a known score of 0 gives 0 (scoring.aggregate)
+    logs = np.log(np.where(pos_ok, s, 1.0))
+    w0 = np.array([float(profile.weights[c.id]) for c in crit])
+    cat_of = np.array([cats.index(c.category) for c in crit])
+    rng = np.random.default_rng(seed)
+    f = rng.uniform(1.0 - r, 1.0 + r, size=(draws, len(cats)))
+    w = w0[None, :] * f[:, cat_of]
+    w /= w.sum(axis=1, keepdims=True)
+    num = w @ logs.T  # (draws, areas)
+    den = w @ known.T.astype(float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        overall = np.where(den > 0, np.exp(num / den), np.nan)
+    overall = np.where(zero[None, :], 0.0, overall)
+    # ties keep the baseline order (stable sort over areas listed in baseline rank order)
+    order = np.argsort(-np.nan_to_num(overall, nan=-1.0), axis=1, kind="stable")
+    position = np.empty_like(order)
+    np.put_along_axis(position, order, np.arange(len(ranked))[None, :], axis=1)
+    share = (position < k).mean(axis=0)
+    out["candidates"] = [
+        {"area_id": ranked[i]["area_id"], "share_in_top_k": float(share[i])}
+        for i in range(min(k, len(ranked)))
+    ]
+    return out
