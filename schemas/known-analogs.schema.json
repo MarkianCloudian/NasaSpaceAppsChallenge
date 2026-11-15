@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "known-analogs.schema.json",
+  "title": "Known terrestrial analog sites",
+  "type": "object",
+  "required": [
+    "sites"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "sites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "site_id",
+          "name",
+          "lat",
+          "lon",
+          "bodies",
+          "analog_for",
+          "reference"
+        ],
+        "properties": {
+          "site_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]*$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "lon": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "radius_km": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "bodies": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "Mars",
+                "Moon"
+              ]
+            },
+            "minItems": 1
+          },
+          "purposes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9_-]*$"
+            }
+          },
+          "analog_for": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}
