@@ -1,0 +1,488 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "results.schema.json",
+  "title": "Run results",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_record",
+    "candidates"
+  ],
+  "properties": {
+    "run_record": {
+      "$ref": "#/$defs/run_record"
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/candidate"
+      }
+    }
+  },
+  "$defs": {
+    "run_record": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "profile",
+        "grid_id",
+        "settings",
+        "sources",
+        "started_at",
+        "stages",
+        "counts",
+        "placeholder_values",
+        "dedup_applied",
+        "percentile_population",
+        "stage_fingerprints",
+        "refinement"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "profile": {
+          "type": "object",
+          "required": [
+            "id",
+            "version",
+            "content_hash"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+\\.\\d+$"
+            },
+            "content_hash": {
+              "type": "string"
+            }
+          }
+        },
+        "grid_id": {
+          "type": "string"
+        },
+        "settings": {
+          "type": "object"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "source_id",
+              "dataset_version"
+            ],
+            "properties": {
+              "source_id": {
+                "type": "string"
+              },
+              "dataset_version": {
+                "type": "string"
+              },
+              "accessed": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finished_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "status",
+              "fingerprint"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "complete",
+                  "failed",
+                  "skipped",
+                  "reused"
+                ]
+              },
+              "seconds": {
+                "type": "number"
+              },
+              "fingerprint": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            }
+          }
+        },
+        "counts": {
+          "type": "object",
+          "required": [
+            "evaluated_cells",
+            "rejected_by_constraint",
+            "rejected_by_criterion",
+            "areas",
+            "refined",
+            "insufficient_data",
+            "ranked"
+          ],
+          "properties": {
+            "evaluated_cells": {
+              "type": "integer"
+            },
+            "rejected_by_constraint": {
+              "type": "integer"
+            },
+            "rejected_by_criterion": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer"
+              }
+            },
+            "areas": {
+              "type": "integer"
+            },
+            "refined": {
+              "type": "integer"
+            },
+            "insufficient_data": {
+              "type": "integer"
+            },
+            "ranked": {
+              "type": "integer"
+            }
+          }
+        },
+        "placeholder_values": {
+          "type": "boolean"
+        },
+        "dedup_applied": {
+          "type": "boolean"
+        },
+        "percentile_population": {
+          "type": "object",
+          "required": [
+            "name",
+            "cells"
+          ],
+          "properties": {
+            "name": {
+              "enum": [
+                "eligible",
+                "all_land",
+                "ice_free_land"
+              ]
+            },
+            "cells": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "stage_fingerprints": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          }
+        },
+        "refinement": {
+          "type": "object",
+          "required": [
+            "stop",
+            "proven_top",
+            "terrain_areas",
+            "mineral_areas"
+          ],
+          "properties": {
+            "stop": {
+              "enum": [
+                "bound_reached",
+                "cap_reached",
+                "skipped"
+              ]
+            },
+            "proven_top": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "terrain_areas": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "mineral_areas": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "emit_covered_areas": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "area_id",
+        "status",
+        "centroid",
+        "representative",
+        "n_cells",
+        "area_km2",
+        "overall_score",
+        "confidence",
+        "limiting_criterion",
+        "rejected_by",
+        "analogy_limits",
+        "label",
+        "results",
+        "footprint",
+        "upper_bound",
+        "refinement_level"
+      ],
+      "properties": {
+        "area_id": {
+          "type": "string"
+        },
+        "rank": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "status": {
+          "enum": [
+            "ranked",
+            "insufficient_data",
+            "rejected",
+            "screened_only"
+          ]
+        },
+        "centroid": {
+          "type": "object",
+          "required": [
+            "lat",
+            "lon"
+          ],
+          "properties": {
+            "lat": {
+              "type": "number"
+            },
+            "lon": {
+              "type": "number"
+            }
+          }
+        },
+        "representative": {
+          "type": "object",
+          "required": [
+            "lat",
+            "lon"
+          ],
+          "properties": {
+            "lat": {
+              "type": "number"
+            },
+            "lon": {
+              "type": "number"
+            }
+          }
+        },
+        "n_cells": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "area_km2": {
+          "type": "number"
+        },
+        "bbox": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "overall_score": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "limiting_criterion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rejected_by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "analogy_limits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "label": {
+          "enum": [
+            "known_analog",
+            "new_candidate",
+            null
+          ]
+        },
+        "known_site": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion_result"
+          }
+        },
+        "footprint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lat",
+            "lon",
+            "radius_km"
+          ],
+          "properties": {
+            "lat": {
+              "type": "number"
+            },
+            "lon": {
+              "type": "number"
+            },
+            "radius_km": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "upper_bound": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "refinement_level": {
+          "enum": [
+            "none",
+            "terrain",
+            "full"
+          ]
+        }
+      }
+    },
+    "criterion_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "criterion_id",
+        "state",
+        "score"
+      ],
+      "properties": {
+        "criterion_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "state": {
+          "enum": [
+            "known",
+            "unknown",
+            "not_comparable"
+          ]
+        },
+        "relative": {
+          "type": "boolean"
+        },
+        "earth_value": {},
+        "unit": {
+          "type": "string"
+        },
+        "target": {
+          "type": "object"
+        },
+        "deviation": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "deviation_ratio": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "score": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "weight_effective": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "scale_used": {
+          "enum": [
+            "grid",
+            "refinement",
+            null
+          ]
+        },
+        "source_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
