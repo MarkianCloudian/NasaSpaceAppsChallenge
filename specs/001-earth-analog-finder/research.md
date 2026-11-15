@@ -660,3 +660,33 @@ work.
 - Still **verify**: licence, DOI and the fallback choice (`copdem-glo30-pc` vs. GLO-90).
 - Note: no `http` source adapter exists yet; the builder calls `source.fetch({"url": endpoint,
   "file": "dem.tif"})` and expects a `.tif` in the returned directory.
+
+### Performance pass (T087, 2026-11-15)
+
+Tool: `scripts/benchmark_perf.py` (`footprint`, `grid`, `disk`). Machine: 2-core CI runner, 7 GB RAM.
+
+**Measured** — footprint pass (T046), synthetic land mask (smoothed random blobs, 30 % land, seed 0),
+band 30–40°N (436,355 land cells), values random float32, `min_valid_fraction` 0.5:
+
+| radius | per statistic (s per 10⁶ land cells) | all 7 statistics in one `focal_many` | peak RSS |
+|---|---|---|---|
+| 20 km (Jezero profile) | 1.0–1.1 | 3.9 s per 10⁶ cells | 440 MB |
+| 100 km | 20–28 (median/p90/p10 slowest: sort) | 90 s per 10⁶ cells | 562 MB |
+
+**Extrapolation (estimate, not measured)** to the whole globe, assuming ≈ 29 % land cells
+(≈ 7.5 M cells; the 29 % is an assumption, not a dataset value) and the 30–40°N cost per cell
+(kernels are larger towards the poles, so the figure is optimistic at high latitude):
+20 km ≈ 0.1 min per criterion (0.5 min for all seven statistics); 100 km ≈ 3 min per criterion
+(≈ 11 min for all seven). Memory is bounded by `max_elements` (4 M gathered values per chunk),
+independent of latitude.
+
+**Not measured here** (need the downloaded sources, NASA Earthdata/Copernicus credentials and
+~GBs of data, which the CI runner does not have): grid build from cached inputs (SC-001),
+`data/` disk use (SC-003), cached and first full run (SC-002). Run
+`uv run python scripts/benchmark_perf.py grid` / `disk` after `analog grid` on a machine with the
+data and record the numbers here; T088 replaces the quickstart _TBD_ values from them. The only
+earlier real-data figure is the ETOPO `dem_block_stats` full-globe run above (620 s, 894 MB peak).
+
+**Optimisation**: none applied — no measured target was missed, and the slowest measured part
+(100 km footprints at ≈ 11 min for seven statistics) is outside the 10-minute grid-build target
+(the footprint pass is part of the run, not of the build). Open item: confirm after real-data timing.
