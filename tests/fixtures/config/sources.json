@@ -1,0 +1,99 @@
+{
+  "sources": [
+    {
+      "source_id": "fx-climate",
+      "provider": "fixture",
+      "dataset": "fx-climate",
+      "dataset_version": "1",
+      "body": "Earth",
+      "route": "http",
+      "endpoint": "https://example.org/fixture",
+      "login": "none",
+      "request_unit": "tile",
+      "format": "GeoTIFF",
+      "rate_limit": {
+        "requests": 1,
+        "per_seconds": 1
+      },
+      "licence": "fixture",
+      "citation": "fixture",
+      "docs_url": "https://example.org/fixture"
+    },
+    {
+      "source_id": "fx-dem",
+      "provider": "fixture",
+      "dataset": "fx-dem",
+      "dataset_version": "1",
+      "body": "Earth",
+      "route": "http",
+      "endpoint": "https://example.org/fixture",
+      "login": "none",
+      "request_unit": "tile",
+      "format": "GeoTIFF",
+      "rate_limit": {
+        "requests": 1,
+        "per_seconds": 1
+      },
+      "licence": "fixture",
+      "citation": "fixture",
+      "docs_url": "https://example.org/fixture"
+    },
+    {
+      "source_id": "fx-fine-dem",
+      "provider": "fixture",
+      "dataset": "fx-fine-dem",
+      "dataset_version": "1",
+      "body": "Earth",
+      "route": "http",
+      "endpoint": "https://example.org/fixture",
+      "login": "none",
+      "request_unit": "tile",
+      "format": "GeoTIFF",
+      "rate_limit": {
+        "requests": 1,
+        "per_seconds": 1
+      },
+      "licence": "fixture",
+      "citation": "fixture",
+      "docs_url": "https://example.org/fixture"
+    },
+    {
+      "source_id": "fx-emit",
+      "provider": "fixture",
+      "dataset": "fx-emit",
+      "dataset_version": "1",
+      "body": "Earth",
+      "route": "http",
+      "endpoint": "https://example.org/fixture",
+      "login": "none",
+      "request_unit": "tile",
+      "format": "GeoTIFF",
+      "rate_limit": {
+        "requests": 1,
+        "per_seconds": 1
+      },
+      "licence": "fixture",
+      "citation": "fixture",
+      "docs_url": "https://example.org/fixture"
+    },
+    {
+      "source_id": "fx-literature",
+      "provider": "fixture",
+      "dataset": "fx-literature",
+      "dataset_version": "1",
+      "body": "Mars",
+      "route": "manual",
+      "endpoint": "https://example.org/fixture",
+      "login": "none",
+      "request_unit": "tile",
+      "format": "GeoTIFF",
+      "rate_limit": {
+        "requests": 1,
+        "per_seconds": 1
+      },
+      "licence": "fixture",
+      "citation": "fixture",
+      "docs_url": "https://example.org/fixture"
+    }
+  ]
+}

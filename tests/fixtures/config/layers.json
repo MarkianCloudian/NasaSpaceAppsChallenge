@@ -1,0 +1,35 @@
+{
+  "layers": [
+    {
+      "layer_id": "fx_climate",
+      "builder": "climatology_rest",
+      "source_id": "fx-climate",
+      "params": {},
+      "resampling": "area_mean",
+      "outputs": [
+        {
+          "layer_id": "precip_annual",
+          "quantity": "precip_annual",
+          "unit": "mm/yr",
+          "statistic": "annual total"
+        }
+      ]
+    },
+    {
+      "layer_id": "fx_terrain",
+      "builder": "dem_block_stats",
+      "source_id": "fx-dem",
+      "params": {},
+      "resampling": "area_mean",
+      "outputs": [
+        {
+          "layer_id": "slope_p90_1km",
+          "quantity": "slope_p90",
+          "unit": "deg",
+          "statistic": "block p90",
+          "baseline_m": 926
+        }
+      ]
+    }
+  ]
+}
