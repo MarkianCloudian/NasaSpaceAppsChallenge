@@ -431,6 +431,34 @@ work.
   an area of arbitrary size (1 cell to 2500 km²) did not satisfy it.
 - **Cost**: one focal pass per grid-scale criterion (≈ 6 for the Mars profile); expected tens of
   seconds to a few minutes on land-only data; to be measured in plan I2.
+- **Measured (T047, 2026-11-15)** with `scripts/benchmark_footprint_real.py` on a real grid
+  (land mask and land-cover fractions from MCD12C1 2023, grid `a13f9adacf6f8d47`; **8,506,369
+  land cells**, more than half of them poleward of 52°); radius 20 km, `min_valid_fraction` 0.5;
+  laptop, Python 3.14. Time depends on land cells and kernel size, not on values: layers not built
+  for this measurement (`precip_annual`, `rh2m_mean`, `ndvi_max`, `lst_amp`, `slope_p90_1km`) were
+  replaced by fixed-seed random fields; `lc_frac_barren` is the real layer.
+
+  | Pass | Cells computed | Time | Peak RSS |
+  |---|---|---|---|
+  | `hyperarid` mean (alone) | 8.51 M | 88 s | 1.11 GB |
+  | `dry_air` mean (alone) | 8.51 M | 85 s | 1.09 GB |
+  | `no_vegetation` p90 (alone) | 8.51 M | 68 s | 1.01 GB |
+  | `barren_ground` mean (alone) | 8.51 M | 71 s | 1.10 GB |
+  | `thermal_swing` mean (alone) | 8.51 M | 73 s | 1.09 GB |
+  | `regional_slope` p90 (alone) | 8.51 M | 69 s | 1.00 GB |
+  | all six, one `focal_many` pass, all land | 8.51 M | **218 s** (over the 180 s budget) | 1.59 GB |
+  | all six, one pass, Mars profile `lat_range` [−52, 52] (what screening runs) | 3.94 M | **24 s** | 1.57 GB |
+
+  Before the optimisation the all-land single pass took 244 s (same machine). Changes made (T047):
+  neighbour values gathered in float32 with float64 sums for means (equal inputs still give
+  exactly equal outputs; float32 sums changed near-tie rankings), int32 neighbour indices, and a
+  `targets` mask so only cells that can pass the profile's latitude constraint are computed when
+  the percentile population is `eligible` (neighbours still come from all land, so their values
+  are identical to a full pass — unit test). **Within budget for the Mars v1 profile** (24 s,
+  1.57 GB). A profile without a latitude limit, or with population `all_land` / `ice_free_land`,
+  needs the all-land pass (218 s, 1.6 GB): over the time budget, within RAM; the remaining cost is
+  the polar rows (kernel width ∝ 1/cos lat). Options if that case matters: per-band kernels
+  capped by a metric reprojection near the poles, or `np.partition`-based quantiles.
 - **Revisit when**: profiles need footprints much larger than 50 km (kernel cost grows with
   area) or non-circular footprints.
 
@@ -727,7 +755,7 @@ run is done.
 | CRISM thresholds used (T013/T073) | CHECKED, NOT A PUBLISHED VALUE (T036, 2026-11-15) | Viviano-Beck et al. 2014 does not publish per-parameter detection thresholds (see *CRISM summary parameter thresholds (T036)* below). The five values in `config/mineral_classes.json` are a project choice, now marked `"status": "project_choice"`; results that use them stay provisional. |
 | EMIT version used (T051) | NOT VERIFIED | `config/sources.json` `emit-l2b-min` targets L2B MIN **V002** (docs `https://lpdaac.usgs.gov/products/emitl2bminv002/`); the DOI is still marked "verify" and no CMR search was run (needs network access to Earthdata). Fallback if V002 mineral list differs: update `config/mineral_classes.json` version. |
 | ERA5 CDS request size/time (T043) | NOT VERIFIED | Needs `~/.cdsapirc` (not available; credentials never go in the repo). D-008 estimate (one global 0.25° request, a few hundred MB) stands. Only relevant if the POWER route fails. |
-| Footprint benchmark (T047) | NOT VERIFIED | Needs the built grid (T044). Budget is `footprint.benchmark_budget_s = 180` s. If exceeded, the T047 task describes the fallback (reduce radius or optimise); record the measured time here. |
+| Footprint benchmark (T047) | MEASURED (2026-11-15) | Real land mask (8.51 M land cells): all six Mars-profile criteria in one pass 24 s / 1.57 GB with the profile's latitude range (within the 180 s / 2 GB budget); 218 s / 1.59 GB over all land (over the time budget). Details and method in D-017 *Measured (T047)*. |
 | Terrain-hint validity (D-024) | NOT VERIFIED | Needs refined areas (first real run). Measure the share with 30 m slope p90 < 926 m slope p90; if > 5 %, set `refine.terrain_hint` to `false` in `config/settings.json`. Currently `true` (default, unmeasured). |
 | Refinement counts and stop reason of first real run | NOT VERIFIED | No real run done yet. Record `run_record.refinement` {stop, proven_top, terrain_areas, mineral_areas, emit_covered_areas}. |
 | Settings values (T010) | VERIFIED (read from `config/settings.json`) | `grid.cell_size_deg` 0.05; `lat_range` [-90, 90]; `reference_years` 2019–2023; `screen_min_score` 0.3; `max_area_km2` 2500; `refine` batch 10, max_terrain_areas 200, max_mineral_areas 60, bound_margin 0.05, terrain_hint true; `site_top_n` 30; `stability` draws 500, range 0.25, seed 42, top_k 10; `known_radius_default_km` 50; `cleanup_keep` grids 2, runs 5; `footprint` min_valid_fraction 0.5, benchmark_budget_s 180; `coverage.min_coverage_fraction` 0.5; `emit` min_band_depth 0.02, min_cluster_pixels 4, max_granules_per_area 5; `http.timeout_s` 60. |

@@ -94,6 +94,13 @@ def run(ctx: StageContext) -> ScreeningResult:
     }
     for k in lc_classes:
         jobs[f"lc:{k}"] = (grid.land_vector(f"lc_frac_{k}"), "mean")
+    # cells outside the latitude range fail the hard constraints anyway; with the `eligible`
+    # population their footprint values are never used, so skip them (T047: the polar rows have
+    # the largest kernels). Other populations need every land cell.
+    lat_range = sc.get("lat_range")
+    targets = None
+    if lat_range and profile.percentile_population == "eligible":
+        targets = (land.lat >= min(lat_range)) & (land.lat <= max(lat_range))
     fp = focal_many(
         jobs,
         land,
@@ -103,12 +110,12 @@ def run(ctx: StageContext) -> ScreeningResult:
         lat_top=geo["lat_top"],
         grid_shape=geo["grid_shape"],
         wrap_lon=geo["wrap_lon"],
+        targets=targets,
     )
     footprint = {c.id: fp[c.id] for c in crit}
 
     # 2. hard constraints
     ok = np.ones(n, bool)
-    lat_range = sc.get("lat_range")
     if lat_range:
         ok &= (land.lat >= min(lat_range)) & (land.lat <= max(lat_range))
     for k, mx in (sc.get("max_landcover_fraction") or {}).items():

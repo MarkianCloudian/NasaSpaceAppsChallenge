@@ -116,3 +116,17 @@ def test_rejects_non_aligned_vector():
     li, grid = small()
     with pytest.raises(ValueError, match="land-aligned"):
         focal(np.zeros(3), li, 20, "mean", 0.5, **grid)
+
+
+def test_targets_match_full_pass():
+    mask = np.ones((60, 80), bool)
+    mask[:, 70:] = False
+    li, grid = small(lat_top=40.0, mask=mask)
+    rng = np.random.default_rng(5)
+    a = rng.random(li.rows.size)
+    full = focal_many({"a": (a, "p90"), "m": (a, "mean")}, li, 20, 0.5, **grid)
+    targets = (li.rows >= 20) & (li.rows < 30)
+    part = focal_many({"a": (a, "p90"), "m": (a, "mean")}, li, 20, 0.5, targets=targets, **grid)
+    for k in ("a", "m"):
+        assert np.array_equal(part[k][targets], full[k][targets])  # neighbours from all land
+        assert np.isnan(part[k][~targets]).all()
