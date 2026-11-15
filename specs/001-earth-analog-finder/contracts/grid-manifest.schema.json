@@ -159,6 +159,16 @@
         "qc_rule": {
           "type": "string",
           "description": "Quality-control rule applied to the source data (e.g. MODIS QC bit decoding)"
+        },
+        "registration": {
+          "type": "object",
+          "description": "Source raster registration handled by the builder (dem_block_stats, research D-023)",
+          "additionalProperties": false,
+          "required": ["kind", "half_pixel_offset_deg"],
+          "properties": {
+            "kind": {"enum": ["cell", "grid"]},
+            "half_pixel_offset_deg": {"type": "number"}
+          }
         }
       }
     }

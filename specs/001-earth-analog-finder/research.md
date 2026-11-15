@@ -643,3 +643,20 @@ work.
   (`base_branch`), installs `uv` and may run `uv`, `git`, `ruff`, `pytest` (see
   `.github/workflows/claude.yml` on `main`).
 - **`.specify/feature.json`** is committed so `/speckit-*` commands work right after cloning.
+
+## Verification results
+
+### ETOPO 2022 30″ surface elevation (T042, 2026-11-15)
+
+- **File URL** (single global file, anonymous HTTPS, range requests supported):
+  `https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/30s/30s_surface_elev_gtif/ETOPO_2022_v1_30s_N90W180_surface.tif`
+  (found via the NCEI product page; recorded in `config/sources.json` `etopo-2022.endpoint`).
+- **Size**: 1,585,813,987 bytes (1.48 GiB), within the D-007 download estimate.
+- **Registration (D-023 A4)**: GeoTIFF header reads 43200 × 21600, float32, pixel 1/120°, tie point
+  (−180, 90) → **cell-registered**; the grid-registered branch is only exercised by synthetic tests.
+- **Full-globe run** of `dem_block_stats` on this file: 620 s on a CI runner, **peak RSS 894 MB**
+  (< 2 GB). Himalaya box (26–36°N, 76–92°E) max block relief 3857 m (> 2000 m); Grand Erg
+  Oriental sand sea (29–31°N, 7–9°E) max block relief 171 m, median 54 m (< 200 m).
+- Still **verify**: licence, DOI and the fallback choice (`copdem-glo30-pc` vs. GLO-90).
+- Note: no `http` source adapter exists yet; the builder calls `source.fetch({"url": endpoint,
+  "file": "dem.tif"})` and expects a `.tif` in the returned directory.
