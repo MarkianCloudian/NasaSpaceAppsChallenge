@@ -1,0 +1,30 @@
+# Earth Analog Finder (dev-app-v1)
+
+# Pipeline data: downloads, grids, stage cache, runs (never committed)
+data/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Interrupted atomic writes
+*.partial-*
+public.tmp-*
+
+# Credentials (must stay outside the repo)
+.netrc
+.cdsapirc
+.env
+
+# Local tool clones and generated previews
+spec-kit/
+outputs/preview*/
+
+# Claude Code: only the spec-kit skills are shared
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/speckit-*/

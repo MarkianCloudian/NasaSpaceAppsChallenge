@@ -1,0 +1,632 @@
+{
+  "schema_version": "0.2.0",
+  "notes": "All numeric values are PLACEHOLDERS unless 'value_status' says 'measured'. Numbers are bare numbers; units live in 'unit'.",
+  "conventions": {
+    "temperature_unit": "degC",
+    "range_semantics": "target.min/target.max inclusive; null = open bound",
+    "score_range": [
+      0,
+      1
+    ],
+    "comparison_modes": {
+      "absolute": "Earth value compared directly with target range (e.g. slope, mineral class).",
+      "normalized": "Earth value compared after scaling to Earth's own range (used when the planetary value is physically impossible on Earth, e.g. lunar 250 degC day/night swing).",
+      "not_comparable": "Criterion kept in profile for completeness/report only; excluded from score (e.g. vacuum, gravity)."
+    }
+  },
+  "categories": {
+    "geology": "Geology, mineralogy, and surface materials",
+    "terrain": "Terrain, elevation, slope, roughness, craters, and other topographic features",
+    "thermal": "Temperature, illumination, and environmental extremes",
+    "resources": "Water, ice, permafrost, and other potential resources",
+    "atmosphere": "Dust, wind, erosion, and other atmospheric or surface processes",
+    "biology": "Biology, extremophiles, habitability, and biosignatures",
+    "subsurface": "Caves, lava tubes, underground environments, and other subsurface features",
+    "operations": "Conditions relevant to landing, mobility, navigation, robotic operations, human exploration, or construction"
+  },
+  "profiles": [
+    {
+      "profile_id": "moon-permanent-base-south-pole",
+      "body": "Moon",
+      "purpose": "permanent_base",
+      "reference_site": {
+        "name": "Shackleton crater connecting ridge",
+        "lat": -89.45,
+        "lon": 222.69,
+        "radius_km": 10,
+        "crs": "IAU_2015:30100"
+      },
+      "spatial_resolution_m": 120,
+      "earth_search_constraints": {
+        "lat_range": [
+          -60,
+          60
+        ],
+        "exclude_landcover": [
+          "urban",
+          "cropland",
+          "permanent_water"
+        ]
+      },
+      "criteria": [
+        {
+          "id": "surface_temp_range",
+          "category": "thermal",
+          "metric": "surface_skin_temperature",
+          "statistic": "annual_min_max",
+          "unit": "degC",
+          "target": {
+            "min": -230,
+            "max": -50
+          },
+          "value_status": "placeholder",
+          "comparison": "normalized",
+          "weight": 0.15,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "LRO Diviner GDR (bolometric temperature by local time)"
+            ],
+            "earth": [
+              "MODIS MOD11A1/MOD21 LST",
+              "ECOSTRESS LST"
+            ]
+          }
+        },
+        {
+          "id": "diurnal_temp_amplitude",
+          "category": "thermal",
+          "metric": "surface_skin_temperature",
+          "statistic": "mean_day_minus_night",
+          "unit": "degC",
+          "target": {
+            "min": 100,
+            "max": null
+          },
+          "value_status": "placeholder",
+          "comparison": "normalized",
+          "weight": 0.05,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "LRO Diviner GDR"
+            ],
+            "earth": [
+              "MODIS MOD11A1 (day vs night LST)",
+              "ECOSTRESS LST"
+            ]
+          }
+        },
+        {
+          "id": "illumination_fraction",
+          "category": "thermal",
+          "metric": "fraction_of_time_sunlit",
+          "statistic": "annual_mean",
+          "unit": "fraction",
+          "target": {
+            "min": 0.7,
+            "max": 1.0
+          },
+          "value_status": "placeholder",
+          "comparison": "not_comparable",
+          "weight": 0.0,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "LOLA-derived polar illumination maps (NOT in report - gap)"
+            ],
+            "earth": [
+              "NASA POWER ALLSKY_SFC_SW_DWN (insolation)"
+            ]
+          }
+        },
+        {
+          "id": "slope",
+          "category": "terrain",
+          "metric": "slope",
+          "statistic": "p90",
+          "unit": "deg",
+          "target": {
+            "min": 0,
+            "max": 10
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.2,
+          "hard_constraint": true,
+          "sources": {
+            "target": [
+              "LOLA polar DEM (derived)"
+            ],
+            "earth": [
+              "NASADEM / Copernicus GLO-30 (derived, resampled to profile resolution)"
+            ]
+          }
+        },
+        {
+          "id": "roughness",
+          "category": "terrain",
+          "metric": "terrain_ruggedness_index",
+          "statistic": "median",
+          "unit": "m",
+          "target": {
+            "min": 0,
+            "max": 5
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.1,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "LOLA DEM (derived)"
+            ],
+            "earth": [
+              "NASADEM / Copernicus GLO-30 (derived)"
+            ]
+          }
+        },
+        {
+          "id": "rock_abundance",
+          "category": "operations",
+          "metric": "rock_abundance",
+          "statistic": "mean",
+          "unit": "fraction",
+          "target": {
+            "min": 0,
+            "max": 0.02
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.1,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "LRO Diviner rock abundance map"
+            ],
+            "earth": [
+              "proxy only: HLS/Sentinel-2 texture or none (gap)"
+            ]
+          }
+        },
+        {
+          "id": "surface_mineralogy",
+          "category": "geology",
+          "metric": "dominant_mineral_class",
+          "statistic": "mode",
+          "unit": "class",
+          "target": {
+            "classes": [
+              "anorthosite_plagioclase",
+              "pyroxene"
+            ]
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.2,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "Chandrayaan-1 M3",
+              "Diviner Christiansen feature"
+            ],
+            "earth": [
+              "EMIT L2B MIN (group_1_mineral_id)",
+              "ASTER emissivity"
+            ]
+          }
+        },
+        {
+          "id": "water_ice_presence",
+          "category": "resources",
+          "metric": "cold_trap_or_ice_presence",
+          "statistic": "boolean_within_radius",
+          "unit": "bool",
+          "target": {
+            "value": true
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.15,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "Diviner (T < -163 degC cold traps)",
+              "M3 OH/H2O band"
+            ],
+            "earth": [
+              "HLS Fmask snow/ice",
+              "ESA WorldCover snow/ice",
+              "permafrost map (NOT in report - gap)"
+            ]
+          }
+        },
+        {
+          "id": "subsurface_shelter",
+          "category": "subsurface",
+          "metric": "pit_or_lava_tube_within_radius",
+          "statistic": "boolean_within_radius",
+          "unit": "bool",
+          "target": {
+            "value": false
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.0,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "LROC pit catalogue (NOT in report - gap)"
+            ],
+            "earth": [
+              "no global cave dataset (gap)"
+            ]
+          }
+        },
+        {
+          "id": "biology_absence",
+          "category": "biology",
+          "metric": "ndvi",
+          "statistic": "annual_max",
+          "unit": "index",
+          "target": {
+            "min": -1,
+            "max": 0.1
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.05,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "assumed sterile; no dataset"
+            ],
+            "earth": [
+              "HLS L30/S30 (NDVI)",
+              "ESA WorldCover bare/sparse"
+            ]
+          }
+        },
+        {
+          "id": "vacuum_gravity_radiation",
+          "category": "atmosphere",
+          "metric": "environment_physics",
+          "statistic": "constant",
+          "unit": "n/a",
+          "target": {
+            "pressure_pa": 0,
+            "gravity_m_s2": 1.62
+          },
+          "value_status": "measured",
+          "comparison": "not_comparable",
+          "weight": 0.0,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "physical constants"
+            ],
+            "earth": []
+          }
+        }
+      ]
+    },
+    {
+      "profile_id": "mars-rover-expedition-jezero",
+      "body": "Mars",
+      "purpose": "rover_expedition",
+      "reference_site": {
+        "name": "Jezero crater delta",
+        "lat": 18.44,
+        "lon": 77.45,
+        "radius_km": 20,
+        "crs": "IAU_2015:49900"
+      },
+      "spatial_resolution_m": 200,
+      "earth_search_constraints": {
+        "lat_range": [
+          -52,
+          52
+        ],
+        "exclude_landcover": [
+          "urban",
+          "cropland",
+          "permanent_water",
+          "tree_cover"
+        ]
+      },
+      "criteria": [
+        {
+          "id": "air_temp_range",
+          "category": "thermal",
+          "metric": "near_surface_air_temperature",
+          "statistic": "annual_min_max",
+          "unit": "degC",
+          "target": {
+            "min": -90,
+            "max": 0
+          },
+          "value_status": "placeholder",
+          "comparison": "normalized",
+          "weight": 0.05,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "Mars Climate Database",
+              "Perseverance MEDA / Curiosity REMS (in-situ, site only)"
+            ],
+            "earth": [
+              "NASA POWER T2M/T2M_MIN/T2M_MAX",
+              "ERA5 2m temperature"
+            ]
+          }
+        },
+        {
+          "id": "relative_humidity",
+          "category": "atmosphere",
+          "metric": "near_surface_relative_humidity",
+          "statistic": "annual_mean",
+          "unit": "percent",
+          "target": {
+            "min": 0,
+            "max": 20
+          },
+          "value_status": "placeholder",
+          "comparison": "normalized",
+          "weight": 0.05,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "Mars Climate Database",
+              "MEDA / REMS RH (in-situ)"
+            ],
+            "earth": [
+              "NASA POWER RH2M",
+              "ERA5"
+            ]
+          }
+        },
+        {
+          "id": "wind_speed",
+          "category": "atmosphere",
+          "metric": "near_surface_wind_speed",
+          "statistic": "p95",
+          "unit": "m/s",
+          "target": {
+            "min": null,
+            "max": 15
+          },
+          "value_status": "placeholder",
+          "comparison": "normalized",
+          "weight": 0.05,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "Mars Climate Database",
+              "MEDA (in-situ)"
+            ],
+            "earth": [
+              "NASA POWER WS10M",
+              "ERA5 u10/v10"
+            ]
+          }
+        },
+        {
+          "id": "slope",
+          "category": "operations",
+          "metric": "slope",
+          "statistic": "p90",
+          "unit": "deg",
+          "target": {
+            "min": 0,
+            "max": 25
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.15,
+          "hard_constraint": true,
+          "sources": {
+            "target": [
+              "CTX / HiRISE DTM (derived)",
+              "MOLA+HRSC blended DEM"
+            ],
+            "earth": [
+              "NASADEM / Copernicus GLO-30 (derived)"
+            ]
+          }
+        },
+        {
+          "id": "roughness",
+          "category": "terrain",
+          "metric": "terrain_ruggedness_index",
+          "statistic": "median",
+          "unit": "m",
+          "target": {
+            "min": 1,
+            "max": 20
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.1,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "CTX DTM (derived)"
+            ],
+            "earth": [
+              "NASADEM / Copernicus GLO-30 (derived)"
+            ]
+          }
+        },
+        {
+          "id": "landform",
+          "category": "terrain",
+          "metric": "landform_type",
+          "statistic": "presence",
+          "unit": "class",
+          "target": {
+            "classes": [
+              "fluvial_delta",
+              "paleolake_basin",
+              "crater_rim"
+            ]
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.1,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "manual / literature tag"
+            ],
+            "earth": [
+              "manual tag or DEM-based geomorphon classification"
+            ]
+          }
+        },
+        {
+          "id": "surface_mineralogy",
+          "category": "geology",
+          "metric": "mineral_classes_present",
+          "statistic": "presence_above_threshold",
+          "unit": "class",
+          "target": {
+            "classes": [
+              "Fe_Mg_smectite",
+              "carbonate",
+              "olivine"
+            ]
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.3,
+          "hard_constraint": false,
+          "crosswalk": {
+            "Fe_Mg_smectite": {
+              "crism": "D2300 > 0.01",
+              "emit": [
+                "nontronite",
+                "saponite",
+                "montmorillonite"
+              ]
+            },
+            "carbonate": {
+              "crism": "MIN2295_2480 > 0.01",
+              "emit": [
+                "calcite",
+                "dolomite",
+                "magnesite"
+              ]
+            },
+            "olivine": {
+              "crism": "OLINDEX3 > 0.1",
+              "emit": [
+                "olivine (group_1)"
+              ]
+            }
+          },
+          "sources": {
+            "target": [
+              "CRISM MTRDR summary parameters (_SU/_SR)",
+              "TES / OMEGA (regional context)"
+            ],
+            "earth": [
+              "EMIT L2B MIN group_1/group_2_mineral_id",
+              "ASTER emissivity"
+            ]
+          }
+        },
+        {
+          "id": "hydration",
+          "category": "resources",
+          "metric": "hydrated_mineral_signature",
+          "statistic": "presence_above_threshold",
+          "unit": "bool",
+          "target": {
+            "value": true
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.1,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "CRISM BD1900_2"
+            ],
+            "earth": [
+              "EMIT L2B group_2 (gypsum, clays)"
+            ]
+          }
+        },
+        {
+          "id": "thermal_inertia",
+          "category": "operations",
+          "metric": "thermal_inertia",
+          "statistic": "median",
+          "unit": "J m-2 K-1 s-1/2",
+          "target": {
+            "min": 200,
+            "max": 600
+          },
+          "value_status": "placeholder",
+          "comparison": "not_comparable",
+          "weight": 0.0,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "THEMIS thermal inertia mosaic"
+            ],
+            "earth": [
+              "no direct product (ECOSTRESS/MODIS day-night LST proxy possible)"
+            ]
+          }
+        },
+        {
+          "id": "biology_absence",
+          "category": "biology",
+          "metric": "ndvi",
+          "statistic": "annual_max",
+          "unit": "index",
+          "target": {
+            "min": -1,
+            "max": 0.1
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.1,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "assumed; no dataset"
+            ],
+            "earth": [
+              "HLS L30/S30 (NDVI)",
+              "ESA WorldCover bare/sparse"
+            ]
+          }
+        },
+        {
+          "id": "subsurface_feature",
+          "category": "subsurface",
+          "metric": "pit_or_lava_tube_within_radius",
+          "statistic": "boolean_within_radius",
+          "unit": "bool",
+          "target": {
+            "value": false
+          },
+          "value_status": "placeholder",
+          "comparison": "absolute",
+          "weight": 0.0,
+          "hard_constraint": false,
+          "sources": {
+            "target": [
+              "USGS Mars Global Cave Candidate Catalog (NOT in report - gap)"
+            ],
+            "earth": [
+              "no global cave dataset (gap)"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

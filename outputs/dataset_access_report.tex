@@ -1,0 +1,368 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2cm]{geometry}
+\usepackage{array,booktabs,tabularx,longtable}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+\usepackage[skins,breakable]{tcolorbox}
+\usepackage{fancyhdr,titlesec,microtype,amssymb}
+\usepackage[hidelinks]{hyperref}
+\def\UrlBreaks{\do\/\do-\do_\do.\do=\do?\do\&}
+\setlist{nosep,leftmargin=1.3em}
+\setlength{\parskip}{0.4em}\setlength{\parindent}{0pt}
+\definecolor{navy}{HTML}{1F3A5F}\definecolor{pale}{HTML}{F3F6FA}
+\definecolor{ok}{HTML}{1B7F3B}\definecolor{warn}{HTML}{B5462A}\definecolor{mid}{HTML}{A06A00}
+\titleformat{\section}{\Large\bfseries\color{navy}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{navy}}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{navy}}{\thesubsubsection}{0.5em}{}
+\pagestyle{fancy}\fancyhf{}
+\lhead{\small Dataset Access Report -- Planetary Analog Challenge}\rhead{\small\thepage}
+\newcommand{\OK}{\textcolor{ok}{\textbf{PASS}}}
+\newcommand{\AUTH}{\textcolor{mid}{\textbf{LOGIN}}}
+\newcommand{\FAIL}{\textcolor{warn}{\textbf{BLOCKED}}}
+\newtcolorbox{verdict}{enhanced,breakable,colback=pale,colframe=navy,arc=2pt,boxrule=0.6pt,title={\bfseries Access verdict},left=5pt,right=5pt}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\title{\color{navy}\textbf{Dataset Analysis and Access Report}\\[0.3em]\large Section 2.1 datasets of \texttt{solution\_ideas.md}, plus adjacent geo/space datasets}
+\author{NASA Space Apps Challenge 2026 -- TerraAnalog Explorer}
+\date{Live tests run 14 November 2026}
+
+\begin{document}
+\maketitle\thispagestyle{empty}
+
+\section*{Purpose and method}
+This report analyses the six datasets proposed in Section~2.1 of \texttt{solution\_ideas.md}, plus adjacent datasets that could help the TerraAnalog Explorer solution. For each dataset it covers:
+\begin{enumerate}
+\item what the dataset is and what it contains, with variable/column names and real sample values where available;
+\item whether it can be downloaded only, or also reached through an API and/or a Python library;
+\item what is needed to retrieve it: no authentication, a free account/login, a free API key, or a paid key.
+\end{enumerate}
+
+\textbf{How access was tested.} Every endpoint below was called anonymously (no credentials, no cookies) from a Linux machine on 14 Nov 2026, using plain HTTP requests. The result codes are reported as:
+\OK{} = data or metadata returned without any credentials;
+\AUTH{} = server redirected to a login page (HTTP 302 to \texttt{urs.earthdata.nasa.gov}) or answered HTTP 401;
+\FAIL{} = not reachable at test time.
+Python library availability was checked on PyPI (current versions noted). As requested, no code samples are included.
+
+\subsection*{Summary matrix}
+{\small
+\rowcolors{2}{pale}{white}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{2.3cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{5.4cm}@{}}
+\toprule
+\textbf{Dataset} & \textbf{Download} & \textbf{API} & \textbf{Python library} & \textbf{Credentials (tested)}\\\midrule\endhead
+EMIT L2B MIN & yes & yes (CMR, STAC, AppEEARS) & earthaccess, pystac-client, xarray/netCDF4 & Search: none. Data: \textbf{free Earthdata Login} (302 to login). No paid tier.\\
+SRTM GL1/GL3 & yes & yes (CMR, STAC, AppEEARS; mirrors) & earthaccess, elevation, bmi-topography, planetary-computer & NASA copy: \textbf{free Earthdata Login}. Mirrors (AWS Terrain Tiles, Planetary Computer NASADEM): \textbf{none}. OpenTopography: \textbf{free API key} (401 without).\\
+HLS L30/S30 v2 & yes & yes (CMR-STAC, AppEEARS, MS Planetary Computer STAC) & earthaccess, pystac-client, planetary-computer, odc-stac, stackstac & NASA copy: \textbf{free Earthdata Login}. Planetary Computer copy: \textbf{none} (anonymous token issued).\\
+CRISM MTRDR & yes & yes (PDS ODE REST) & requests, pdr, planetarypy, spectral & \textbf{None}, fully public.\\
+Mars Trek WMTS & tiles / GeoTIFF & yes (OGC WMTS + Trek search API) & owslib, requests & \textbf{None}, fully public.\\
+LRO Diviner & yes & partial (ODE REST for metadata; HTTP archive) & requests, pds4-tools, pdr & \textbf{None}, fully public. Very large files.\\
+\bottomrule
+\end{longtable}}
+
+\textbf{Key takeaway.} None of the six datasets requires a paid key. The three \emph{Earth} datasets hosted by NASA LP~DAAC (EMIT, SRTM, HLS) can be \emph{searched} anonymously but need a free NASA Earthdata Login to \emph{download}. SRTM and HLS also have public, no-login mirrors. The three \emph{planetary} datasets (CRISM, Trek, Diviner) are entirely public.
+
+%=======================================================================
+\section{EMIT L2B Surface Mineral Identification (EMITL2BMIN)}
+%=======================================================================
+\subsection{What it is}
+EMIT (Earth Surface Mineral Dust Source Investigation) is an imaging spectrometer on the International Space Station, operated by NASA JPL. It measures visible to short-wave infrared (VSWIR) reflectance at about 285 bands. The Level~2B product (\textbf{EMITL2BMIN}) runs the USGS \emph{Tetracorder} expert system (Clark et al.\ 2013) on the L2A reflectance. It reports, per 60\,m pixel, the best-matching mineral in two spectral groups and the depth of the matched absorption band.
+\begin{itemize}
+\item Provider and archive: NASA JPL / LP~DAAC (NASA Earthdata Cloud, AWS us-west-2).
+\item Collections in CMR: \path{EMITL2BMIN} v001 (\path{C2408034484-LPCLOUD}) and \textbf{v002} (\path{C4079846859-LPCLOUD}), both cloud-hosted.
+\item Coverage: sunlit land between 52\textdegree N and 52\textdegree S. The prime mission focused on arid dust source regions; the extended mission covers all land observable from the ISS. Time range: Aug 2022 to present.
+\item Spatial: 60\,m nominal, 72\,km swath; scenes about 1242 $\times$ 1280 pixels; \emph{not orthorectified} (a geometry lookup table, GLT, is supplied).
+\item Format: NetCDF4 (one mineral file and one uncertainty file per scene) plus a PNG browse image.
+\item Docs: User Guide \url{https://lpdaac.usgs.gov/documents/1660/EMITL2BMIN_User_Guide_V1.pdf}; ATBD \url{https://lpdaac.usgs.gov/documents/1659/EMITL2B_ATBD_v1.pdf}; DOI \href{https://doi.org/10.5067/EMIT/EMITL2BMIN.002}{10.5067/EMIT/EMITL2BMIN.002}.
+\end{itemize}
+
+\subsection{Data content (from User Guide Table 3-1, confirmed)}
+{\small\rowcolors{2}{pale}{white}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{1.5cm}>{\raggedright\arraybackslash}p{1.6cm}L@{}}
+\toprule\textbf{Variable} & \textbf{Type} & \textbf{Units} & \textbf{Meaning}\\\midrule
+\path{group_1_mineral_id} & int16 & -- & Index of best-fit mineral, spectral group 1 (Fe-bearing minerals, $\sim$0.4--1.3\,µm)\\
+\path{group_1_band_depth} & float32 & -- & Band depth of the group-1 match\\
+\path{group_2_mineral_id} & int16 & -- & Index of best-fit mineral, group 2 (clays, carbonates, sulfates, $\sim$2--2.5\,µm)\\
+\path{group_2_band_depth} & float32 & -- & Band depth of the group-2 match\\
+\path{location/lat}, \path{lon}, \path{elev} & float64 & deg, m & Per-pixel geolocation\\
+\path{location/glt_x}, \path{glt_y} & int32 & index & Geometry lookup table for orthorectification\\
+\path{mineral_metadata/index, name, group, record, library, url} & mixed & -- & Lookup table: index $\rightarrow$ mineral name, group, USGS Spectral Library~7 record and link\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Uncertainty file} (\path{EMIT_L2B_MINUNCERT_...nc}):}\\
+\path{group_1_band_depth_unc}, \path{group_2_band_depth_unc} & float32 & -- & Band-depth uncertainty\\
+\path{group_1_fit}, \path{group_2_fit} & float32 & -- & Tetracorder fit score\\
+\bottomrule
+\end{tabularx}}
+
+\textbf{Real granule found in testing} (Atacama, bbox 69.5--68.5\textdegree W, 24.5--23.5\textdegree S): \path{EMIT_L2B_MIN_002_20220828T180411}, acquired 2022-08-28 18:04:11 UTC, size about 118\,MB, with files \path{..._MIN_...nc}, \path{..._MINUNCERT_...nc} and \path{.cmr.json}. Typical mineral names in the lookup table include kaolinite, montmorillonite, illite/muscovite, gypsum, calcite, dolomite, goethite, hematite and chlorite (USGS Spectral Library~7 names).
+
+\textbf{Relevance.} This dataset gives the Earth side of the mineralogy comparison. Its group-2 minerals (smectites, kaolinite, sulfates, carbonates) correspond to CRISM summary parameters such as D2300, BD2210, BD1900 and SINDEX2 (Chapter~4).
+
+\subsection{Access routes}
+\begin{itemize}
+\item \textbf{Download (GUI):} NASA Earthdata Search, \url{https://search.earthdata.nasa.gov} (needs login to download).
+\item \textbf{API -- CMR search:} \url{https://cmr.earthdata.nasa.gov/search/} (collections and granules, JSON/UMM). Tested \OK{}, no credentials.
+\item \textbf{API -- CMR-STAC:} \url{https://cmr.earthdata.nasa.gov/stac/LPCLOUD} (STAC search). Tested \OK{} anonymously for metadata.
+\item \textbf{API -- AppEEARS:} \url{https://appeears.earthdatacloud.nasa.gov/api/} lists \path{EMIT_L2B_MIN.001} and \path{EMIT_L2B_MINUNCERT.001} (version 001 only at test time). The product list was \OK{} anonymously; submitting area/point extraction tasks needs an Earthdata token.
+\item \textbf{Direct HTTPS file:} \path{https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/EMITL2BMIN.002/...nc}. Tested: \AUTH{}, HTTP 302 to \path{urs.earthdata.nasa.gov/oauth/authorize}.
+\item \textbf{Direct S3 (in-region):} temporary credentials from \path{.../s3credentials}, which requires Earthdata Login; works only from AWS us-west-2.
+\item \textbf{Python:} \texttt{earthaccess} 0.19.0 (search, login, download or stream), \texttt{pystac-client} 0.9.1, \texttt{xarray}/\texttt{netCDF4} for reading; the NASA tutorial repo is \url{https://github.com/nasa/EMIT-Data-Resources}. Browse PNGs live in a public bucket (\path{lp-prod-public}).
+\end{itemize}
+\begin{verdict}
+Downloadable \emph{and} reachable by API and Python. Metadata search is public with no key. \textbf{Data files need a free NASA Earthdata Login} (username/password or a bearer token generated in the Earthdata profile). There is no API key and no paid tier. \textbf{Not} available on Microsoft Planetary Computer or AWS Earth Search (checked catalogue list).
+\end{verdict}
+
+%=======================================================================
+\section{SRTM Global Elevation (SRTMGL1 / SRTMGL3 / NASADEM)}
+%=======================================================================
+\subsection{What it is}
+The Shuttle Radar Topography Mission (Feb 2000, 11 days) used C-band interferometric radar to map land elevation between 60\textdegree N and 56\textdegree S. NASA products:
+\begin{itemize}
+\item \textbf{SRTMGL1 v003} (1 arc-second, $\approx$30\,m), CMR \path{C2763266360-LPCLOUD}; \textbf{SRTMGL3 v003} (3 arc-second, $\approx$90\,m), \path{C2763266377-LPCLOUD}.
+\item \textbf{NASADEM\_HGT v001} (\path{C2763264762-LPCLOUD}): a 2020 reprocessing of SRTM with improved void filling and ICESat calibration. It is the recommended modern version.
+\item Tiles of 1\textdegree{}$\times$1\textdegree{} in WGS84 geographic coordinates; heights in metres above the EGM96 geoid; signed 16-bit integers; voids = $-32768$ (filled in v3).
+\item File format: \path{.hgt} (raw big-endian int16 grid, 3601$\times$3601 for GL1) inside a ZIP. Companion \path{NUM} files give the source of each pixel.
+\end{itemize}
+
+\subsection{Data content}
+A single-band raster: \textbf{elevation (m)}. There are no columns. Each tile is named by its south-west corner, e.g.\ \path{S24W070.SRTMGL1.hgt.zip}, the real tile returned for the Atacama test box (size $\approx$11.4\,MB). Derived quantities for the solution (slope, roughness, TRI, Hurst exponent) must be computed from this grid.
+
+\subsection{Access routes}
+\begin{itemize}
+\item \textbf{NASA LP~DAAC (official):} CMR search \OK{} anonymously; file download \path{https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/S24W070.SRTMGL1.hgt/...zip} gave \AUTH{} (302 to Earthdata Login).
+\item \textbf{AppEEARS API:} \path{SRTMGL1_NC.003}, \path{SRTMGL3_NC.003}, \path{NASADEM_NC.001} listed (\OK{}); task submission needs an Earthdata token.
+\item \textbf{OpenTopography Global DEM API:} \url{https://portal.opentopography.org/API/globaldem?demtype=SRTMGL1}; without a key it returned HTTP \textbf{401}, so a \textbf{free API key} is required (free account; academic users get higher quotas). Python: \texttt{bmi-topography} 0.9.0.
+\item \textbf{Microsoft Planetary Computer} STAC collection \path{nasadem}: \OK{}, anonymous (an anonymous SAS token endpoint issues read tokens with no account). Python: \texttt{planetary-computer} 1.0.0 + \texttt{pystac-client}.
+\item \textbf{AWS Terrain Tiles (Mapzen/Tilezen)}, \path{s3.amazonaws.com/elevation-tiles-prod/}: GeoTIFF tile download \OK{}, no credentials (SRTM-derived blended DEM).
+\item \textbf{Google Earth Engine} asset \path{USGS/SRTMGL1_003}: \AUTH{} (401 without OAuth). Requires a Google account and Cloud project; free for non-commercial and research use.
+\item \textbf{Python:} \texttt{earthaccess} (official), \texttt{elevation} 2.1.0 (downloads SRTM from public mirrors), \texttt{bmi-topography}, \texttt{rasterio}/\texttt{rioxarray} for reading.
+\end{itemize}
+\begin{verdict}
+Downloadable, API and Python. Official NASA copy: \textbf{free Earthdata Login}. Planetary Computer (NASADEM) and AWS Terrain Tiles: \textbf{public, no login}. OpenTopography: \textbf{free API key}. No paid option is needed.
+\end{verdict}
+
+%=======================================================================
+\section{Harmonized Landsat Sentinel-2 (HLS v2.0)}
+%=======================================================================
+\subsection{What it is}
+HLS merges Landsat~8/9 OLI and Sentinel-2A/B/C MSI surface reflectance into one consistent 30\,m product on the Sentinel-2 MGRS tiling grid (109.8\,km tiles, UTM). It is atmospherically corrected, BRDF-normalised and bandpass-adjusted, with a revisit of about 2--3 days when combined.
+\begin{itemize}
+\item \textbf{HLSL30 v2.0} (Landsat-derived), CMR \path{C2021957657-LPCLOUD}; \textbf{HLSS30 v2.0} (Sentinel-derived), \path{C2021957295-LPCLOUD}. Also vegetation-index products \path{HLSL30_VI}, \path{HLSS30_VI} (in AppEEARS).
+\item Format: one Cloud-Optimized GeoTIFF (COG) per band per scene; int16 reflectance scaled by 0.0001; thermal bands (L30 B10/B11) in °C scaled by 0.01; fill $-9999$.
+\end{itemize}
+
+\subsection{Data content}
+Real scene found in testing: \path{HLS.L30.T19KEP.2025006T143710.v2.0} (Atacama, 6 Jan 2025). Its files (one COG each) were:
+{\small\rowcolors{2}{pale}{white}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm}L@{}}
+\toprule\textbf{Asset} & \textbf{Content (L30)}\\\midrule
+B01--B07 & Coastal aerosol, Blue, Green, Red, NIR (B05), SWIR1 (B06), SWIR2 (B07) surface reflectance\\
+B09 & Cirrus\\
+B10, B11 & Thermal infrared brightness temperature (TIRS)\\
+Fmask & Bit-packed quality: cirrus, cloud, adjacent cloud, cloud shadow, snow/ice, water, aerosol level\\
+SZA, SAA, VZA, VAA & Sun and view zenith/azimuth angles\\
+\path{_stac.json}, \path{.cmr.xml} & Metadata (the STAC JSON sits in the \emph{public} bucket)\\
+\bottomrule
+\end{tabularx}}
+
+S30 uses Sentinel band numbering (B01--B12 plus B8A). Typical derived indicators for the solution: NDVI (vegetation absence), bare-soil index, SWIR ratios for clay/iron, and albedo.
+
+\subsection{Access routes}
+\begin{itemize}
+\item \textbf{NASA CMR / CMR-STAC} \url{https://cmr.earthdata.nasa.gov/stac/LPCLOUD/collections/HLSL30_2.0}: \OK{} anonymously for search. Band COGs in \path{lp-prod-protected}: \AUTH{}.
+\item \textbf{AppEEARS API:} \path{HLSL30.020}, \path{HLSS30.020}, \path{..._VI.020} listed \OK{}; extraction tasks need an Earthdata token.
+\item \textbf{Microsoft Planetary Computer} collections \path{hls2-l30}, \path{hls2-s30}: STAC search \OK{} with no account (returned \path{HLS.L30.T19JEN.2026306T143123.v2.0}, assets B01--B11, Fmask, angles, preview). A read SAS token was issued anonymously by \path{/api/sas/v1/token/hls2-l30}, so the data are downloadable with \textbf{no login}.
+\item \textbf{Google Earth Engine:} \path{NASA/HLS/HLSL30/v002}; Google account required.
+\item \textbf{Python:} \texttt{earthaccess}, \texttt{pystac-client}, \texttt{planetary-computer}, \texttt{odc-stac} 0.5.3, \texttt{stackstac} 0.5.1, \texttt{rioxarray}.
+\end{itemize}
+\begin{verdict}
+Downloadable, API and Python. NASA copy: \textbf{free Earthdata Login}. Microsoft Planetary Computer copy: \textbf{public, no login, no key} (rate-limited anonymous tokens; a free subscription key raises limits). No paid tier.
+\end{verdict}
+
+%=======================================================================
+\section{CRISM MTRDR (Map-projected Targeted Reduced Data Record)}
+%=======================================================================
+\subsection{What it is}
+CRISM (Compact Reconnaissance Imaging Spectrometer for Mars, on MRO, 2006--2023) is a VNIR--IR imaging spectrometer covering 0.36--3.9\,µm. \textbf{MTRDR} is the best-processed CRISM targeted product: full-resolution (FRT, $\approx$18\,m/px), half-resolution (HRL/HRS, $\approx$36\,m/px) and FRS observations. These are photometrically and atmospherically corrected, de-noised, joined across VNIR and IR, and map-projected (Mars equirectangular, IAU2000).
+\begin{itemize}
+\item Archive: PDS Geosciences Node, data set \path{mro-m-crism-5-rdr-mptargeted-v1} (\path{mro_crism_mtrdr}), about 3700 observations, with PDS3 and PDS4 labels.
+\item Formats: ENVI binary (\path{.IMG} + \path{.HDR}), PDS3 \path{.LBL}, PDS4 \path{.XML}, KML/shapefile footprints, PNG browse.
+\end{itemize}
+
+\subsection{Data content (verified from a real product)}
+Observation tested: \path{HRL000040FF} (2007, Jezero/NE Syrtis search box 77--78\textdegree E, 18--19\textdegree N). Files per observation:
+{\small\rowcolors{2}{pale}{white}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{1.6cm}L@{}}
+\toprule\textbf{File (suffix)} & \textbf{Size} & \textbf{Content}\\\midrule
+\path{_IF183J_MTR3.IMG} & 668\,MB & Corrected I/F spectral cube, 489 bands (wavelengths in \path{_WV..._MTR3.TAB}, e.g.\ 436.13, 442.63, 449.14 nm, FWHM 8.62 nm)\\
+\path{_SU183J_MTR3.IMG} & 82\,MB & \textbf{Spectral summary parameters}: 60 bands, float32, 455$\times$751 px at 36\,m, BSQ\\
+\path{_SR183J_MTR3.IMG} & 82\,MB & Refined summary parameters (improved versions)\\
+\path{_IN183J_MTR3.IMG} & 12\,MB & Data-processing information maps\\
+\path{_DE183L_MTR1.IMG} & 19\,MB & Derived data record (geometry: incidence, emission, lat/lon, elevation)\\
+\path{_BR***J_MTR3.PNG/IMG} & $\sim$1\,MB & Browse composites (e.g.\ CAR carbonates, PHY phyllosilicates, HYD hydrated, FEM Fe-minerals)\\
+\bottomrule
+\end{tabularx}}
+
+\textbf{The 60 summary parameter band names} (from the real \path{SU} header):
+\begin{center}\footnotesize\ttfamily
+\begin{minipage}{0.95\textwidth}\raggedright
+R770, RBR, BD530\_2, SH600\_2, SH770, BD640\_2, BD860\_2, BD920\_2, RPEAK1, BDI1000VIS, R440, IRR1, BDI1000IR, OLINDEX3, R1330, BD1300, LCPINDEX2, HCPINDEX2, VAR, ISLOPE1, BD1400, BD1435, BD1500\_2, ICER1\_2, BD1750\_2, BD1900\_2, BD1900R2, BDI2000, BD2100\_2, BD2165, BD2190, MIN2200, BD2210\_2, D2200, BD2230, BD2250, MIN2250, BD2265, BD2290, D2300, BD2355, SINDEX2, ICER2\_2, MIN2295\_2480, MIN2345\_2537, BD2500\_2, BD3000, BD3100, BD3200, BD3400\_2, CINDEX2, BD2600, IRR2, IRR3, R530, R600, R1080, R1506, R2529, R3920
+\end{minipage}\end{center}
+Ignore value: 65535. These are band-depth and index maps (dimensionless). For example, D2300 indicates Fe/Mg-smectites, BD2210 Al-OH clays, BD1900 hydration, OLINDEX3 olivine, LCP/HCPINDEX pyroxenes, SINDEX2 sulfates, and MIN2295\_2480 / MIN2345\_2537 carbonates.
+
+\textbf{Relevance.} This is the Mars side of the mineralogy comparison (Solution~2, ``MarsMatch''). The summary parameters can be thresholded into mineral classes and compared with EMIT group-1/group-2 classes.
+
+\subsection{Access routes}
+\begin{itemize}
+\item \textbf{PDS ODE REST API} (Orbital Data Explorer), \url{https://oderest.rsl.wustl.edu/live2/}: query by target, instrument (\texttt{CRISM}), product type (\texttt{MTRDR}) and lat/lon box. Returns JSON with every file URL. Tested \OK{}, no key.
+\item \textbf{Direct HTTPS archive:} \url{https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/} (\path{mrocr_4001/mtrdr/YYYY/YYYY_DDD/<obs>/}). Header and wavelength table downloaded \OK{}.
+\item \textbf{GUI:} ODE web map \url{https://ode.rsl.wustl.edu/mars/}; JMARS; Mars Trek also shows CRISM footprints.
+\item \textbf{Python:} no dedicated official client. Use \texttt{requests} against ODE REST; read with \texttt{spectral} (SPy) 0.26 (ENVI), \texttt{rasterio}/GDAL (ENVI/PDS), \texttt{pdr} 1.4.4 or \texttt{planetarypy} 0.84.2 (PDS labels/indices).
+\end{itemize}
+\begin{verdict}
+Downloadable and reachable by a public REST API. \textbf{No login, no API key, nothing paid.} Main friction: file size (the I/F cube alone is about 0.67\,GB per observation), but the 82\,MB summary-parameter file is enough for mineral-class comparison.
+\end{verdict}
+
+%=======================================================================
+\section{Mars Trek WMTS (NASA Solar System Treks)}
+%=======================================================================
+\subsection{What it is}
+NASA Solar System Treks (JPL) are web portals (Mars, Moon, Vesta, and others) that serve hundreds of co-registered planetary map layers: image mosaics, DEMs, hillshades, slope, mineral and thermal maps. Layers are delivered as \textbf{OGC WMTS} tiles, and many layers can also be downloaded as full GeoTIFF products.
+
+\subsection{Data content}
+\begin{itemize}
+\item \textbf{Imagery/visual layers:} e.g.\ MOLA colour hillshade (\path{Mars_MGS_MOLA_ClrShade_merge_global_463m}), CTX mosaics, HiRISE, THEMIS day/night IR, Viking colour. Tiles are 8-bit JPEG/PNG; values are display colours, \emph{not physical quantities}.
+\item \textbf{Downloadable science products:} the Trek search API returned 107 matches for ``MOLA DEM'', e.g.\ \path{Mars_MOLA_blend200ppx_HRSC_DEM_clon0dd_200mpp_lzw} (``MGS MOLA and Mars Express HRSC, DEM'', global, 200\,m/px, $\approx$5.6\,GB GeoTIFF, category Topography/DEM, projection EPSG::104905). Each record includes title, mission, instrument, resolution, file size, coverage and service types.
+\end{itemize}
+Important: WMTS tiles are visualisation. For quantitative terrain comparison, use the DEM GeoTIFF product (or the USGS copy, Chapter~7.1), not JPEG tiles.
+
+\subsection{Access routes}
+\begin{itemize}
+\item \textbf{WMTS:} \path{https://trek.nasa.gov/tiles/Mars/EQ/<layer>/1.0.0/WMTSCapabilities.xml} and tile URLs \path{.../default/default028mm/{z}/{row}/{col}.jpg}. Capabilities and tile tested \OK{}. Moon equivalent (\path{/tiles/Moon/EQ/LRO_WAC_Mosaic_Global_303ppd_v02/}) \OK{}. Note: guessed layer names returned 404, so always take names from the capabilities document or the search API.
+\item \textbf{Trek search API (Solr JSON):} \path{https://trek.nasa.gov/mars/TrekServices/ws/index/eq/searchItems?key=...} \OK{}, no key; returns product metadata and download links.
+\item \textbf{GUI:} \url{https://trek.nasa.gov/mars/} (layer browser, measuring tools, export).
+\item \textbf{Python:} \texttt{owslib} 0.36.0 (WMTS client), \texttt{requests}; tiles can also be loaded directly in Folium/Leaflet as a tile layer.
+\end{itemize}
+\begin{verdict}
+Tiles via an open WMTS API, plus full GeoTIFF downloads. \textbf{No login, no key, nothing paid.} Use it for map backdrops and visual comparison; use the DEM GeoTIFFs for numbers.
+\end{verdict}
+
+%=======================================================================
+\section{LRO Diviner Lunar Radiometer}
+%=======================================================================
+\subsection{What it is}
+Diviner (on the Lunar Reconnaissance Orbiter, 2009--present; UCLA/JPL) is a 9-channel thermal and solar radiometer (0.3--400\,µm). It maps lunar surface temperature, thermal inertia, rock abundance and silicate composition (Christiansen feature).
+\begin{itemize}
+\item \textbf{RDR / calibrated data} (Level~4 in PDS terms): one table per 10 minutes of data, about 300\,MB uncompressed each; total archive over 200\,TB. Stored as ZIP of fixed-width text \path{.TAB} with PDS3 \path{.lbl} and PDS4 \path{.xml}. Bundle \path{urn:nasa:pds:lro_diviner_calibrated}.
+\item \textbf{Derived/gridded products} (GDR/Level~3): global or polar maps of bolometric temperature (by local time), rock abundance, regolith temperature (``rock-free''), H-parameter (thermal inertia), Christiansen feature. Available via the UCLA Diviner site (\url{https://www.diviner.ucla.edu/data}, reachable, HTTP 200) and PDS.
+\end{itemize}
+
+\subsection{Data content (verified from a real RDR label)}
+Real file: \path{201002020000_RDR} (2 Feb 2010, 00:00--00:10 UTC), \textbf{885\,843 rows}. Columns from the PDS4 label:
+\begin{center}\footnotesize\ttfamily
+\begin{minipage}{0.95\textwidth}\raggedright
+date, utc, jdate, orbit, sundist, sunlat, sunlon, sclk, sclat, sclon, scrad, scalt, el\_cmd, az\_cmd, af, orientlat, orientlon, c, det, vlookx, vlooky, vlookz, radiance, tb, clat, clon, cemis, csunzen, csunazi, cloctime, qca, qge, qmi
+\end{minipage}\end{center}
+Key columns: \texttt{c}/\texttt{det} = channel (1--9) and detector (1--21); \texttt{radiance}; \textbf{\texttt{tb}} = brightness temperature (K); \texttt{clat}/\texttt{clon} = footprint centre; \texttt{cemis}, \texttt{csunzen}, \texttt{csunazi} = emission and solar angles; \textbf{\texttt{cloctime}} = local lunar time; \texttt{qca}/\texttt{qge}/\texttt{qmi} = quality flags. Typical lunar values: noon equatorial $\approx$390\,K, night $\approx$95\,K, polar cold traps $<$40\,K.
+
+\textbf{Relevance.} This dataset supplies the lunar thermal reference (temperature range and day/night amplitude). As \texttt{solution\_ideas.md} notes, Earth sites cannot reproduce these values. Use it to quantify the mismatch, preferably with the gridded maps rather than raw RDR.
+
+\subsection{Access routes}
+\begin{itemize}
+\item \textbf{HTTPS archive:} \url{https://pds-geosciences.wustl.edu/lro/lro-l-dlre-4-rdr-v1/} (volumes \path{lrodlr_1001}, \path{lrodlr_1002}; \path{data/YYYY/YYYYMM/YYYYMMDD/}). Also the EDR (\path{lro-l-dlre-2-edr-v1}). Listing and labels tested \OK{}.
+\item \textbf{ODE REST API} (target \texttt{moon}, \texttt{ihid=LRO}, \texttt{iid=DLRE}): \OK{}, for product discovery by area/time.
+\item \textbf{UCLA Diviner RDR query tool / gridded products} at \url{https://www.diviner.ucla.edu/data}: public, web-form based (bounding box, local time, channel), returns subsets.
+\item \textbf{Moon Trek layers:} several Diviner maps (rock abundance, temperatures) as WMTS (no key).
+\item \textbf{Python:} no official client. Use \texttt{requests}, \texttt{pds4-tools} 1.4 / \texttt{pdr} for labels, \texttt{pandas} for the fixed-width tables, \texttt{rasterio} for gridded GeoTIFF/IMG.
+\end{itemize}
+\begin{verdict}
+Download (HTTPS) plus metadata REST API. \textbf{No login, no key, nothing paid.} Practical constraint: data volume. Prefer gridded Level~3 maps or the UCLA query tool for small areas (e.g.\ lunar south pole).
+\end{verdict}
+
+%=======================================================================
+\section{Adjacent datasets that can help}
+%=======================================================================
+The datasets below fill gaps in the six-dataset plan: Mars and Moon topography, Earth thermal and climate data, alternative global DEMs, and other mineral data. Each was assessed against the same three points. Rows marked ``tested'' were probed live on 14 Nov 2026.
+
+\subsection{Planetary datasets (Mars and Moon)}
+{\small
+\rowcolors{2}{pale}{white}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{4.9cm}@{}}
+\toprule
+\textbf{Dataset} & \textbf{What / content} & \textbf{Access mode} & \textbf{Credentials}\\\midrule\endhead
+MOLA MEGDR / global DEM (Mars) & MGS laser altimetry; global DEM 463\,m/px (128 ppd) and 200\,m blended MOLA+HRSC; elevation (m) relative to the areoid; int16 GeoTIFF. Needed for Mars terrain metrics (slope, roughness). & Download (USGS \path{planetarymaps.usgs.gov/mosaic/...tif}, which redirects to public S3, tested \OK{} with range read; PDS Geosciences); Trek API & None\\
+LOLA (Moon) & LRO laser altimeter; global LDEM (118\,m and finer), polar 5--20\,m DEMs, slope and roughness maps; RDR point tables (lat, lon, radius, quality). & Download (PDS Geosciences \path{lro-l-lola-3-rdr-v1}, tested \OK{}; USGS); STAC (USGS Astrogeology collection \path{lunar_orbiter_laser_altimeter}, tested \OK{}); ODE & None\\
+MRO CTX DTMs and Murray Lab global CTX mosaic & 6\,m/px panchromatic imagery and stereo DTMs ($\approx$18--24\,m). Good for rover-scale terrain. & USGS Astrogeology STAC \path{mro_ctx_controlled_usgs_dtms} (\OK{}); Murray Lab mosaic tiles (endpoint timed out during test); ODE & None\\
+HiRISE images and DTMs & 25--50\,cm/px imagery; 1\,m DTMs at selected sites (e.g.\ Jezero). & PDS Imaging (redirect, public); USGS STAC \path{mro_hirise_socet_dtms} (\OK{}); ODE & None\\
+THEMIS (Mars Odyssey) & Day/night IR mosaics (100\,m) and a thermal inertia map (TI in J\,m$^{-2}$K$^{-1}$s$^{-1/2}$): physical surface properties. & USGS STAC \path{mo_themis_controlled_mosaics} (\OK{}); ASU JMARS; Trek & None\\
+TES (MGS) & Global albedo, thermal inertia, mineral abundance maps (feldspar, pyroxene, olivine, high-Si glass), 3--8\,km. Global Mars mineralogy. & PDS Geosciences download; ODE & None\\
+OMEGA (Mars Express) & ESA VNIR imaging spectrometer; global mineral index maps ($\sim$1--5\,km). & ESA PSA (\url{https://psa.esa.int}) download and TAP API & None (public)\\
+Kaguya / SELENE TC DTMs (Moon) & 10\,m DTMs and imagery. & USGS STAC \path{kaguya_terrain_camera_usgs_dtms*} (\OK{}); JAXA DARTS & None\\
+Moon Mineralogy Mapper (M\textsuperscript{3}) & Chandrayaan-1 VNIR imaging spectrometer, 140\,m; reflectance cubes (85 bands). Lunar mineralogy (pyroxene, olivine, OH/H$_2$O). & PDS Imaging download; ODE & None\\
+LROC NAC/WAC & 0.5\,m NAC images; 100\,m WAC global mosaic; NAC DTMs. & LROC website and PDS; ODE; Moon Trek WMTS (\OK{}) & None\\
+Curiosity / Perseverance in-situ (APXS, ChemCam, PIXL, REMS) & Rock/soil oxide compositions (wt\% tables) and REMS weather (pressure, T, RH, UV). Ground-truth references. & PDS Geosciences / Atmospheres download; ODE in-situ notebook & None\\
+Mars Climate Database (MCD) & Modelled Martian climate (T, p, winds, dust, UV) at any lat/lon/time. & Web interface; download on request & Free registration for full DB\\
+\bottomrule
+\end{longtable}}
+
+\subsection{Earth datasets}
+{\small
+\rowcolors{2}{pale}{white}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{4.9cm}@{}}
+\toprule
+\textbf{Dataset} & \textbf{What / content} & \textbf{Access mode} & \textbf{Credentials}\\\midrule\endhead
+EMIT L2A Reflectance (EMITL2ARFL) & 285-band surface reflectance cubes (381--2493\,nm, 60\,m), NetCDF. Lets you compute your own band depths or spectral angles comparable to CRISM. & CMR/STAC/AppEEARS (\OK{} search), earthaccess & Free Earthdata Login (same as EMIT L2B)\\
+Copernicus DEM GLO-30 / GLO-90 & ESA/Airbus TanDEM-X DEM (2011--15), 30\,m, global incl.\ $>$60\textdegree N; float32 COG, 1\textdegree{} tiles. Often more accurate than SRTM. & AWS Open Data \path{s3://copernicus-dem-30m} (anonymous range read \OK{}); Earth Search STAC (\OK{}, item \path{Copernicus_DSM_COG_10_S25_00_W070_00_DEM}); Planetary Computer (\OK{}); OpenTopography & None (OpenTopography route: free key)\\
+ASTER GDEM v3 (ASTGTM) & 30\,m DEM from ASTER stereo; global 83\textdegree N--83\textdegree S. & LP~DAAC (CMR \OK{}), earthaccess & Free Earthdata Login\\
+ALOS World 3D (AW3D30) & JAXA 30\,m DSM. & Planetary Computer \path{alos-dem} (\OK{} listed); JAXA site & None (PC) / free JAXA registration\\
+MODIS Land Surface Temperature (MOD11A1/A2, MOD21) & Daily/8-day day and night LST (K, scale 0.02), emissivity, 1\,km. Gives the Earth-side thermal range. & LP~DAAC (CMR \OK{}), AppEEARS (\OK{} listed), Planetary Computer \path{modis-11A1-061} (\OK{}), GEE & Earthdata Login / none on PC\\
+ECOSTRESS LST (ECO\_L2T\_LSTE) & 70\,m LST at varying times of day (diurnal sampling from the ISS). & LP~DAAC (CMR \OK{}), AppEEARS (\OK{} listed) & Free Earthdata Login\\
+ASTER L1T / emissivity (AG100) & 90\,m TIR emissivity: silica, carbonate and mafic discrimination (Earth thermal-IR mineralogy, comparable to TES/THEMIS). & Planetary Computer \path{aster-l1t}; LP~DAAC & None (PC) / Earthdata Login\\
+NASA POWER & Point/regional daily climate from MERRA-2 and CERES: T2M, Tmax/Tmin, RH2M, solar and UV, precipitation. Real sample (24\textdegree S, 69\textdegree W, 1 Jan 2024): T2M 16.36\,°C, Tmax 26.09, Tmin 7.61, RH2M 31.1\,\%, UV index 4.01. & REST API \url{https://power.larc.nasa.gov/api/} (\OK{}), JSON/CSV & \textbf{None, no key}\\
+ERA5 reanalysis & Hourly global climate since 1940, 0.25\textdegree: temperature, humidity, radiation, wind. & Copernicus CDS API (catalogue \OK{}; data needs key), Python \texttt{cdsapi} 0.7.7; Planetary Computer \path{era5-pds} (public) & Free CDS account + API key (or none via PC)\\
+Sentinel-2 L2A & 10--60\,m multispectral, 13 bands, 5-day revisit (higher resolution than HLS). & Earth Search and Planetary Computer STAC (public), Copernicus Data Space & None (STAC mirrors) / free CDSE account\\
+Landsat Collection 2 L2 & 30\,m reflectance and surface temperature (ST\_B10, K). & Planetary Computer \path{landsat-c2-l2} (public); USGS EarthExplorer / M2M API & None (PC) / free USGS ERS login (M2M API also needs access request)\\
+ESA WorldCover / CCI Land Cover & 10\,m (WorldCover) land-cover classes incl.\ ``bare/sparse vegetation'' and ``snow/ice''. Fast filter for barren candidate areas. & Planetary Computer \path{esa-worldcover} (\OK{} listed), AWS & None\\
+USGS Spectral Library 7 & Lab reflectance spectra of minerals (0.2--200\,µm); reference spectra behind EMIT/Tetracorder and used for CRISM comparison. & Download (USGS ScienceBase) & None\\
+Google Earth Engine catalogue & Hosts SRTM, NASADEM, HLS, MODIS, Landsat, ERA5 in one API with server-side processing. & Python \texttt{earthengine-api}; tested 401 without OAuth & Google account + Cloud project; free for research/non-commercial; commercial use is paid\\
+OpenTopography & Global DEM API (SRTM, NASADEM, COP30, AW3D30) plus high-res lidar. & REST API (401 without key), \texttt{bmi-topography} & Free API key (account)\\
+\bottomrule
+\end{longtable}}
+
+%=======================================================================
+\section{Consolidated findings}
+%=======================================================================
+\subsection{Download-only vs API vs Python}
+\begin{itemize}
+\item \textbf{None of the six core datasets is download-only.} All have at least one programmatic route.
+\item \textbf{Full API + maintained Python client:} EMIT, SRTM/NASADEM, HLS (NASA CMR/STAC/AppEEARS + \texttt{earthaccess}; plus \texttt{pystac-client}/\texttt{planetary-computer} for SRTM and HLS mirrors).
+\item \textbf{REST API without a dedicated Python client} (use generic HTTP and PDS readers): CRISM MTRDR (ODE REST), Mars Trek (WMTS + search API), Diviner (ODE REST + HTTPS tree).
+\item \textbf{Effectively download/web-form oriented among adjacent sets:} Murray Lab CTX mosaic, UCLA Diviner gridded maps, Mars Climate Database, USGS Spectral Library.
+\end{itemize}
+
+\subsection{Authentication summary}
+{\small\rowcolors{2}{pale}{white}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.5cm}L@{}}
+\toprule\textbf{Requirement} & \textbf{Datasets}\\\midrule
+No login, no key (fully public) & CRISM MTRDR, Mars Trek, Diviner, MOLA, LOLA, CTX/HiRISE/THEMIS/Kaguya (USGS STAC), TES, OMEGA, M\textsuperscript{3}, LROC, NASA POWER, Copernicus DEM (AWS/STAC), Microsoft Planetary Computer mirrors (NASADEM, HLS, MODIS LST, Landsat, Sentinel-2, WorldCover, ERA5), AWS Terrain Tiles\\
+Free NASA Earthdata Login (account; token for scripts) & EMIT L2B and L2A, SRTMGL1/GL3, NASADEM, HLS (NASA copies), ASTER GDEM, ECOSTRESS, MODIS (NASA copies), all AppEEARS tasks\\
+Free API key & OpenTopography; Copernicus CDS (ERA5); Planetary Computer subscription key (optional, raises limits)\\
+Account with project / approval & Google Earth Engine (free for research); USGS M2M API (free ERS login + access request)\\
+Paid & \textbf{None required.} GEE commercial use and commercial imagery (Maxar, Planet) are outside scope\\
+\bottomrule
+\end{tabularx}}
+
+\subsection{Practical implications for the team}
+\begin{enumerate}
+\item Every team member should create a free \textbf{NASA Earthdata Login} before the hackathon. It unlocks EMIT, the only source of Earth mineral identification in the plan.
+\item For Earth DEM and multispectral data, the \textbf{public Planetary Computer / AWS mirrors} avoid login friction and are cloud-optimised (COG): read only the window you need.
+\item All \textbf{planetary} references (CRISM, MOLA, LOLA, Diviner, Trek) need no credentials. The constraint is file size: choose summary or gridded products rather than raw cubes and RDR tables.
+\item Mars Trek WMTS tiles are display images. Use Trek or USGS \textbf{DEM GeoTIFFs} for numerical terrain comparison.
+\item The official challenge rule (at least one dataset from the official Resources tab) is still to be checked; all six core datasets are NASA-hosted.
+\end{enumerate}
+
+\subsection*{Limitations of this report}
+Tests confirm reachability and authentication behaviour on 14 Nov 2026; quotas and rate limits were not stress-tested. Authenticated downloads were not performed, since no credentials were used. Gridded Diviner products and the Murray Lab CTX mosaic were not tested in depth; the CTX endpoint timed out. Mineral-name examples for EMIT come from the USGS Spectral Library naming used by Tetracorder and were not read from a downloaded granule.
+
+\end{document}

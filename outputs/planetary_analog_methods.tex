@@ -1,0 +1,409 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{array,booktabs,tabularx,longtable}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+\usepackage[skins,breakable]{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+\def\UrlBreaks{\do\/\do-\do_\do.\do=\do?\do&}
+\setlist{nosep,leftmargin=1.4em}
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+
+\definecolor{navy}{HTML}{1F3A5F}
+\definecolor{rust}{HTML}{B5462A}
+\definecolor{pale}{HTML}{F3F6FA}
+\titleformat{\section}{\Large\bfseries\color{navy}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{navy}}{\thesubsection}{0.5em}{}
+
+\pagestyle{fancy}\fancyhf{}
+\lhead{\small Planetary Analog Site Evaluation: Methods \& Formulas}
+\rhead{\small\thepage}
+
+\newtcolorbox{method}[1]{enhanced,breakable,colback=pale,colframe=navy,
+  title={\bfseries #1},fonttitle=\large,arc=2pt,boxrule=0.6pt,left=6pt,right=6pt}
+\newtcolorbox{caveat}{colback=rust!6,colframe=rust,arc=2pt,boxrule=0.5pt,
+  title={\bfseries Caveats},left=5pt,right=5pt}
+\newcommand{\field}[1]{\par\smallskip\textbf{\color{navy}#1:}\ }
+\newcommand{\verif}[1]{\par\smallskip{\footnotesize\textit{Formula status: #1}}}
+
+\title{\color{navy}\textbf{Finding Earth Analogs of Mars and the Moon}\\[0.3em]
+\large Literature survey of quantitative methods for evaluating, searching and ranking terrestrial analog sites}
+\author{Compiled for NASA Space Apps Challenge 2026}
+\date{14 November 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent This document surveys the published quantitative methods for judging how closely an Earth location resembles a site on Mars or the Moon. It covers peer-reviewed and agency sources: NASA technical reports (NTRS), arXiv preprints, ScienceDirect (Icarus, Planetary and Space Science), ResearchGate-hosted conference papers and LPI reports. For each method it gives the governing equations, what they mean in the original work, inputs and outputs, data sources, how the method bears on analog site selection, and its limits. The methods fall into six families: (1) conceptual analog frameworks, (2) compositional and geochemical similarity, (3) spectral similarity, (4) terrain and morphometric similarity, (5) environmental and physical similarity (thermal, water, radiation, regolith) and (6) planetary-scale similarity indices. The document ends with a proposed composite analog score that combines them.
+\end{abstract}
+
+\paragraph{How to read the formula status line.} \textbf{Update 14 Nov 2026:} the C1, C2, T1, T2, T3 and P1 formulas were re-checked against the full source PDFs or article text (see each status line). T2 was corrected. C3 (Gorgona) could not be retrieved. The web search tools used for this survey returned abstracts and excerpts, not always full texts. Every method therefore carries a \emph{formula status} line. \textbf{Verified} means the equation's structure was confirmed in the cited source text. \textbf{Standard form} means a widely used textbook or community form consistent with the source's description, whose exact notation and weights should be checked against the full PDF before you rely on it in code.
+
+\tableofcontents
+\newpage
+
+%=====================================================================
+\section{Framing: what makes a location an ``analog''?}
+%=====================================================================
+
+Foucher et al.\ (2021) argue that an analog should be defined by its \emph{function} rather than by overall resemblance. A site is a good analog \emph{for a purpose} (testing a rover's mobility, calibrating a spectrometer, studying biosignature preservation) when the properties that matter for that purpose match the target. The properties that do not matter can differ. This idea underpins every method below. No universal ``Mars-likeness'' score exists, only scores tuned to a use case.
+
+\begin{method}{F1. Functional analog framework (Foucher et al., 2021)}
+\field{Source} F.~Foucher, K.~Hickman-Lewis, A.~Hutzler, K.H.~Joy, L.~Folco, J.C.~Bridges, \dots, F.~Westall, ``Definition and use of functional analogues in planetary exploration,'' \emph{Planetary and Space Science} 197, 105162 (2021). DOI: \href{https://doi.org/10.1016/j.pss.2021.105162}{10.1016/j.pss.2021.105162}. Open access (CC BY 4.0). Files: \url{https://hal.science/hal-03130725} (\texttt{2021\_foucher\_westall\_planetary\_and\_space\_science\_version\_auteur.pdf}); \url{https://kar.kent.ac.uk/109579/}.
+\field{Content} An analog has \emph{general properties} that resemble the target body and \emph{specific properties} that must be highly relevant to the intended use. The paper classifies analogs by their utility before, during and after a mission, and gives logical pathways for choosing the best analog.
+\field{Formalisation} The paper is qualitative. Its logic can be written as a weighted relevance score over a property set $P$:
+\begin{equation}
+  A_{\text{use}}(s) \;=\; \sum_{p\in P} r_{p,\text{use}}\; S_p(s,t), \qquad \sum_p r_{p,\text{use}} = 1 ,
+\end{equation}
+Here $S_p\in[0,1]$ is the similarity of site $s$ to target $t$ in property $p$ (any metric in Sections~2--6), and $r_{p,\text{use}}$ is the relevance weight for the intended use. For mobility testing, for example, weight slope and rock abundance heavily and mineralogy hardly at all.
+\field{Inputs / outputs} Inputs: property similarities $S_p$ and relevance weights chosen by experts. Output: a use-specific analog score.
+\field{Relevance} This is the organising principle for any analog-finder application. It tells you to expose the \emph{weights} to the user rather than hard-code a single score.
+\verif{author's formalisation of a qualitative framework; this equation is not in the paper.}
+\begin{caveat}Weights are subjective. Report the per-property scores next to the aggregate so a site that is perfect in one property is not hidden by averaging.\end{caveat}
+\end{method}
+
+\begin{method}{F2. Analog sites for MSL and beyond (LPI)}
+\field{Source} ``Analogue sites for Mars missions: MSL and beyond,'' Lunar and Planetary Institute Contribution 1612. File: \url{https://www.lpi.usra.edu/lpi/contribution_docs/LPI-001612.pdf} (\texttt{LPI-001612.pdf}).
+\field{Content} A community workshop report that catalogues terrestrial analog sites (Atacama, Dry Valleys, Rio Tinto, Svalbard, Iceland, Pilbara and others) against Mars Science Laboratory candidate landing environments. It lists criteria such as mineralogy, aqueous history, preservation potential and accessibility.
+\field{Relevance} Gives the qualitative ground truth (expert-chosen sites) against which a quantitative ranking can be validated.
+\verif{no equations; descriptive report.}
+\end{method}
+
+%=====================================================================
+\section{Compositional and geochemical similarity}
+%=====================================================================
+
+\begin{method}{C1. Figure of Merit (FoM) for composition (NASA lunar simulant programme)}
+\field{Source} D.L.~Rickman, C.M.~Schrader et al., ``Lunar Regolith Characterization for Simulant Design and Evaluation Using Figure of Merit Algorithms,'' AIAA 2009. Files: \url{https://ares.jsc.nasa.gov/projects/simulants/attachments/conf_papr_AIAA_2009_Schrader\%20-\%20Lunar\%20Regolith\%20Characterization\%20for\%20Simulant\%20Design\%20and\%20Evaluation\%20Using\%20Figure\%20of\%20Merit\%20Algorithms.pdf}; ResearchGate record \url{https://www.researchgate.net/publication/237112023}. Full maths: C.M.~Schrader et al., \emph{Lunar Regolith Simulant User's Guide}, NASA/TM-2010-216446, \S3.2--3.3, \url{https://ntrs.nasa.gov/api/citations/20100038451/downloads/20100038451.pdf} (\texttt{20100038451.pdf}). FoM software: \url{https://ntrs.nasa.gov/citations/20110012037}.
+\field{Original application} Quantifies how well a terrestrial simulant (for example JSC-1A, NU-LHT) matches a lunar reference regolith such as Apollo~16 samples 64001/64002. The match is scored on particle type (composition), particle size distribution, particle shape and bulk density. A score of 1 is a perfect match and 0 is no match.
+\field{Formula} Each material is a vector of $n$ component abundances (modal mineralogy or particle types). Normalising forces the difference into $[0,1]$, and subtracting from 1 gives the score:
+\begin{equation}
+  \mathrm{FoM}_{\text{comp}} \;=\; 1 - \frac{\sum_{i=1}^{n} \lvert x_i - y_i\rvert}{\sum_{i=1}^{n} (x_i + y_i)}
+  \qquad\text{(equivalently } 1-\tfrac12\lVert \hat{x}-\hat{y}\rVert_1 \text{ for unit-sum vectors)} ,
+\end{equation}
+Here $x_i$ is the abundance of component $i$ in the reference (lunar) material and $y_i$ the abundance in the candidate (terrestrial) material. The NASA authors also describe the formula as similar to an inner product between unit vectors.
+\field{Inputs / outputs} Inputs: modal mineralogy or particle-type percentages (plagioclase, pyroxene, olivine, agglutinates, glass, \dots). The original method also uses plagioclase An\# as a key marker. Output: a scalar in $[0,1]$.
+\field{Data} Apollo/Luna sample catalogues (Lunar Sample Compendium), and terrestrial sample XRD/QEMSCAN analyses.
+\field{Relevance} Scores Earth rock or soil sources as lunar analogs, such as Stillwater anorthosite for the highlands or Hawaiian and Arizona basalts for the mare. It applies equally to Mars when APXS/ChemCam oxide vectors serve as the reference.
+\verif{\textbf{verified against full PDF} (Schrader et al.\ AIAA 2009, \S II): ``the composition FoM is the normalized difference of the composition vectors \dots\ subtracted from unity \dots\ may be interpreted as the fraction of material that is the same in both materials.'' For unit-sum vectors that fraction is exactly $\sum_i\min(x_i,y_i)=1-\tfrac12\lVert x-y\rVert_1$, which is Eq.~(2). Neither PDF prints the equation; NASA/TM-2010-216446 \S3.2 is descriptive only and points to the FoM v.2 software (Matlab). Full TM results vs.\ 64001/64002: NU-LHT-1M 0.65, NU-LHT-2M 0.55, JSC-1AF 0.43, FJS-1 0.36, JSC-1A 0.35, MLS-1 0.35, JSC-1 0.33, OB-1 0.28 (TM Table 3; its caption says ``Revision 1 algorithm'' while the text says v.2).}
+\begin{caveat}
+The results do not depend on how particle classes are defined, but they are sensitive to which classes you include. Texture effects (agglutinate shape, glass) are \emph{not} captured. Reported lunar-highland mineralogical FoMs: NU-LHT-1M $\approx 0.65$, OB-1 $\approx 0.28$ (via arXiv:1912.10622). The FoM rewards matching proportions, not absolute geotechnical behaviour: simulants that match composition can still fail to reproduce cohesion (arXiv:2602.03829).
+\end{caveat}
+\end{method}
+
+\begin{method}{C2. Figure of Merit for particle size distribution (PSD)}
+\field{Source} As C1 (NASA/TM-2010-216446 \S3.3).
+\field{Formula} The method compares the derivative (frequency curve) of the cumulative size distributions over logarithmic size bins $\phi_k$:
+\begin{equation}
+  \mathrm{FoM}_{\text{PSD}} \;=\; 1-\frac{\sum_k \bigl\lvert F'_{\text{ref}}(\phi_k) - F'_{\text{cand}}(\phi_k)\bigr\rvert}{\sum_k \bigl(F'_{\text{ref}}(\phi_k)+F'_{\text{cand}}(\phi_k)\bigr)} ,\qquad F'(\phi)=\frac{dF}{d\phi} ,
+\end{equation}
+Here $F(\phi)$ is the cumulative mass fraction finer than size class $\phi = -\log_2(d/\text{mm})$.
+\field{Inputs / outputs} Inputs: sieve or laser-diffraction size data for both materials. Output: a score in $[0,1]$.
+\field{Relevance} Needed for trafficability, dust and excavation analogs, such as basaltic cinder fields used for lunar and Mars rover testing.
+\verif{\textbf{verified against full PDF} (AIAA 2009 \S II): ``the difference between the size relative frequency distributions, which are the derivatives of the size cumulative frequency distributions \dots\ subtracted from unity.'' The equation itself is not printed. TM \S3.3 notes that the user defines the bins, and that comparing against the $<$1\,mm or $<$90\,µm reference subsets (renormalised to 100\%) changes the score.}
+\begin{caveat}The score depends on bin width. Use the same $\phi$ grid for both materials. Lunar PSD is in-situ, so comminution changes a terrestrial sample after it is collected.\end{caveat}
+\end{method}
+
+\begin{method}{C3. Compositional Figure of Merit FOMc with areal weighting (Gorgona -- Syrtis Major)}
+\field{Source} Tovar et al., ``Gorgona Island (Colombia) as a terrestrial analog of Syrtis Major (Mars): Evidence from geochemical meta-analyses and compositional figures of merit,'' \emph{Icarus} 456, 117133 (2026). DOI \href{https://doi.org/10.1016/j.icarus.2026.117133}{10.1016/j.icarus.2026.117133}; \url{https://www.sciencedirect.com/science/article/pii/S0019103526001995}; open-access copy \url{https://repositorio.utb.edu.co/bitstreams/d1f0b56d-9f82-464c-8f6c-412028e380b6/download}.
+\field{Original application} Compares published Gorgona whole-rock geochemistry with Mars orbital data (TES, GRS, OMEGA, CRISM) and SNC meteorites. It uses discriminant ratios such as Al$_2$O$_3$/TiO$_2$ and FOMc, computed both per dataset and as averages weighted by the areal proportion of each lithology on the island.
+\field{Formulas} A compositional FoM between target oxide vector $\mathbf{m}$ (Mars) and lithology vector $\mathbf{g}_j$:
+\begin{equation}
+  \mathrm{FOMc}_j \;=\; 1-\frac{1}{N}\sum_{i=1}^{N}\frac{\lvert g_{ij}-m_i\rvert}{g_{ij}+m_i},
+\end{equation}
+and the area-weighted site score
+\begin{equation}
+  \mathrm{FOMc}_{\text{site}} = \sum_j a_j\,\mathrm{FOMc}_j ,\qquad a_j = \frac{A_j}{\sum_k A_k},
+\end{equation}
+where $A_j$ is the mapped outcrop area of lithology $j$. Discriminant: $R=\mathrm{Al_2O_3}/\mathrm{TiO_2}$. The two datasets are similar when their $R$ versus MgO trends have the same slope; both show a positive, MORB-like slope.
+\field{Inputs / outputs} Inputs: major-oxide wt\% (SiO$_2$, TiO$_2$, Al$_2$O$_3$, FeO$_T$, MgO, CaO, Na$_2$O, K$_2$O), geological map areas, Mars orbital and meteorite compositions. Outputs: per-lithology and site-level FOMc. Enriched and depleted basalts and spinifex komatiites score above 0.87, while dunites and wehrlites score low.
+\field{Relevance} The most direct published example of a quantitative, multi-dataset geochemical ranking of an Earth site against a named Martian region. The area-weighting step maps directly onto a GIS-based analog finder.
+\verif{\textbf{NOT verified.} The full text could not be retrieved: the open-access repository returned a bot-detection page and ScienceDirect is paywalled. The abstract confirms the FOMc, Al$_2$O$_3$/TiO$_2$ and areal-weighting method, but not the equation. A related EGU24 abstract (EGU24-12957) describes a Mars-simulant FoM as a ``standardized fidelity compositional comparison of the oxide differences'' against reference datasets, which is consistent with Eq.~(4). Treat Eq.~(4) as a plausible reconstruction.}
+\begin{caveat}Orbital Mars data (GRS footprints of hundreds of km, TES at about 3\,km) average over many lithologies, while terrestrial data are hand samples, so the two differ in scale. Oxide closure (all oxides sum to 100\%) creates spurious correlations; consider a log-ratio transform (C4).\end{caveat}
+\end{method}
+
+\begin{method}{C4. Multivariate geochemical distance: PCA, clustering, Mahalanobis}
+\field{Source} Tréguier, d'Uston, Pinet, Berger, Toplis, McCoy, Gellert, Brückner, ``Overview of Mars surface geochemical diversity through Alpha Particle X-Ray Spectrometer data multidimensional analysis,'' \emph{JGR Planets} (2008), DOI \href{https://doi.org/10.1029/2007JE003010}{10.1029/2007JE003010}. Related APXS work: \url{https://ntrs.nasa.gov/api/citations/20150018594/downloads/20150018594.pdf}.
+\field{Original application} PCA and hierarchical clustering of MER APXS rock and soil compositions. They showed that Meridiani variability is dominated by sulfur and that Burns-formation bedrock is basalt plus a sulfur component.
+\field{Formulas} Centred log-ratio (clr) transform to remove closure, for a $D$-part composition:
+\begin{equation}
+  \mathrm{clr}(\mathbf{x}) = \Bigl[\ln\tfrac{x_1}{g(\mathbf{x})},\dots,\ln\tfrac{x_D}{g(\mathbf{x})}\Bigr],\quad g(\mathbf{x})=\Bigl(\prod_{i=1}^{D}x_i\Bigr)^{1/D}.
+\end{equation}
+PCA: eigen-decomposition of the covariance $\boldsymbol\Sigma = \frac{1}{n-1}\mathbf{Z}^{\!\top}\mathbf{Z} = \mathbf{V}\boldsymbol\Lambda\mathbf{V}^{\!\top}$, with scores $\mathbf{T}=\mathbf{Z}\mathbf{V}_k$.
+Mahalanobis distance of a terrestrial sample $\mathbf{y}$ from a Martian class with mean $\boldsymbol\mu$ and covariance $\boldsymbol\Sigma$:
+\begin{equation}
+  D_M(\mathbf{y}) = \sqrt{(\mathbf{y}-\boldsymbol\mu)^{\!\top}\boldsymbol\Sigma^{-1}(\mathbf{y}-\boldsymbol\mu)},\qquad
+  S = \exp\!\bigl(-\tfrac12 D_M^2\bigr).
+\end{equation}
+\field{Inputs / outputs} Inputs: oxide and element tables for Mars (APXS, ChemCam, meteorites) and Earth (GEOROC, PetDB). Outputs: PC scores, cluster labels, and a distance or similarity per sample.
+\field{Relevance} A terrestrial sample that falls inside a Martian compositional cluster (small $D_M$) is a statistically defensible analog, and this accounts for correlated oxides better than C1/C3 do.
+\verif{PCA/clustering verified from abstract; Mahalanobis use is not reported in the found Mars-analog sources, so it is offered here as a standard extension.}
+\begin{caveat}You need enough Martian samples to estimate $\boldsymbol\Sigma$ ($n\gg D$) and should shrink $\boldsymbol\Sigma$ if few are available. Do not run PCA on raw wt\% without a log-ratio transform.\end{caveat}
+\end{method}
+
+%=====================================================================
+\section{Spectral similarity (orbital and field spectroscopy)}
+%=====================================================================
+
+\begin{method}{S1. Spectral Angle Mapper (SAM) and spectral distance}
+\field{Sources} Kruse et al.\ (1993), the original SAM paper (Remote Sens.\ Environ.\ 44). Mars and analog context: Mauna Kea alteration library thesis (University of Nevada, Reno), \url{https://scholarwolf.unr.edu/server/api/core/bitstreams/2b820389-df4c-4e9a-847b-5d8da610fe68/content}; Mauna Kea VSWIR basalts, \emph{Am.\ Mineral.}\ 105 (2020), \url{https://msaweb.org/MSA/AmMin/TOC/2020/Abstracts/AM105P1306.pdf}; NASA spectral-fidelity recommendations, \url{https://ntrs.nasa.gov/api/citations/20030012636/downloads/20030012636.pdf}.
+\field{Formula} For spectra $\mathbf{t}$ (target, such as a CRISM pixel) and $\mathbf{r}$ (terrestrial field or ASD spectrum resampled to CRISM bands) over $B$ bands:
+\begin{equation}
+  \theta = \arccos\!\left(\frac{\sum_{b=1}^{B} t_b r_b}{\sqrt{\sum_b t_b^2}\,\sqrt{\sum_b r_b^2}}\right),\qquad S_{\text{spec}} = 1-\frac{2\theta}{\pi}.
+\end{equation}
+Band depth, used in CRISM summary products:
+\begin{equation}
+  BD(\lambda_c)=1-\frac{R(\lambda_c)}{R_{\text{cont}}(\lambda_c)},\quad
+  R_{\text{cont}}(\lambda_c)= a\,R(\lambda_s)+b\,R(\lambda_l),\ \ b=\frac{\lambda_c-\lambda_s}{\lambda_l-\lambda_s},\ a=1-b .
+\end{equation}
+\field{Inputs / outputs} Inputs: reflectance spectra (CRISM, OMEGA, M$^3$ for the Moon; ASD, AVIRIS, EMIT, PRISMA for Earth). Outputs: an angle in radians (0 is identical shape), band-depth maps (for example BD1900 for hydration and D2300 for Fe/Mg phyllosilicates).
+\field{Relevance} Lets you compare the mineralogy of Earth hyperspectral scenes to Mars or Moon pixels, for example to find Earth places with the same hydrated-silica, sulfate or smectite signature. SAM is insensitive to illumination scaling.
+\verif{standard, well-established formulas.}
+\begin{caveat}SAM ignores albedo differences and is affected by atmospheric residuals (Mars CO$_2$ near 2.0\,µm; Earth H$_2$O at 1.4 and 1.9\,µm, which hides hydration bands). Resample to matching band widths. Grain size and space weathering (lunar nanophase Fe) change spectral contrast, so a spectral match is not a mineral match. NASA recommends analog datasets measured with geometric and spectral fidelity as close to the flight instruments as possible.\end{caveat}
+\end{method}
+
+\begin{method}{S2. Hapke radiative-transfer reflectance (linking spectra to mineral abundance)}
+\field{Source} B.~Hapke, \emph{Theory of Reflectance and Emittance Spectroscopy}, Cambridge University Press (2012). Widely used in lunar and Mars analog unmixing.
+\field{Formula} Bidirectional reflectance (simplified, isotropic multiple scattering):
+\begin{equation}
+  r(i,e,g)=\frac{w}{4\pi}\frac{\mu_0}{\mu_0+\mu}\Bigl\{[1+B(g)]P(g)+H(\mu_0)H(\mu)-1\Bigr\},\qquad
+  H(x)\approx\frac{1+2x}{1+2x\sqrt{1-w}},
+\end{equation}
+where $\mu_0=\cos i$, $\mu=\cos e$, $w$ is the single-scattering albedo, $P$ the phase function and $B$ the opposition effect. Linear mixing applies in $w$-space: $w_{\text{mix}}=\sum_j f_j w_j$, with $f_j$ the area fractions.
+\field{Inputs / outputs} Inputs: measured reflectance, observation geometry ($i,e,g$), endmember library. Outputs: mineral abundances, which can then feed C1/C3.
+\field{Relevance} Turns orbital spectra into the modal abundance vectors that FoM methods need.
+\verif{standard form.}
+\begin{caveat}Grain size and phase function are poorly constrained. Results are non-unique without ground truth.\end{caveat}
+\end{method}
+
+%=====================================================================
+\section{Terrain and morphometric similarity}
+%=====================================================================
+
+\begin{method}{T1. Surface roughness: RMS height, RMS slope, Hurst exponent}
+\field{Sources} Lunar: M.~Rosenburg, PhD thesis Ch.~2, Caltech (2014), \url{https://thesis.library.caltech.edu/8408/13/Rosenburg_Margaret_2014_Ch2.pdf} (\texttt{Rosenburg\_Margaret\_2014\_Ch2.pdf}); Rosenburg et al., ``Global surface slopes and roughness of the Moon from LOLA,'' JGR (2011). Mars: Orosei et al., MOLA self-affine roughness. Small body example: ``The Global Surface Roughness of 25143 Itokawa,'' \url{https://arxiv.org/pdf/1905.04882}.
+\field{Formulas} RMS deviation (structure function) at baseline $\Delta x$:
+\begin{equation}
+  \nu(\Delta x)=\sqrt{\frac{1}{n}\sum_{i=1}^{n}\bigl[z(x_i)-z(x_i+\Delta x)\bigr]^2},\qquad
+  \nu(\Delta x)=\nu_0\left(\frac{\Delta x}{\Delta x_0}\right)^{H},
+\end{equation}
+RMS slope $s_{\text{rms}}(\Delta x)=\nu(\Delta x)/\Delta x$, and Hurst exponent $H\in(0,1)$ from the log-log slope. The Allan (median) variant replaces RMS with median differential slope to reduce outlier sensitivity.
+\field{Inputs / outputs} Inputs: DEM or altimeter profiles (LOLA, MOLA, HiRISE/CTX stereo DEMs; Copernicus GLO-30, LiDAR for Earth). Outputs: $\nu_0$ (roughness amplitude), $H$ (scaling), and the breakpoints where scaling changes.
+\field{Reported values} Lunar maria: $H\approx0.7$--$0.9$ (median 0.78) at small baselines, falling at larger scales. Highlands are much rougher than maria. Mars: RMS height follows the crustal dichotomy and $H$ follows a latitude trend. Mercury smooth plains: $H\approx0.88$.
+\field{Relevance} The core metric for rover-testbed analogs. Two terrains are similar for mobility if their $(\nu_0,H)$ match \emph{over the wheel-to-traverse scale range} (about 0.1--100\,m).
+\verif{\textbf{verified against full PDF} (arXiv:1905.04882, Eqs.~1--2): $\nu(L)=\bigl[\tfrac1n\sum_i(\Delta h(L)_i)^2\bigr]^{1/2}$ on \emph{detrended} heights, and $\nu(L)=\nu_0L^{H}$ with $\nu_0$ the RMS deviation at unit scale. The estimate is unstable at small $n$ and converges for $n\ge200$ samples per estimate. The Rosenburg (Caltech) thesis PDF timed out twice and was not checked.}
+\begin{caveat}RMS slope is very sensitive to outliers and to the number of points $N$ in each window. Compare at the \emph{same baselines and resolutions}. A 30\,m Earth DEM cannot be compared with a 1\,m HiRISE DEM without resampling. Vegetation and buildings contaminate Earth DEMs.\end{caveat}
+\end{method}
+
+\begin{method}{T2. Image-texture feature distance for testbed ranking (NHSJS 2026; Space Apps open-source)}
+\field{Sources} ``Finding Earth's Best Testbeds for Moon and Mars Rovers: A Quantitative Terrain Comparison,'' \emph{National High School Journal of Science} (2026), \url{https://nhsjs.com/2026/finding-earths-best-testbeds-for-moon-and-mars-rovers-a-quantitative-terrain-comparison/}. Open-source implementation (NASA Space Apps 2026): \url{https://github.com/shishir-kuet/terrestrial-analog-finder} (LOLA, MRO CTX and Copernicus DEM).
+\field{Formula} Grayscale images are first min--max normalised per image, $I'=(I-I_{\min})/(I_{\max}-I_{\min})$. The roughness proxy (RP) at pixel $p_i$ is based on the local intensity gradient, comparing $p_i$ with $\bar p_j$, the mean of the surrounding pixels (for example $\mathrm{RP}_i=\lvert p_i-\bar p_j\rvert$). Each site becomes a four-dimensional vector
+\begin{equation}
+  \mathbf{F}=\bigl(\mu_{I'},\ \sigma_{I'},\ \mu_{\mathrm{RP}},\ \sigma_{\mathrm{RP}}\bigr),\qquad
+  d_{\text{site}}=\bigl\lVert \mathbf{F}_{\text{Earth}}-\bar{\mathbf{F}}_{\text{ref}}\bigr\rVert_2 ,
+\end{equation}
+where $\bar{\mathbf{F}}_{\text{ref}}$ is the centroid (mean feature vector) of the lunar or Martian reference image set. The distance is unweighted Euclidean, and a lower $d$ means more similar. Ranking stability is checked by leave-one-out resampling: the paper records how often each site ranks first.
+\field{Inputs / outputs} Inputs: optical images (not DEMs) reprojected and resampled to a common scale. Output: a distance per Earth site to each reference centroid. Reported closest: Nevada Desert and Askja Caldera at $d=0.022$ to the Moon; Nevada Desert $0.016$ to Mars; Devon Island the farthest at $0.186$ / $0.06$.
+\field{Relevance} Directly matches the Space Apps ``find Earth analog'' task. A simple, explainable, low-cost screening baseline.
+\verif{\textbf{verified against full article text}. The features are \emph{image-texture} statistics, not elevation, slope or TRI, so this box was corrected from the earlier draft. The exact RP equation is rendered as an image on the web page; the text defines it via $p_i$ and the neighbour mean $\bar p_j$. No feature z-scoring or weights are described.}
+\begin{caveat}The author states that the descriptors are \emph{not} physical elevation, slope or mechanical roughness, and that the method must not be used to predict mobility or traction. Illumination, albedo and sensor processing can dominate intensity. Mean and standard deviation discard spatial-correlation information. For physical terrain, use T1 on DEMs (the GitHub tool uses LOLA, CTX and Copernicus DEMs instead). Gravity also differs (lunar $g=1.62$, Mars $3.71$, Earth $9.81$\,m\,s$^{-2}$).\end{caveat}
+\end{method}
+
+\begin{method}{T3. Siamese convolutional network for image-based analog search (Qaidam Basin)}
+\field{Source} F.~Meng, X.~Wang, A.~Antunes, J.~Zhao, G.~Zhou, B.~Wu, T.~Hao, ``Deep learning selection of analogues for Mars landing sites in the Qaidam Basin, Qinghai-Tibet Plateau,'' arXiv:2501.08584 (2024). \url{https://arxiv.org/abs/2501.08584} (\texttt{2501.08584.pdf}). Background site paper: ``A new terrestrial analogue site for Mars research: The Qaidam Basin,'' \url{https://www.researchgate.net/publication/310750925}.
+\field{Original application} Find small-scale analogs of Mars landing-site terrain within the Qaidam evaporite region, where yardangs and playas exist.
+\field{Architecture} Two weight-sharing CNN branches $f_\theta$ (three conv layers and two fully connected layers) take $100\times100$ image patches. Training used Adam, learning rate $10^{-3}$, 300 iterations.
+\field{Formulas} Similarity is the Euclidean distance between embeddings:
+\begin{equation}
+  D(\mathbf{x}_1,\mathbf{x}_2)=\lVert f_\theta(\mathbf{x}_1)-f_\theta(\mathbf{x}_2)\rVert_2 .
+\end{equation}
+The paper describes a discriminative loss that pulls same-location pairs together and pushes different-location pairs apart. The standard contrastive form is:
+\begin{equation}
+  \mathcal{L}=\frac{1}{2N}\sum_{n=1}^{N}\Bigl[\,y_n D_n^2+(1-y_n)\max(0,\,m-D_n)^2\Bigr],
+\end{equation}
+with $y_n=1$ for matching pairs and margin $m$.
+\field{Inputs / outputs} Inputs: Mars orbital image patches (HiRISE/CTX) and Earth satellite patches. Output: a pairwise distance. The paper reports Earth--Mars distances $<0.5$ for its selected analogs, meaning high similarity.
+\field{Relevance} Scales to global search: embed all Earth tiles once and run nearest-neighbour search against Mars tiles.
+\verif{\textbf{verified against full PDF} (\S4.2--4.4, \S5). The paper names a \emph{contrastive loss} (\S4.3) with general form $L=\sum_{i=1}^{P}L(W,(Y,X_1,X_2)^i)$, split into partial losses $L_S$ and $L_D$ for similar and dissimilar pairs, and margin $m>0$ (Eq.~4, after Chopra et al.\ 2005 and Hadsell et al.\ 2006). The equations are images in the PDF; the text matches the form above. The paper's label convention is \emph{inconsistent}: \S4.2 and \S4.4 use $Y=0$ for similar pairs, while \S4.3 uses $Y=1$. Corrected details: each branch outputs a \textbf{5-dimensional} embedding through three FC layers; Adam with lr $10^{-3}$, weight decay $5\times10^{-4}$, batch 64, \textbf{300 epochs}; final loss 0.0088; test accuracy 99.82\%. The Mars match centres were A$'$(10.461\textdegree S, 176.446\textdegree E), B$'$(42.660\textdegree S, 38.023\textdegree E), C$'$(9.12\textdegree N, 67.29\textdegree E) and D$'$(341.61\textdegree E, 50.70\textdegree N).}
+\begin{caveat}Visual similarity is not geologic similarity (convergent morphology). The model is sensitive to illumination, resolution and sensor. Distances are not calibrated across trained models. Few labelled Mars--Earth pairs exist, so there is a risk of overfitting.\end{caveat}
+\end{method}
+
+%=====================================================================
+\section{Environmental and physical similarity}
+%=====================================================================
+
+\begin{method}{E1. Thermal inertia and surface energy balance}
+\field{Sources} Kieffer, ``Thermal model for analysis of Mars infrared mapping,'' JGR Planets (2013). Dry Valleys modelling: Antarctic Science / Cambridge, \url{https://cambridge.org/core/services/aop-cambridge-core/content/view/S0954102022000025}. NASA Phoenix analog: \url{https://ntrs.nasa.gov/api/citations/20100003844/downloads/20100003844.pdf} (\texttt{20100003844.pdf}).
+\field{Formulas}
+\begin{equation}
+  I=\sqrt{k\rho c_p}\ \ [\mathrm{J\,m^{-2}\,K^{-1}\,s^{-1/2}}],\qquad
+  \kappa=\frac{k}{\rho c_p},\qquad
+  \delta=\sqrt{\frac{\kappa P}{\pi}} ,
+\end{equation}
+\begin{equation}
+  (1-A)\,S_0\cos i + \varepsilon L_{\downarrow} = \varepsilon\sigma T_s^4 + H + LE - k\left.\frac{\partial T}{\partial z}\right|_{0},
+\end{equation}
+with diurnal skin depth $\delta$ (period $P$), albedo $A$, solar flux $S_0$, sensible heat $H$ and latent heat $LE$.
+\field{Inputs / outputs} Inputs: conductivity $k$, density $\rho$, heat capacity $c_p$, albedo, emissivity; Mars TES/THEMIS thermal inertia maps; Earth MODIS/ASTER day-night LST. Outputs: $I$, surface temperature curves, active-layer depth.
+\field{Relevance} Thermal inertia shows grain size, induration and ice cementation. The University Valley study found that differences in peak soil temperature follow mainly the higher thermal diffusivity of ice-cemented ground. The Phoenix report found that dry permafrost above the ice table, which is not ice-cemented, is very like Martian soils.
+\verif{standard physics.}
+\begin{caveat}Earth's thick atmosphere couples gas conduction in pores: conductivity $k$ in a 6\,mbar CO$_2$ atmosphere is about 10 times lower for the same grain size. Compare \emph{grain size inferred from} $I$, not raw $I$.\end{caveat}
+\end{method}
+
+\begin{method}{E2. Water activity and humidity (habitability analogs)}
+\field{Sources} Overview: \url{https://en.wikipedia.org/wiki/Mars_habitability_analogue_environments_on_Earth} (secondary; follow its primary citations). Salar de Pajonales: Frontiers in Astron.\ Space Sci.\ (2021), \url{https://www.frontiersin.org/journals/astronomy-and-space-sciences/articles/10.3389/fspas.2021.797591/pdf}. Dry Valleys salt pond: \url{https://cosmochemistry-papers.com/2023/06/02/a-shallow-salt-pond-analog-for-aqueous-alteration-on-ancient-mars-spectroscopymineralogy-and-geochemistry-of-sediments-from-antarcticas-dry-valleys/}.
+\field{Formulas}
+\begin{equation}
+  a_w=\frac{p_{\mathrm{H_2O}}}{p^{\ast}_{\mathrm{H_2O}}(T)}=\frac{\mathrm{RH}}{100},\qquad
+  \ln p^{\ast}_{\text{ice}}(T)\approx 28.9-\frac{6143.7}{T}\ \ (\text{Pa, K}),
+\end{equation}
+Deliquescence of a salt occurs when $\mathrm{RH}\ge \mathrm{DRH}(T)$. The habitable condition (Planetary Protection ``special region'') is $a_w>0.6$ and $T>-28^\circ$C.
+\field{Inputs / outputs} Inputs: air temperature and relative humidity (REMS on Curiosity; Earth weather stations), soil RH probes, salt mineralogy. Outputs: $a_w$ time series and the fraction of time spent above the habitable threshold.
+\field{Reported values} Dry Valleys soils have $a_w\approx0.3$--$0.6$. The Atacama hyperarid core has mean air RH about 17.3\% and soil RH about 14\% at 1\,m depth, comparable to the lowest RH Curiosity measured.
+\field{Relevance} The key metric for astrobiology analogs: does the Earth site push life to the same $a_w$--$T$ limits as Mars?
+\verif{standard thermodynamics.}
+\begin{caveat}Mars $a_w$ is high only at very low $T$, whereas Earth deserts are warm and dry. Match the \emph{joint} $(a_w,T)$ distribution, not either alone.\end{caveat}
+\end{method}
+
+\begin{method}{E3. UV dose and biologically weighted irradiance}
+\field{Sources} N.~Cabrol et al., ``Record solar UV irradiance in the tropical Andes,'' \emph{Front.\ Environ.\ Sci.}\ 2:19 (2014), DOI \href{https://doi.org/10.3389/fenvs.2014.00019}{10.3389/fenvs.2014.00019}; SETI summary \url{https://seti.org/press-release/record-levels-solar-ultraviolet-measured-south-america}. Mars UV: arXiv:2005.14450, \url{https://arxiv.org/pdf/2005.14450}.
+\field{Formulas}
+\begin{equation}
+  E_{\text{bio}}=\int_{\lambda_1}^{\lambda_2} E(\lambda)\,W(\lambda)\,d\lambda,\qquad
+  \mathrm{UVI}=\frac{1}{25\ \mathrm{mW\,m^{-2}}}\int_{250}^{400}E(\lambda)\,W_{\text{CIE}}(\lambda)\,d\lambda ,
+\end{equation}
+\begin{equation}
+  E(\lambda)=E_0(\lambda)\,\mu_0\,\exp\!\bigl[-\tau(\lambda)/\mu_0\bigr],\qquad \tau=\tau_{\mathrm{O_3}}+\tau_{\text{Rayleigh}}+\tau_{\text{aerosol}} .
+\end{equation}
+\field{Inputs / outputs} Inputs: spectral irradiance $E(\lambda)$ (dosimeters, radiative-transfer models), action spectrum $W(\lambda)$ (CIE erythema, DNA damage), column ozone, altitude. Outputs: UVI and dose in J\,m$^{-2}$.
+\field{Reported values} Licancabur summit (5917\,m) reached UVI 43 (29 Dec 2003), the highest ever recorded on Earth's surface. Ojos del Salado shows the strongest UV-induced surface modification among the Mars analog sites studied.
+\field{Relevance} High-Andean lakes approach early-Mars UV fluxes. Present-day Mars UV-C exceeds anything at Earth's surface because Mars lacks an ozone shield.
+\verif{standard radiative transfer.}
+\begin{caveat}The comparison with Mars is qualitative. No Earth site reproduces Mars UV-C (200--280\,nm). Match DNA-weighted doses, not UVI.\end{caveat}
+\end{method}
+
+\begin{method}{E4. Regolith geotechnics: Mohr--Coulomb and Bekker terramechanics}
+\field{Sources} NASA/TM-2010-216446 (above); ``A Functional Comparison of Lunar Regoliths and Their Simulants,'' NTRS 20120014474, \url{https://ntrs.nasa.gov/citations/20120014474}; ``An Open Database of Lunar Regolith and Simulants Properties,'' arXiv:2602.03829, \url{https://arxiv.org/pdf/2602.03829}.
+\field{Formulas}
+\begin{equation}
+  \tau_{\max}=c+\sigma\tan\phi,\qquad
+  p=\Bigl(\frac{k_c}{b}+k_\phi\Bigr)z^{n}\ \ (\text{Bekker pressure--sinkage}),
+\end{equation}
+\begin{equation}
+  \text{Wheel load: } W = m\,g_{\text{body}},\qquad \text{similarity } S_{\text{geo}}=\prod_q\Bigl(1-\Bigl|\tfrac{q_E-q_T}{q_E+q_T}\Bigr|\Bigr)^{1/Q},\ q\in\{c,\phi,\rho_b,k_c,k_\phi,n\}.
+\end{equation}
+\field{Inputs / outputs} Inputs: cohesion $c$, friction angle $\phi$, bulk density, Bekker moduli from shear and bevameter tests, and body gravity. Outputs: sinkage, drawbar pull, and a similarity score.
+\field{Relevance} Mobility analog selection. Known result: simulants reproduce friction well but not cohesion.
+\verif{standard terramechanics; similarity product proposed by author in ESI form.}
+\begin{caveat}Results depend on gravity, so test-scale vehicles must be scaled (for example with reduced mass, as in Earth-gravity rover tests). Vacuum and electrostatic cohesion are absent on Earth.\end{caveat}
+\end{method}
+
+%=====================================================================
+\section{Planetary-scale similarity indices}
+%=====================================================================
+
+\begin{method}{P1. Earth Similarity Index (ESI) and Mars Similarity Index (MSI)}
+\field{Sources} Schulze-Makuch et al., \emph{Astrobiology} 11 (2011). Kashyap Jagadeesh et al., ``Earth Similarity Index and Habitability Studies of Exoplanets,'' arXiv:1801.07101, \url{https://arxiv.org/pdf/1801.07101}. ``Similarity indexing of exoplanets\dots\ Mars-like worlds,'' arXiv:1608.06702. Venus-like extension: arXiv:2604.06792, \url{https://arxiv.org/pdf/2604.06792}. Overview: PHL \url{https://phl.upr.edu/projects/earth-similarity-index-esi}.
+\field{Formulas}
+\begin{equation}
+  \mathrm{ESI}_x=\left(1-\left|\frac{x-x_0}{x+x_0}\right|\right)^{w_x},\qquad
+  \mathrm{ESI}=\prod_{i=1}^{n}\mathrm{ESI}_{x_i}^{1/n},
+\end{equation}
+\begin{equation}
+  \mathrm{ESI}_{\text{int}}=\sqrt{\mathrm{ESI}_R\,\mathrm{ESI}_\rho},\quad
+  \mathrm{ESI}_{\text{surf}}=\sqrt{\mathrm{ESI}_{v_e}\,\mathrm{ESI}_{T_s}},\quad
+  \mathrm{ESI}_{\text{global}}=\sqrt{\mathrm{ESI}_{\text{int}}\,\mathrm{ESI}_{\text{surf}}} .
+\end{equation}
+MSI uses the same form with Mars as reference ($x_0$ in Mars units; $T_s$ in K). The weights come from a similarity threshold $V$ (0.8) at the permissible limits $x_a<x_0<x_b$:
+\begin{equation}
+  w_{a,b}=\frac{\ln V}{\ln\!\Bigl(1-\bigl|\tfrac{x_{a,b}-x_0}{x_{a,b}+x_0}\bigr|\Bigr)},\qquad w_x=\sqrt{w_a\,w_b}.
+\end{equation}
+Mars-like limits: radius 0.72--1.88\,MU, density 0.89--1.402\,MU, $T_s$ 233--418\,K, $v_e$ 0.85--2.23\,MU. Mars units: $R=3390$\,km, $\rho=3.93$\,g\,cm$^{-3}$, $T_s=240$\,K, $v_e=5.03$\,km\,s$^{-1}$. Earth's MSI is 0.68.
+\field{Inputs / outputs} Inputs: radius, bulk density, escape velocity and surface temperature, each with a weight exponent. Output: an index in $[0,1]$ (Mars ESI $\approx0.73$).
+\field{Relevance to sites} Not a site-selection tool, but its \emph{functional form} is the cleanest way to aggregate many site properties. The geometric mean penalises a site that fails badly on any one property. Section~7 uses it for a site-level ``Mars Analog Similarity Index.''
+\verif{\textbf{verified against full PDFs} (arXiv:1801.07101 \S3, Eqs.~3.7--3.9 and Table 3.2; arXiv:2604.06792 \S2 and Appendix A). The equations are images in the PDF; the text gives their definitions.}
+\begin{caveat}The index is not a habitability measure. The weights $w_x$ are tuned on reference ranges, and the geometric mean drops to 0 if any term is 0.\end{caveat}
+\end{method}
+
+%=====================================================================
+\section{Synthesis: a composite analog similarity score}
+%=====================================================================
+
+The sources point to an ESI-style weighted geometric mean of component similarities. Each component is mapped to $[0,1]$ and weighted for the intended use (F1):
+\begin{equation}
+  \boxed{\;\mathrm{MASI}(s)=\prod_{p\in P} S_p(s,t)^{\,r_p},\qquad \sum_p r_p=1\;}
+\end{equation}
+\begin{center}
+\rowcolors{2}{pale}{white}
+\begin{tabularx}{\textwidth}{@{}l X l l@{}}
+\toprule
+\textbf{Component} & \textbf{Similarity $S_p$} & \textbf{Earth data} & \textbf{Mars / Moon data}\\
+\midrule
+Geochemistry & FoM / FOMc (C1, C3), $e^{-D_M^2/2}$ (C4) & GEOROC, field XRF & APXS, GRS, Apollo\\
+Mineralogy (spectral) & $1-2\theta/\pi$ (S1) & EMIT, AVIRIS, ASD & CRISM, OMEGA, M$^3$\\
+Terrain & $\exp(-d)$ on $(\nu_0,H,\mathrm{TRI})$ (T1, T2) & Copernicus GLO-30 & MOLA, HiRISE, LOLA\\
+Visual morphology & $\exp(-D)$ Siamese (T3) & Sentinel-2, Maxar & CTX, HiRISE, LROC\\
+Thermal & ESI-term on grain size from $I$ (E1) & ASTER/MODIS LST & THEMIS, TES, Diviner\\
+Aridity & ESI-term on $(a_w,T)$ (E2) & station data & REMS, Phoenix\\
+Radiation & ESI-term on DNA-weighted dose (E3) & dosimeters, TUV model & REMS UV, RAD\\
+Geotechnics & $S_{\text{geo}}$ (E4) & field shear tests & Apollo, MER, MSL\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Example weights. \textbf{Rover testbed}: terrain 0.5, geotechnics 0.3, visual 0.2. \textbf{Spectrometer calibration}: mineralogy 0.6, geochemistry 0.4. \textbf{Astrobiology}: aridity 0.35, radiation 0.25, mineralogy 0.25, thermal 0.15.
+
+\begin{caveat}
+(1) Scale: match spatial resolution and footprint before computing any metric. (2) Gravity, atmosphere and vacuum differ fundamentally; no Earth site is a full analog. (3) Validate the ranking against the expert-chosen sites (Atacama, Dry Valleys, Haughton, Rio Tinto, Mauna Kea, Iceland, Qaidam, Svalbard, Hawaii lunar basalt fields, Meteor Crater). (4) Report per-component scores, not only the aggregate.
+\end{caveat}
+
+%=====================================================================
+\section{Source list}
+%=====================================================================
+{\small
+\rowcolors{2}{pale}{white}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.42\textwidth}>{\raggedright\arraybackslash}p{0.54\textwidth}@{}}
+\toprule
+\textbf{Source / file} & \textbf{Link}\\ \midrule\endhead
+Foucher et al.\ 2021, PSS 197 (\texttt{2021\_foucher\_westall\dots.pdf}) & \url{https://hal.science/hal-03130725}\\
+LPI Contribution 1612 (\texttt{LPI-001612.pdf}) & \url{https://www.lpi.usra.edu/lpi/contribution_docs/LPI-001612.pdf}\\
+Schrader et al.\ 2009 AIAA FoM (ResearchGate) & \url{https://www.researchgate.net/publication/237112023}\\
+Lunar Regolith Simulant User's Guide (\texttt{20100038451.pdf}) & \url{https://ntrs.nasa.gov/api/citations/20100038451/downloads/20100038451.pdf}\\
+FoM software, NTRS & \url{https://ntrs.nasa.gov/citations/20110012037}\\
+Functional comparison lunar regoliths/simulants, NTRS & \url{https://ntrs.nasa.gov/citations/20120014474}\\
+Asteroid simulant fidelity (\texttt{1912.10622.pdf}) & \url{https://arxiv.org/pdf/1912.10622}\\
+Open database lunar regolith (\texttt{2602.03829.pdf}) & \url{https://arxiv.org/pdf/2602.03829}\\
+Tovar et al.\ 2026 Icarus, Gorgona/Syrtis & \url{https://www.sciencedirect.com/science/article/pii/S0019103526001995}\\
+Tréguier et al.\ 2008 APXS PCA & \url{https://doi.org/10.1029/2007JE003010}\\
+APXS NASA report (\texttt{20150018594.pdf}) & \url{https://ntrs.nasa.gov/api/citations/20150018594/downloads/20150018594.pdf}\\
+Mauna Kea VSWIR, Am.\ Mineral.\ 2020 & \url{https://msaweb.org/MSA/AmMin/TOC/2020/Abstracts/AM105P1306.pdf}\\
+NASA analog spectral fidelity (\texttt{20030012636.pdf}) & \url{https://ntrs.nasa.gov/api/citations/20030012636/downloads/20030012636.pdf}\\
+Rosenburg 2014 thesis Ch.\,2 & \url{https://thesis.library.caltech.edu/8408/13/Rosenburg_Margaret_2014_Ch2.pdf}\\
+Itokawa roughness (\texttt{1905.04882.pdf}) & \url{https://arxiv.org/pdf/1905.04882}\\
+NHSJS 2026 terrain comparison & \url{https://nhsjs.com/2026/finding-earths-best-testbeds-for-moon-and-mars-rovers-a-quantitative-terrain-comparison/}\\
+terrestrial-analog-finder (GitHub) & \url{https://github.com/shishir-kuet/terrestrial-analog-finder}\\
+Meng et al.\ Qaidam Siamese (\texttt{2501.08584.pdf}) & \url{https://arxiv.org/abs/2501.08584}\\
+Qaidam Basin analog site (ResearchGate) & \url{https://www.researchgate.net/publication/310750925}\\
+Dry Valleys energy balance (Cambridge) & \url{https://cambridge.org/core/services/aop-cambridge-core/content/view/S0954102022000025}\\
+Dry Valleys Phoenix analog (\texttt{20100003844.pdf}) & \url{https://ntrs.nasa.gov/api/citations/20100003844/downloads/20100003844.pdf}\\
+Salar de Pajonales, Frontiers 2021 & \url{https://www.frontiersin.org/journals/astronomy-and-space-sciences/articles/10.3389/fspas.2021.797591/pdf}\\
+Cabrol et al.\ 2014 Andes UV & \url{https://doi.org/10.3389/fenvs.2014.00019}\\
+Mars UV (\texttt{2005.14450.pdf}) & \url{https://arxiv.org/pdf/2005.14450}\\
+ESI, Jagadeesh et al.\ (\texttt{1801.07101.pdf}) & \url{https://arxiv.org/pdf/1801.07101}\\
+Venus/Mars Similarity Index (\texttt{2604.06792.pdf}) & \url{https://arxiv.org/pdf/2604.06792}\\
+PHL ESI page & \url{https://phl.upr.edu/projects/earth-similarity-index-esi}\\
+Mars analog environments overview (secondary) & \url{https://en.wikipedia.org/wiki/Mars_habitability_analogue_environments_on_Earth}\\
+\bottomrule
+\end{longtable}}
+
+\end{document}
