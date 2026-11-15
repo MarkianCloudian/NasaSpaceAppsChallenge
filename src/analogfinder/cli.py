@@ -36,8 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true")
     sub = p.add_subparsers(dest="command", metavar="COMMAND")
     for name, help_ in COMMANDS.items():
-        sp = sub.add_parser(name, help=help_)
-        sp.add_argument("rest", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
+        sub.add_parser(name, help=help_, add_help=False)  # command options parsed by its handler
     return p
 
 
@@ -52,7 +51,8 @@ HANDLERS = {}  # command name -> callable(args) -> int, filled as stages are imp
 def main(argv=None) -> int:
     parser = build_parser()
     try:
-        args = parser.parse_args(argv)
+        args, rest = parser.parse_known_args(argv)
+        args.rest = rest
     except SystemExit as e:  # argparse exits 0 for --help, 2 for usage errors
         return int(e.code or 0)
     if not args.command:
