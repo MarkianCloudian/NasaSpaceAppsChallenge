@@ -493,5 +493,5 @@
       "reason": "No global Earth dataset of pits or lava tubes (FR-005)."
     }
   ],
-  "notes": "v1 profile. All targets sourced (T036, 2026-11-15): terrain from T072 (CTX DTMs, MOLA+HRSC), mineral classes from published CRISM analyses (Goudge et al. 2015; Horgan et al. 2020), climate from the Mars Climate Database v6.2, gravity from the NSSDCA fact sheet, thermal inertia from THEMIS (Martinez et al. 2022); no_vegetation and barren_ground are Earth bare-ground equivalents checked on MODIS 2023 data (see criterion notes). hyperarid, dry_air and thermal_swing are percentile design mappings of Mars values outside the Earth range. Pending: review of targets, tolerances and vetoes by a second team member (\"reviewed by <initials>, <date>\")."
+  "notes": "v1 profile. All targets sourced (T036, 2026-11-15): terrain from T072 (CTX DTMs, MOLA+HRSC), mineral classes from published CRISM analyses (Goudge et al. 2015; Horgan et al. 2020), climate from the Mars Climate Database v6.2, gravity from the NSSDCA fact sheet, thermal inertia from THEMIS (Martinez et al. 2022); no_vegetation and barren_ground are Earth bare-ground equivalents checked on MODIS 2023 data (see criterion notes). hyperarid, dry_air and thermal_swing are percentile design mappings of Mars values outside the Earth range. Reviewed by MarkianCloudian, 15 November 2026."
 }
