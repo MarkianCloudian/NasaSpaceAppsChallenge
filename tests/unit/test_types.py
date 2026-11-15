@@ -10,7 +10,7 @@ from tests.fixtures.profiles_inline import criterion, profile
 
 
 def test_criterion_from_json():
-    c = criterion(sources={"target": [], "earth": [{"source_id": "emit-l2b-min"}]})
+    c = criterion(sources={"target": [], "earth": ["emit-l2b-min"]})
     assert c.earth_sources == ("emit-l2b-min",) and c.raw["justification"] == "test"
     with pytest.raises(dataclasses.FrozenInstanceError):
         c.id = "x"  # type: ignore[misc]

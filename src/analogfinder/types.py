@@ -65,7 +65,7 @@ class Criterion:
             value_status=d["value_status"],
             uncertainty=d.get("uncertainty"),
             class_map=d.get("class_map"),
-            earth_sources=tuple(e["source_id"] for e in earth if e.get("source_id")),
+            earth_sources=tuple(str(e) for e in earth),  # schema: list of source_id strings
             raw=d,
         )
 
