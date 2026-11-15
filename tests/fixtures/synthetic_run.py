@@ -3,7 +3,7 @@ and rank; fake terrain/EMIT sources)."""
 
 from __future__ import annotations
 
-from analogfinder import pipeline
+from analogfinder import calibrate, pipeline
 from analogfinder.refine import scheduler
 from analogfinder.types import GroupResult
 from tests.fixtures.synthetic import build_synthetic_grid
@@ -34,6 +34,21 @@ def synthetic_hooks(fail_refine: list | None = None) -> pipeline.Hooks:
             raise RuntimeError("simulated failure during refine")
         return scheduler.schedule(areas, ctx, terrain_fn, mineral_fn, lambda fp, c: True)
 
+    def calib(results, screening, ctx, **kw):
+        return calibrate.calibrate(
+            results,
+            screening,
+            ctx,
+            terrain_fn=terrain_fn,
+            mineral_fn=mineral_fn,
+            coverage_fn=lambda fp, c: True,
+            **kw,
+        )
+
     return pipeline.Hooks(
-        check=lambda ctx: None, grid=lambda ctx: grid, refine=refine, sources=lambda opts: None
+        check=lambda ctx: None,
+        grid=lambda ctx: grid,
+        refine=refine,
+        calibrate=calib,
+        sources=lambda opts: None,
     )

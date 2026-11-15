@@ -194,7 +194,8 @@ def calibrate(
     sites = relevant_sites(known, profile)
     land = screening.land
     geo = _geometry(ctx.grid)
-    geo["lon_left"] = float(((ctx.grid.manifest or {}).get("cell") or {}).get("origin", [-180])[0])
+    cell = (getattr(ctx.grid, "manifest", None) or {}).get("cell") or {}
+    geo["lon_left"] = float(cell.get("origin", [-180.0])[0])
     radius = profile.radius_km
     crit = {c.id: c for c in profile.criteria}
     gcrit = grid_criteria(profile)

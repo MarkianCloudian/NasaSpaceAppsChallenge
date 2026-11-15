@@ -226,7 +226,7 @@ def _extract(args) -> int:
 
 
 def _pipeline(args, until: str) -> int:
-    """`analog run|screen|refine|rank` (contracts/cli.md, research D-011/D-023/D-025)."""
+    """`analog run|screen|refine|rank|calibrate` (contracts/cli.md, research D-011/D-023/D-025)."""
     import logging
 
     from .pipeline import Options, print_summary, resolve_ref, run_all
@@ -305,10 +305,11 @@ def _site(args) -> int:
 HANDLERS = {
     "site": _site,
     "publish": _site,
-    "run": lambda a: _pipeline(a, "rank"),
+    "run": lambda a: _pipeline(a, "calibrate"),
     "screen": lambda a: _pipeline(a, "screen"),
     "refine": lambda a: _pipeline(a, "refine"),
     "rank": lambda a: _pipeline(a, "rank"),
+    "calibrate": lambda a: _pipeline(a, "calibrate"),
     "extract": _extract,
     "validate": _validate,
     "freeze": _freeze,

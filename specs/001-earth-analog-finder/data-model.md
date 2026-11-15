@@ -210,6 +210,10 @@ percentile_rank, overall_score, limiting_criterion}] — `rank` and `percentile_
 conservative (counting areas whose final score or upper bound exceeds the site's score, D-025), `flag_for_review` bool, `flag_reasons` [`no_known_analog_in_scope` |
 `no_known_analog_in_top_20pct`] (D-018), `stability` {draws, range, seed, top_k,
 candidates [{area_id, share_in_top_k}]}.
+Also written (T077): `profile` {id, version}, `run_id`, `areas_passed_screening`, and per known
+site `name`, `cell` {lat, lon} (the land cell whose grid-scale footprint values were used: the
+cell containing the site, or the nearest land cell within the radius when that cell is not land)
+and `confidence`.
 
 ## Settings (`config/settings.json`)
 
