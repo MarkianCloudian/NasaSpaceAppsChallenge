@@ -147,13 +147,30 @@ class GridVersion:
     manifest: Mapping[str, Any]
 
     def layer(self, layer_id: str) -> np.ndarray:  # full raster, float32
-        raise NotImplementedError("GridVersion.layer is implemented by the grid build task")
+        from .grid import cells
+
+        for entry in self.manifest["layers"]:
+            if entry["layer_id"] == layer_id:
+                return cells.read_layer(self.path / entry["file"])
+        raise KeyError(f"layer {layer_id!r} not in grid {self.grid_id}")
 
     def land_index(self) -> LandIndex:
-        raise NotImplementedError("GridVersion.land_index is implemented by the grid build task")
+        from .grid import cells
+
+        mask = np.nan_to_num(self.layer("land_mask"), nan=0.0) > 0.5
+        rows, cols = np.nonzero(mask)
+        lat, lon = cells.cell_centres()
+        return LandIndex(
+            rows=rows.astype(np.int32),
+            cols=cols.astype(np.int32),
+            lat=lat[rows],
+            lon=lon[cols],
+            area_km2=np.asarray(cells.cell_area_km2(rows), dtype=np.float64),
+        )
 
     def land_vector(self, layer_id: str) -> np.ndarray:  # aligned to land_index()
-        raise NotImplementedError("GridVersion.land_vector is implemented by the grid build task")
+        idx = self.land_index()
+        return self.layer(layer_id)[idx.rows, idx.cols]
 
 
 @dataclass(frozen=True, slots=True)
