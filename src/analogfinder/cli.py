@@ -265,7 +265,46 @@ def _pipeline(args, until: str) -> int:
     return res.exit_code
 
 
+def _site(args) -> int:
+    """`analog site --run RUN_ID | --latest` and `analog publish ... [--allow-unvalidated]`."""
+    import logging
+
+    from . import config
+    from .site import build
+
+    p = argparse.ArgumentParser(prog=f"analog {args.command}")
+    g = p.add_mutually_exclusive_group(required=True)
+    g.add_argument("--run", dest="run_id")
+    g.add_argument("--latest", action="store_true")
+    p.add_argument("--profiles-dir", default="profiles")
+    if args.command == "publish":
+        p.add_argument("--allow-unvalidated", action="store_true")
+        p.add_argument("--public-dir", default=None, help="default: settings paths.public")
+    opts = p.parse_args(args.rest)
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.WARNING if args.quiet else logging.INFO,
+        stream=sys.stderr,
+        format="%(message)s",
+    )
+    run_id = opts.run_id or build.latest_run_id(args.data_dir)
+    if args.command == "publish":
+        public = opts.public_dir or config.load_settings(args.config_dir)["paths"]["public"]
+        return build.publish(
+            args.data_dir,
+            args.config_dir,
+            opts.profiles_dir,
+            run_id,
+            public,
+            allow_unvalidated=opts.allow_unvalidated,
+        )
+    path, reused = build.build_site(args.data_dir, args.config_dir, opts.profiles_dir, run_id)
+    print(f"{'reused' if reused else 'built'} site of run {run_id}: {path}")
+    return errors.OK
+
+
 HANDLERS = {
+    "site": _site,
+    "publish": _site,
     "run": lambda a: _pipeline(a, "rank"),
     "screen": lambda a: _pipeline(a, "screen"),
     "refine": lambda a: _pipeline(a, "refine"),

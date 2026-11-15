@@ -1,0 +1,56 @@
+{% extends "base.html.j2" %}
+{% block title %}Data and run — Earth Analog Finder{% endblock %}
+{% block content %}
+<h1>Data sources and run record</h1>
+
+<h2>Run</h2>
+<dl class="facts">
+  <dt>Run id</dt><dd><code>{{ rr.run_id }}</code></dd>
+  <dt>Profile</dt><dd><code>{{ rr.profile.id }}@{{ rr.profile.version }}</code></dd>
+  <dt>Grid</dt><dd><code>{{ rr.grid_id }}</code>{% if grid %} ({{ grid.status }}, built {{ grid.built_at }}){% endif %}</dd>
+  <dt>Started / finished</dt><dd>{{ rr.started_at }} / {{ rr.finished_at or "—" }}</dd>
+  <dt>Refinement</dt><dd>{{ refinement }}</dd>
+  <dt>Cells evaluated</dt><dd>{{ counts.evaluated_cells | default("—") }}</dd>
+  <dt>Rejected by search constraints</dt><dd>{{ counts.rejected_by_constraint | default("—") }}</dd>
+  <dt>Rejected by criterion (veto)</dt><dd>{% for k, v in (counts.rejected_by_criterion or {}).items() %}{{ k }} {{ v }}{% if not loop.last %}, {% endif %}{% else %}—{% endfor %}</dd>
+  <dt>Areas / ranked / insufficient data</dt><dd>{{ counts.areas | default("—") }} / {{ counts.ranked | default("—") }} / {{ counts.insufficient_data | default("—") }}</dd>
+</dl>
+
+<h2>Calibration against known analogs</h2>
+{% if calibration %}
+<p>Flag for review: {{ "yes — " ~ (calibration.flag_reasons | join(", ")) if calibration.flag_for_review else "no" }}.</p>
+{% else %}
+<p>Calibration was not run for this result; scores are not validated against known Earth analog sites.</p>
+{% endif %}
+
+<h2>Data sources</h2>
+<table class="sources">
+<thead><tr><th scope="col">Source</th><th scope="col">Dataset</th><th scope="col">Version</th>
+<th scope="col">Accessed</th><th scope="col">Licence</th><th scope="col">Citation</th></tr></thead>
+<tbody>
+{% for s in sources %}
+<tr><td>{% if s.docs_url %}<a href="{{ s.docs_url }}" rel="noopener">{{ s.source_id }}</a>{% else %}{{ s.source_id }}{% endif %}<br><small>{{ s.provider }}</small></td>
+<td>{{ s.dataset }}</td><td>{{ s.dataset_version }}</td><td>{{ s.accessed or "—" }}</td>
+<td><small>{{ s.licence }}</small></td><td><small>{{ s.citation }}</small></td></tr>
+{% endfor %}
+</tbody>
+</table>
+
+<h2>Grid layers</h2>
+{% if grid %}
+<table class="layers">
+<thead><tr><th scope="col">Layer</th><th scope="col">Source</th><th scope="col">Version</th>
+<th scope="col">Reference period</th><th scope="col">Resampling</th><th scope="col">Baseline (m)</th></tr></thead>
+<tbody>
+{% for l in grid.layers %}
+<tr><td>{{ l.layer_id }}</td><td>{{ l.source_id }}</td><td>{{ l.dataset_version }}</td>
+<td>{{ l.reference_period or "—" }}</td><td>{{ l.resampling }}</td><td>{{ l.baseline_m or "—" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% if grid.missing_layers %}<p class="note">Missing layers: {% for x in grid.missing_layers %}{{ x.layer_id }} ({{ x.reason }}){% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
+{% else %}
+<p>Grid manifest not available for this run.</p>
+{% endif %}
+<p class="note">Map: Natural Earth 1:110m land (public domain).</p>
+{% endblock %}

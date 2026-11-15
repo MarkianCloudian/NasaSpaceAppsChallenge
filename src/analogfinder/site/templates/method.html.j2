@@ -1,0 +1,43 @@
+{% extends "base.html.j2" %}
+{% block title %}Method — Earth Analog Finder{% endblock %}
+{% block content %}
+<h1>How the scores are computed</h1>
+<ol class="steps">
+  <li><strong>Screening.</strong> Earth's land is divided into cells of 0.05° (about 5 km). For every
+    cell, each grid-scale criterion is summarised over a circle of {{ profile.reference_site.radius_km }} km
+    radius, the same size as the Mars reference area. Cells outside the search constraints are removed.</li>
+  <li><strong>Veto.</strong> A criterion with a veto removes a place when its score falls below that
+    value, regardless of the other criteria.</li>
+  <li><strong>Per-criterion score.</strong> Each Earth value is compared with the Mars target and gets a
+    score from 0 to 1: 1 inside the target range, falling linearly to 0 one tolerance outside it.
+    Quantities that Earth cannot reach in absolute terms (for example dryness) are compared as
+    percentiles of the {{ rr.percentile_population.name | replace("_", " ") }} Earth land population
+    ({{ rr.percentile_population.cells }} cells).</li>
+  <li><strong>Refinement.</strong> The best areas are re-measured with 30 m terrain (NASADEM / Copernicus DEM)
+    and, where available, EMIT mineral maps.</li>
+  <li><strong>Overall score.</strong> The weighted geometric mean of the known criterion scores. A single
+    score of 0 gives 0 overall.</li>
+  <li><strong>Confidence.</strong> The share of the total weight carried by criteria that have Earth data.
+    Areas below {{ profile.min_confidence | pct }} confidence are not ranked.</li>
+</ol>
+<p>Weights come from ranking the categories for the purpose and the criteria within each category
+  (method {{ profile.weights_method }}). Criteria marked "not comparable" cannot be reproduced on Earth;
+  they carry no weight and are listed as limits of the analogy.</p>
+
+<h2>Profile {{ profile.profile_id }}@{{ profile.version }}</h2>
+<table class="criteria">
+<thead><tr><th scope="col">Criterion</th><th scope="col">Category</th><th scope="col">Earth quantity</th>
+<th scope="col">Comparison</th><th scope="col">Scale</th><th scope="col">Mars target</th>
+<th scope="col">Tolerance</th><th scope="col">Veto</th><th scope="col">Weight</th><th scope="col">Target source</th></tr></thead>
+<tbody>
+{% for k in criteria_table %}
+<tr><td>{{ k.id }}</td><td>{{ k.category }}</td><td>{{ k.quantity }}</td><td>{{ k.mode }}</td>
+<td>{{ k.scale }}</td><td>{{ k.target }}</td><td>{{ k.tolerance }}</td><td>{{ k.veto }}</td>
+<td>{{ k.weight }}</td>
+<td><small>{% for s in k.sources %}{{ s.citation }}{% if not loop.last %}; {% endif %}{% endfor %}</small></td></tr>
+{% endfor %}
+</tbody>
+</table>
+<p class="note">Percentile population: {{ rr.percentile_population.name }}
+  ({{ rr.percentile_population.cells }} cells). Profile frozen {{ profile.frozen_at }}.</p>
+{% endblock %}
