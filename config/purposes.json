@@ -1,0 +1,19 @@
+{
+  "purposes": [
+    {
+      "purpose_id": "rover_expedition",
+      "description": "Rover expedition: traversable, dry, barren terrain with aqueous-mineral geology (data-model Mars v1 profile criteria)",
+      "weight_method": "roc",
+      "category_ranks": {
+        "operations": 1,
+        "terrain": 2,
+        "geology": 3,
+        "atmosphere": 4,
+        "thermal": 5,
+        "resources": 6,
+        "biology": 7,
+        "subsurface": 8
+      }
+    }
+  ]
+}
