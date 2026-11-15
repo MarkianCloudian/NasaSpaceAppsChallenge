@@ -173,6 +173,29 @@ def _regional_slope_candidates(area: CandidateArea, profile: Profile, hints) -> 
     return []
 
 
+def initial_bounds(areas: list[CandidateArea], ctx, hints: Mapping[str, float] | None = None):
+    """Set `upper_bound` of every area with all refinement groups still estimated (D-024).
+
+    Used by grouping (T049) and by the screening preview (`--skip-refine`, D-025). Uses the
+    terrain hint when `refine.terrain_hint` is on; EMIT coverage is not checked here.
+    """
+    profile: Profile = ctx.profile
+    cfg = ctx.settings["refine"]
+    crit = {c.id: c for c in profile.criteria}
+    groups = criterion_groups(profile)
+    margin, use_hint = float(cfg["bound_margin"]), bool(cfg["terrain_hint"])
+    for a in areas:
+        est = {cid: 1.0 for cid in groups}
+        if use_hint:
+            xs = _regional_slope_candidates(a, profile, hints)
+            for cid in groups:
+                if groups[cid] == TERRAIN and crit[cid].quantity == "slope_p90" and xs:
+                    est[cid] = max((score(crit[cid], x).score or 0.0) for x in xs) * (1 - margin)
+        b = upper_bound(a.grid_scores, est, groups, profile)
+        a.upper_bound = 0.0 if b is None else b
+    return areas
+
+
 def schedule(
     areas: list[CandidateArea],
     ctx,
