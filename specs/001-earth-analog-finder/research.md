@@ -679,6 +679,37 @@ work.
   until T036 adopts them and a second team member reviews them.
 - Still **verify**: licence and citation of both products.
 
+### CRISM summary parameter thresholds (T036, 2026-11-15)
+
+Checked against the primary sources: Viviano-Beck et al. 2014, JGR Planets 119, 1403–1431,
+doi:10.1002/2014JE004627 (published PDF from CaltechAUTHORS, record 53039) and the PDS
+Geosciences Node *CRISM Summary Parameter Calculation Reference* (July 2026).
+
+- **No per-parameter detection thresholds are published.** Section 5.3 of the paper defines only
+  display stretches: for band-depth parameters the lower limit is fixed at 0 (band depth zero)
+  and the upper limit is the larger of the 99th percentile of a cumulative histogram over more
+  than 100 representative scenes and the 99.9th percentile of the scene's own histogram; the
+  percentile values are not tabulated. The PDS reference gives formulas only.
+- The paper also states (sec. 6) that the strength of a summary product cannot be used to infer
+  mineral abundance and that positive identification needs spectral analysis. Class fractions
+  from thresholded parameters (`planetary/crism.py`, T073) are therefore indicative only.
+- **False-positive caveats** (paper Table 2) for the parameters used in `crism_rules`: D2300 —
+  Mg-carbonate also strongly > 0; BD2210_2 — gypsum, alunite; MIN2295_2480 — hydroxylated
+  silicate + zeolite mixtures (both carbonate overtones must be present); SINDEX2 — ices;
+  OLINDEX3 — high-Ca pyroxene, Fe-phyllosilicates.
+- **Consequence**: the thresholds 0.015 / 0.01 / 0.01 / 0.02 / 0.1 stay as a documented project
+  choice (`"status": "project_choice"` with the note above in `config/mineral_classes.json`).
+  With them the Jezero footprint gives carbonate in only 0.05 % of valid pixels (T074), below the
+  0.1 % proposal cut, although Mg-carbonate in the Jezero delta is established in published
+  CRISM analyses. Options for the team: (a) keep the published-literature class list as the
+  `mineral_classes` target (T036) and treat the CRISM fractions as supporting evidence only;
+  (b) replace the fixed thresholds by a scene-relative rule following the paper's stretch logic
+  (e.g. above the scene's 99th percentile of positive values); (c) lower individual thresholds
+  after inspecting spectra. Not decided here.
+- Note: the OLINDEX3 formula printed in the paper's Table 2 (weights over 1080–1470 nm) differs
+  from the PDS reference (1210–1330 nm); MTRDR `_SU` files carry the delivered values, so
+  `planetary/crism.py` is not affected.
+
 ### Outcomes for the remaining verify items (T086, 2026-11-15)
 
 Recorded by the T086 task. Status **VERIFIED** = checked against a primary source (named);
@@ -693,7 +724,7 @@ run is done.
 | ETOPO file URL/size (T042) | VERIFIED | See *ETOPO 2022 30″* above: URL, 1,585,813,987 bytes, cell-registered. Licence, DOI and the GLO-30/GLO-90 fallback choice stay open (see that subsection). |
 | pyhdf wheels per OS (T002) | VERIFIED (PyPI JSON `https://pypi.org/pypi/pyhdf/json`, pyhdf 0.11.7) | CPython 3.11 wheels: Linux `manylinux_2_28_x86_64`, Windows `win_amd64`, macOS **arm64 only** (`macosx_26_0_arm64`). **No** Linux aarch64 and **no** macOS Intel wheel → those machines build from the sdist (needs HDF4 libraries) or use the fallback: conda for pyhdf (D-005). Not installed or tested on macOS/Windows by this task. |
 | MODIS download volume (T038–T040) | NOT VERIFIED | Needs Earthdata login and a real download. D-007 estimate (≈ 120 files × 20–80 MB + 1 MCD12C1 + ETOPO ≈ 1.5 GB, under the 10 GB budget) stands as an estimate. Fallback if exceeded: reduce `grid.reference_years` or use AppEEARS / Planetary Computer COGs (D-007). |
-| CRISM thresholds used (T013/T073) | NOT VERIFIED | `config/mineral_classes.json` `crism_thresholds` still has `"status": "verify"` for all five classes (D2300 0.015, BD2210_2 0.01, MIN2295_2480 0.01, SINDEX2 0.02, OLINDEX3 0.1). Values are provisional and must be checked against Viviano-Beck et al. 2014 (JGR Planets 119, 1403–1431) before use; until then results using them must be labelled provisional. |
+| CRISM thresholds used (T013/T073) | CHECKED, NOT A PUBLISHED VALUE (T036, 2026-11-15) | Viviano-Beck et al. 2014 does not publish per-parameter detection thresholds (see *CRISM summary parameter thresholds (T036)* below). The five values in `config/mineral_classes.json` are a project choice, now marked `"status": "project_choice"`; results that use them stay provisional. |
 | EMIT version used (T051) | NOT VERIFIED | `config/sources.json` `emit-l2b-min` targets L2B MIN **V002** (docs `https://lpdaac.usgs.gov/products/emitl2bminv002/`); the DOI is still marked "verify" and no CMR search was run (needs network access to Earthdata). Fallback if V002 mineral list differs: update `config/mineral_classes.json` version. |
 | ERA5 CDS request size/time (T043) | NOT VERIFIED | Needs `~/.cdsapirc` (not available; credentials never go in the repo). D-008 estimate (one global 0.25° request, a few hundred MB) stands. Only relevant if the POWER route fails. |
 | Footprint benchmark (T047) | NOT VERIFIED | Needs the built grid (T044). Budget is `footprint.benchmark_budget_s = 180` s. If exceeded, the T047 task describes the fallback (reduce radius or optimise); record the measured time here. |

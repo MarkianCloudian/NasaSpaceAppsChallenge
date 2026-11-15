@@ -314,14 +314,20 @@
       "veto": null,
       "rank_in_category": 1,
       "footprint_statistic": "mean",
-      "value_status": "placeholder",
+      "value_status": "measured",
       "class_map": "config/mineral_classes.json",
       "valid_bands": "CRISM summary parameters D2300, MIN2295_2480, OLINDEX3 vs EMIT L2B 0.4-2.5 um; BD1900_2/BD1400 (Earth water vapour) and parameters beyond 2.5 um excluded (mineral_classes.json excluded_parameters)",
       "sources": {
         "target": [
           {
-            "source_id": "crism-mtrdr-ode",
-            "citation": "CRISM MTRDR summary parameters over the 20 km footprint, extracted with planetary/crism.py (T073)"
+            "source_id": "literature",
+            "citation": "Goudge, T. A. et al. (2015) Assessing the mineralogy of the watershed and fan deposits of the Jezero crater paleolake system, Mars. J. Geophys. Res. Planets 120, 775-808, doi:10.1002/2014JE004782 (CRISM: western fan with Fe/Mg-smectite, Mg-carbonate and olivine)",
+            "accessed": "2026-11-15"
+          },
+          {
+            "source_id": "literature",
+            "citation": "Horgan, B. H. N. et al. (2020) The mineral diversity of Jezero crater: Evidence for possible lacustrine carbonates on Mars. Icarus 339, 113526, doi:10.1016/j.icarus.2019.113526 (CRISM: Marginal Carbonates near the western delta)",
+            "accessed": "2026-11-15"
           }
         ],
         "earth": [
@@ -329,7 +335,7 @@
         ]
       },
       "justification": "Fe/Mg-smectite, carbonate and olivine co-occurring in the delta are the geological signature of Jezero's past lake; EMIT can detect the clay and carbonate classes on Earth.",
-      "note": "Preliminary T073 extraction (FRT000047A3, FRT00005850; CRISM thresholds still marked verify): olivine 0.26, Fe/Mg-smectite 0.006, carbonate 0.0005 of valid pixels. EMIT cannot detect olivine, so this class can only be matched by mafic EMIT classes if added later."
+      "note": "Target from published CRISM analyses (Goudge et al. 2015; Horgan et al. 2020). Supporting T073/T074 extraction over the 20 km footprint (FRT000047A3, FRT00005850): olivine 0.26, Fe/Mg-smectite 0.0058, carbonate 0.0005 of valid pixels; the CRISM thresholds are a project choice, not published values (research.md, T036), so these fractions are indicative only. EMIT cannot detect olivine."
     },
     {
       "id": "aqueous_minerals",
@@ -346,12 +352,13 @@
       "veto": null,
       "rank_in_category": 1,
       "footprint_statistic": "fraction_true",
-      "value_status": "placeholder",
+      "value_status": "measured",
       "sources": {
         "target": [
           {
-            "source_id": "crism-mtrdr-ode",
-            "citation": "Hydrated / aqueous minerals (phyllosilicate, carbonate) detected in the Jezero delta by CRISM"
+            "source_id": "literature",
+            "citation": "Goudge, T. A. et al. (2015) Assessing the mineralogy of the watershed and fan deposits of the Jezero crater paleolake system, Mars. J. Geophys. Res. Planets 120, 775-808, doi:10.1002/2014JE004782 (CRISM: western fan with Fe/Mg-smectite, Mg-carbonate and olivine)",
+            "accessed": "2026-11-15"
           }
         ],
         "earth": [
