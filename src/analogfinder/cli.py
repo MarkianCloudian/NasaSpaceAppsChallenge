@@ -96,7 +96,20 @@ def _validate(args) -> int:
     return errors.VALIDATION_FAILED if problems else errors.OK
 
 
-HANDLERS = {"validate": _validate}  # command name -> callable(args) -> int
+def _freeze(args) -> int:
+    """`analog freeze --profile FILE [--profiles-dir DIR]`."""
+    from .profiles.freeze import freeze
+
+    p = argparse.ArgumentParser(prog="analog freeze")
+    p.add_argument("--profile", required=True)
+    p.add_argument("--profiles-dir", default="profiles")
+    opts = p.parse_args(args.rest)
+    path, status = freeze(opts.profile, args.config_dir, opts.profiles_dir)
+    print(f"{path}: unchanged, reused" if status == "reused" else f"{path}: frozen")
+    return errors.OK
+
+
+HANDLERS = {"validate": _validate, "freeze": _freeze}  # command name -> callable(args) -> int
 
 
 def main(argv=None) -> int:
