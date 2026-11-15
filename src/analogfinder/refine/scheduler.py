@@ -21,8 +21,10 @@ Best-first loop over one queue keyed by the current bound (unrefined -> terrain-
 final score): take the top `refine.batch` entries; confirm fully refined entries whose final
 score ≥ the best key among the other unconfirmed entries; run the terrain pass for unrefined
 entries and the EMIT pass for terrain-done entries (or finalise them without EMIT coverage);
-stop at `site_top_n` confirmed (`bound_reached`), at `refine.max_terrain_areas` /
-`refine.max_mineral_areas` (`cap_reached`) or when nothing is left (`exhausted`).
+stop at `site_top_n` confirmed or when every rankable area is resolved (`bound_reached`: the
+top list is proven complete, possibly shorter than `site_top_n`), or at
+`refine.max_terrain_areas` / `refine.max_mineral_areas` (`cap_reached`). These are the values
+of `run_record.refinement.stop` in results.schema.json.
 Ties are broken by `area_id`, so the order is deterministic.
 """
 
@@ -213,7 +215,7 @@ def schedule(
         rekey(e)
     confirmed: list[str] = []
     n_terrain = n_mineral = n_emit = 0
-    stop = "exhausted"
+    stop = "bound_reached"
 
     def order():
         live = [e for e in entries.values() if not e.done]
@@ -222,7 +224,7 @@ def schedule(
     while len(confirmed) < top_n:
         queue = order()
         if not queue:
-            stop = "exhausted"
+            stop = "bound_reached"
             break
         progressed, capped = False, False
         for e in queue[:batch]:
@@ -272,7 +274,7 @@ def schedule(
             stop = "bound_reached"
             break
         if not progressed:
-            stop = "cap_reached" if capped else "exhausted"
+            stop = "cap_reached" if capped else "bound_reached"
             break
 
     for e in entries.values():
