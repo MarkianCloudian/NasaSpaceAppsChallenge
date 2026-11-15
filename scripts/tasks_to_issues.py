@@ -340,6 +340,23 @@ def main() -> int:
                 return o["id"]
         return None
 
+    item_query = ("query($id: ID!) { node(id: $id) { ... on Issue { projectItems(first: 50) "
+                  "{ nodes { id project { id } } } } } }")
+
+    def project_item(url: str, node_id: str) -> dict:
+        """Add the issue to the board, or return its existing item (boards may auto-add issues)."""
+        try:
+            return json.loads(gh.run(["project", "item-add", str(a.project_number), "--owner", a.project_owner,
+                                      "--url", url, "--format", "json"], mutate=True))
+        except RuntimeError as e:
+            if "already exists" not in str(e):
+                raise
+        out = json.loads(gh.run(["api", "graphql", "-f", f"query={item_query}", "-f", f"id={node_id}"]))
+        for node in out["data"]["node"]["projectItems"]["nodes"]:
+            if node["project"]["id"] == proj["id"]:
+                return {"id": node["id"]}
+        raise RuntimeError(f"project item for {url} not found")
+
     numbers = {k: v["number"] for k, v in by_key.items()}
     node_ids = {k: v["id"] for k, v in by_key.items()}
     for i in plan_issues:
@@ -362,8 +379,7 @@ def main() -> int:
                 if "already" not in str(e).lower() and "duplicate" not in str(e).lower():
                     print(f"  sub-issue link warning: {e}")
         # project item + fields
-        item = json.loads(gh.run(["project", "item-add", str(a.project_number), "--owner", a.project_owner,
-                                  "--url", i["url"], "--format", "json"], mutate=True))
+        item = project_item(i["url"], node_ids[i["key"]])
         for field, value in (("Status", "Todo"), ("Priority", i["priority"]), ("Phase", i["phase"]), ("Area", i["area"])):
             oid = opt(field, value)
             if oid:
