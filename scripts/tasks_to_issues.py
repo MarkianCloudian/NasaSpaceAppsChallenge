@@ -190,6 +190,9 @@ def main() -> int:
     ap.add_argument("--apply", action="store_true", help="actually create/update on GitHub")
     ap.add_argument("--delay", type=float, default=1.0, help="seconds between write calls")
     ap.add_argument("--plan-out", help="write the full planned issue bodies to this file")
+    ap.add_argument("--bodies-only", action="store_true",
+                    help="with --apply: only update titles/bodies/labels/milestones of existing issues "
+                         "(skip sub-issue links and board fields)")
     a = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
@@ -268,10 +271,11 @@ def main() -> int:
                 f"{' · plan ' + ', '.join(it['plan_refs']) if it['plan_refs'] else ''}\n\n"
                 f"### Work\n{it['work']}\n\n### Done when\n{checks}\n"
                 f"- [ ] `uv run ruff check .` and `uv run pytest` pass\n\n"
-                f"**Depends on**: {dep_txt} — these must be closed before starting.\n\n"
+                f"**Depends on**: {dep_txt} — check these are closed before starting or delegating "
+                f"(Claude on GitHub cannot check issue states).\n\n"
                 f"### Read first (paths in branch `{a.branch}`)\n{rf}\n\n"
-                f"### Rules\nOne branch `task/{it['key']}-…` off `{a.branch}`, one PR into `{a.branch}` with "
-                f"`Closes #<this issue>`. Implement only this task; use `contracts/internal-api.md` and the "
+                f"### Rules\nOne PR into `{a.branch}` with `Closes #<this issue>` (any branch name). "
+                f"Implement only this task; use `contracts/internal-api.md` and the "
                 f"schemas as written; never invent data values or URLs (items marked *verify* must be checked "
                 f"and recorded in `research.md`); do not tick `tasks.md`; ask here if anything is unclear.\n\n"
                 # NOTE: never write the literal trigger word (at-sign + claude) into issue bodies:
@@ -371,6 +375,8 @@ def main() -> int:
             print(f"created #{res['number']} {i['key']}")
         i["db_id"], i["url"] = res["id"], res["html_url"]
         node_ids[i["key"]] = res["node_id"]
+        if a.bodies_only:
+            continue
         # sub-issue link
         if i["parent"]:
             try:

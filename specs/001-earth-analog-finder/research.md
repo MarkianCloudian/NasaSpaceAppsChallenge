@@ -628,7 +628,8 @@ work.
 - **Code conventions**: Python 3.11, full type hints, `ruff` lint + format (configured in
   `pyproject.toml`, T002/T005).
 - **Working rules for people and agents** are in `CLAUDE.md` (*Working on a task*): read-first
-  list, one task per branch/PR into `dev-app-v1`, check dependencies, never change contracts or
+  list, one task per PR into `dev-app-v1` (any branch name; small manual fixes may be pushed
+  directly), the person starting a task checks its dependencies, never change contracts or
   invent data values silently, run tests and ruff, ask on the issue when ambiguous.
 - **Status**: the GitHub issue (closed by "Closes #N" in the PR) is the task status; feature PRs
   do not tick `tasks.md`; one maintainer ticks it in batches to avoid merge conflicts.

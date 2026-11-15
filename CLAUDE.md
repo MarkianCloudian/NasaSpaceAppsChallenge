@@ -19,13 +19,16 @@ Spec-driven project (GitHub Spec Kit). Development branch: `dev-app-v1`.
 
 ## Working on a task (mandatory for humans and agents)
 
-1. **One task = one GitHub issue = one branch = one pull request.** Branch `task/T0xx-short-name`
-   off `dev-app-v1`; open the PR **into `dev-app-v1`** with `Closes #<issue>` in the description.
+1. **One task = one GitHub issue = one pull request into `dev-app-v1`.** Any branch name works
+   (the GitHub `@claude` workflow names its own `claude/issue-N-…`; locally e.g. `task/T037-…`);
+   the PR must target **`dev-app-v1`** and contain `Closes #<issue>`. Hackathon shortcut: small
+   manual config or documentation fixes may be pushed directly to `dev-app-v1` (pull first).
 2. **Read first**: the constitution, the task line in `tasks.md`, the plan sub-phase it names
    ("plan C2"), every research decision it names ("D-024"), and every contract or schema it
    names. For any code task also read `contracts/internal-api.md`.
-3. **Check dependencies**: the issue's "Depends on" issues must be closed (merged). If not, stop
-   and say so on the issue.
+3. **Check dependencies (the person starting the task)**: before starting work or tagging
+   `@claude`, check on the issue or board that its "Depends on" issues are closed. Claude running
+   on GitHub cannot check issue states, so it relies on this.
 4. **Implement only this task.** No extra features, refactors of other modules, or new
    dependencies beyond `pyproject.toml` unless the task says so.
 5. **Use the contracts as written.** Import shared types from `analogfinder.types`; follow the
@@ -61,6 +64,10 @@ Never run `/speckit-implement` without a task id: it would work through every op
 
 ## Delegating a task to `@claude` on GitHub
 
-Comment on the task issue:
-`@claude implement this issue following CLAUDE.md and the "Read first" list; open a PR into dev-app-v1.`
-The workflow builds from `dev-app-v1` and may run `uv`, `ruff`, `pytest` and `git`.
+1. Check that the issue's "Depends on" issues are closed.
+2. Comment on the task issue:
+   `@claude implement this issue following CLAUDE.md and the "Read first" list; open a PR into dev-app-v1.`
+3. Claude works from `dev-app-v1` (it may run `uv`, `ruff`, `pytest`, `git`), pushes a branch
+   `claude/issue-N-…` and comments a "Create PR" link.
+4. Open the PR, make sure the base is `dev-app-v1` and the description has `Closes #N`, merge.
+5. To answer a question from Claude, comment `@claude …` again on the same issue.
