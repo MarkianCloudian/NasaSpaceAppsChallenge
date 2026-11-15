@@ -10,9 +10,13 @@ outputs listed in the entry.
 Outputs without a recipe use the generic `params.temporal_reduce` (`max`/`min`/`mean` over the
 12 calendar-month means of the single variable); this is how NDVI is served (no product code).
 
-Output recipes are keyed by output `layer_id` in `OUTPUT_RECIPES` (all statistics are of
+Output recipes are keyed by output `layer_id` in `OUTPUT_EXPRS` (all statistics are of
 *monthly means*, which smooth daily extremes). The QC rule is decoded here per the product user
 guide and recorded in every manifest layer entry as `qc_rule`.
+
+Memory: the builder streams one calendar month at a time (mean over the years of that month,
+then folded into a running max / min / mean per output), so peak RAM stays about 1 GB for the
+global 3600 x 7200 grid instead of holding twelve float64 monthly stacks per variable.
 
 Request sent to the source adapter, one per reference year (global, no bounding box):
 `{"short_name": <dataset>, "version": <dataset_version>, "temporal": [start, end]}`; the returned
@@ -68,24 +72,6 @@ def _stat_nan(fn, stack: np.ndarray) -> np.ndarray:
     return np.where(any_valid, out, np.nan).astype("float32")
 
 
-# Output recipe per output layer_id: function(monthly dict role -> (12, rows, cols)) -> array.
-def _day_max(m):
-    return _stat_nan(np.nanmax, m["day"])
-
-
-def _night_min(m):
-    return _stat_nan(np.nanmin, m["night"])
-
-
-def _mean(m):
-    both = (m["day"] + m["night"]) / 2.0  # NaN if either is missing in that month
-    return _stat_nan(np.nanmean, both)
-
-
-def _amp(m):
-    return _stat_nan(np.nanmean, m["day"] - m["night"])
-
-
 # Generic temporal reduction over the 12 calendar-month climatology of the single variable,
 # selected by `params.temporal_reduce` (used by outputs without a dedicated recipe, e.g. NDVI max).
 TEMPORAL_REDUCE = {
@@ -94,9 +80,27 @@ TEMPORAL_REDUCE = {
     "mean": np.nanmean,
 }
 
+# Output definition per output layer_id: (temporal reduction over the 12 monthly means,
+# per-month expression of the month's role arrays, roles needed). Elementwise expressions work on
+# one month (rows, cols) and on a (12, rows, cols) stack alike; NaN in any role gives NaN.
+OUTPUT_EXPRS: dict = {
+    "lst_day_max": ("max", lambda m: m["day"], ("day",)),
+    "lst_night_min": ("min", lambda m: m["night"], ("night",)),
+    "lst_mean": ("mean", lambda m: (m["day"] + m["night"]) / 2.0, ("day", "night")),
+    "lst_amp": ("mean", lambda m: m["day"] - m["night"], ("day", "night")),
+}
 
-def temporal_reduce_recipe(params: dict):
-    """(function, roles) reducing the only variable of `params` with `params.temporal_reduce`."""
+
+def _recipe(reduce: str, expr):
+    return lambda m: _stat_nan(TEMPORAL_REDUCE[reduce], expr(m))
+
+
+# Whole-stack form, function(monthly dict role -> (12, rows, cols)) -> array (tests, small data).
+OUTPUT_RECIPES = {lid: (_recipe(r, e), roles) for lid, (r, e, roles) in OUTPUT_EXPRS.items()}
+
+
+def temporal_reduce_expr(params: dict):
+    """(reduce name, expression, roles) for the only variable of `params`."""
     name = params.get("temporal_reduce")
     if name not in TEMPORAL_REDUCE:
         raise ConfigError(
@@ -106,16 +110,48 @@ def temporal_reduce_recipe(params: dict):
     if len(roles) != 1:
         raise ConfigError("modis_cmg: temporal_reduce needs exactly one entry in params.variables")
     role = roles[0]
-    fn = TEMPORAL_REDUCE[name]
-    return (lambda m: _stat_nan(fn, m[role])), (role,)
+    return name, (lambda m: m[role]), (role,)
 
 
-OUTPUT_RECIPES = {
-    "lst_day_max": (_day_max, ("day",)),
-    "lst_night_min": (_night_min, ("night",)),
-    "lst_mean": (_mean, ("day", "night")),
-    "lst_amp": (_amp, ("day", "night")),
-}
+def temporal_reduce_recipe(params: dict):
+    """(function, roles) reducing the only variable of `params` with `params.temporal_reduce`."""
+    name, expr, roles = temporal_reduce_expr(params)
+    return _recipe(name, expr), roles
+
+
+class RunningReduce:
+    """Fold monthly arrays one at a time into max / min / mean, ignoring NaN (= `_stat_nan`)."""
+
+    def __init__(self, kind: str):
+        if kind not in TEMPORAL_REDUCE:
+            raise ConfigError(f"modis_cmg: unknown reduction {kind!r}")
+        self.kind = kind
+        self.acc: np.ndarray | None = None
+        self.n: np.ndarray | None = None
+
+    def add(self, a: np.ndarray) -> None:
+        a = np.asarray(a, dtype="float32")
+        if self.kind == "mean":
+            ok = ~np.isnan(a)
+            if self.acc is None:
+                self.acc = np.zeros(a.shape, dtype="float32")
+                self.n = np.zeros(a.shape, dtype="uint8")
+            self.acc[ok] += a[ok]
+            self.n += ok
+        elif self.acc is None:
+            self.acc = a.copy()
+        else:
+            (np.fmax if self.kind == "max" else np.fmin)(self.acc, a, out=self.acc)
+
+    def result(self) -> np.ndarray | None:
+        if self.acc is None:
+            return None
+        if self.kind == "mean":
+            with np.errstate(invalid="ignore", divide="ignore"):
+                return np.where(self.n > 0, self.acc / np.maximum(self.n, 1), np.nan).astype(
+                    "float32"
+                )
+        return self.acc
 
 
 def decode_qc(rule: str, qc: np.ndarray) -> np.ndarray:
@@ -156,8 +192,17 @@ def month_of(path: Path) -> int:
     return (dt.date(int(m[1]), 1, 1) + dt.timedelta(days=int(m[2]) - 1)).month
 
 
-def climatology(files: list[Path], params: dict) -> dict:
-    """role -> (12, rows, cols) mean over years per calendar month (NaN where never valid)."""
+def by_month(files: list[Path]) -> dict[int, list[Path]]:
+    """Calendar month (1-12) -> its files (all years), sorted."""
+    out: dict[int, list[Path]] = {}
+    for f in sorted(files):
+        out.setdefault(month_of(f), []).append(f)
+    return out
+
+
+def month_mean(files: list[Path], params: dict) -> dict:
+    """role -> (rows, cols) float32 mean over the given files (one calendar month, all years);
+    NaN where no year is valid."""
     variables = params["variables"]
     offset = float(params.get("offset_c", 0.0))
     scale = float(params["scale"])
@@ -165,21 +210,38 @@ def climatology(files: list[Path], params: dict) -> dict:
     sums: dict = {}
     counts: dict = {}
     for f in sorted(files):
-        mi = month_of(f) - 1
         data = read_month(f, variables, scale, offset, qc)
         for role, arr in data.items():
             if role not in sums:
-                sums[role] = np.zeros((12,) + arr.shape, dtype="float64")
-                counts[role] = np.zeros((12,) + arr.shape, dtype="uint16")
+                sums[role] = np.zeros(arr.shape, dtype="float32")
+                counts[role] = np.zeros(arr.shape, dtype="uint8")
             ok = ~np.isnan(arr)
-            sums[role][mi][ok] += arr[ok]
-            counts[role][mi] += ok
+            sums[role][ok] += arr[ok]
+            counts[role] += ok
+        del data
     out = {}
     for role in sums:
         with np.errstate(invalid="ignore", divide="ignore"):
             out[role] = np.where(
                 counts[role] > 0, sums[role] / np.maximum(counts[role], 1), np.nan
             ).astype("float32")
+    return out
+
+
+def climatology(files: list[Path], params: dict) -> dict:
+    """role -> (12, rows, cols) mean over years per calendar month (NaN where never valid).
+
+    Holds all twelve months in memory: for small inputs and tests; the builder streams."""
+    months = by_month(files)
+    per_month = {mi: month_mean(fs, params) for mi, fs in months.items()}
+    out = {}
+    for role in {r for mm in per_month.values() for r in mm}:
+        shape = next(mm[role].shape for mm in per_month.values() if role in mm)
+        stack = np.full((12,) + shape, np.nan, dtype="float32")
+        for mi, mm in per_month.items():
+            if role in mm:
+                stack[mi - 1] = mm[role]
+        out[role] = stack
     return out
 
 
@@ -207,15 +269,19 @@ class ModisCmgBuilder:
         params = entry["params"]
         source = ctx.sources.get(entry["source_id"])
         years = resolve_years(params, ctx.settings)
-        recipes = {}
+        exprs = {}
         for output in entry["outputs"]:
             lid = output["layer_id"]
-            if lid in OUTPUT_RECIPES:
-                recipes[lid] = OUTPUT_RECIPES[lid]
+            if lid in OUTPUT_EXPRS:
+                exprs[lid] = OUTPUT_EXPRS[lid]
             elif "temporal_reduce" in params:
-                recipes[lid] = temporal_reduce_recipe(params)
+                exprs[lid] = temporal_reduce_expr(params)
             else:
                 raise ConfigError(f"modis_cmg: no recipe for output {lid!r}")
+        needed = {r for _, _, roles in exprs.values() for r in roles}
+        missing = needed - set(params["variables"])
+        if missing:
+            raise ConfigError(f"modis_cmg: params.variables lacks roles {sorted(missing)}")
         qc = params.get("qc") or {}
         qc_rule = QC_RULES[qc["keep"]][0] if qc.get("keep") in QC_RULES else None
         if qc.get("keep") and qc_rule is None:
@@ -235,11 +301,13 @@ class ModisCmgBuilder:
             files.extend(found)
         log.info("%s: %d monthly files, years %s", entry["layer_id"], len(files), years)
 
-        monthly = climatology(files, params)
-        needed = {r for o in entry["outputs"] for r in recipes[o["layer_id"]][1]}
-        missing = needed - set(monthly)
-        if missing:
-            raise ConfigError(f"modis_cmg: params.variables lacks roles {sorted(missing)}")
+        running = {lid: RunningReduce(kind) for lid, (kind, _, _) in exprs.items()}
+        for mi, month_files in sorted(by_month(files).items()):
+            mm = month_mean(month_files, params)
+            for lid, (_, expr, _) in exprs.items():
+                running[lid].add(expr(mm))
+            del mm
+            log.debug("%s: month %d folded (%d files)", entry["layer_id"], mi, len(month_files))
 
         fp = storage.fingerprint(
             {"entry": entry, "dataset_version": source.entry["dataset_version"], "years": years}
@@ -247,8 +315,9 @@ class ModisCmgBuilder:
         stage_dir = Path(ctx.stage_dir)
         layers = []
         for o in entry["outputs"]:
-            fn, _roles = recipes[o["layer_id"]]
-            array = fn(monthly)
+            array = running[o["layer_id"]].result()
+            if array is None:
+                raise SourceError(f"{entry['source_id']}: no monthly data for {o['layer_id']}")
             name = f"{o['layer_id']}.tif"
             cells.write_layer(stage_dir / name, array)
             layer = {
