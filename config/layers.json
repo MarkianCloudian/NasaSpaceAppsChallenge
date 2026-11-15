@@ -176,7 +176,7 @@
           "statistic": "max of calendar-month climatology"
         }
       ],
-      "notes": "QC SDS name and keep rule to be verified against the MOD13C2 user guide in T040 (verify)."
+      "notes": "NDVI = max over the 12 calendar-month climatology (generic temporal_reduce). SDS and QC names follow the MOD13C2 V061 CMG layout; QC SDS name and reliability codes still to be verified against the MOD13C2 user guide (verify)."
     },
     {
       "layer_id": "power_climate",

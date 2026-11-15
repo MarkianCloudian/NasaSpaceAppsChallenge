@@ -7,6 +7,9 @@ the entry's source adapter; read the SDS with pyhdf; mask fill values and cells 
 rule; scale (`raw * scale + offset_c`); average per calendar month across years; compute the
 outputs listed in the entry.
 
+Outputs without a recipe use the generic `params.temporal_reduce` (`max`/`min`/`mean` over the
+12 calendar-month means of the single variable); this is how NDVI is served (no product code).
+
 Output recipes are keyed by output `layer_id` in `OUTPUT_RECIPES` (all statistics are of
 *monthly means*, which smooth daily extremes). The QC rule is decoded here per the product user
 guide and recorded in every manifest layer entry as `qc_rule`.
@@ -81,6 +84,30 @@ def _mean(m):
 
 def _amp(m):
     return _stat_nan(np.nanmean, m["day"] - m["night"])
+
+
+# Generic temporal reduction over the 12 calendar-month climatology of the single variable,
+# selected by `params.temporal_reduce` (used by outputs without a dedicated recipe, e.g. NDVI max).
+TEMPORAL_REDUCE = {
+    "max": np.nanmax,
+    "min": np.nanmin,
+    "mean": np.nanmean,
+}
+
+
+def temporal_reduce_recipe(params: dict):
+    """(function, roles) reducing the only variable of `params` with `params.temporal_reduce`."""
+    name = params.get("temporal_reduce")
+    if name not in TEMPORAL_REDUCE:
+        raise ConfigError(
+            f"modis_cmg: unknown temporal_reduce {name!r}; known: {sorted(TEMPORAL_REDUCE)}"
+        )
+    roles = list(params["variables"])
+    if len(roles) != 1:
+        raise ConfigError("modis_cmg: temporal_reduce needs exactly one entry in params.variables")
+    role = roles[0]
+    fn = TEMPORAL_REDUCE[name]
+    return (lambda m: _stat_nan(fn, m[role])), (role,)
 
 
 OUTPUT_RECIPES = {
@@ -180,9 +207,15 @@ class ModisCmgBuilder:
         params = entry["params"]
         source = ctx.sources.get(entry["source_id"])
         years = resolve_years(params, ctx.settings)
+        recipes = {}
         for output in entry["outputs"]:
-            if output["layer_id"] not in OUTPUT_RECIPES:
-                raise ConfigError(f"modis_cmg: no recipe for output {output['layer_id']!r}")
+            lid = output["layer_id"]
+            if lid in OUTPUT_RECIPES:
+                recipes[lid] = OUTPUT_RECIPES[lid]
+            elif "temporal_reduce" in params:
+                recipes[lid] = temporal_reduce_recipe(params)
+            else:
+                raise ConfigError(f"modis_cmg: no recipe for output {lid!r}")
         qc = params.get("qc") or {}
         qc_rule = QC_RULES[qc["keep"]][0] if qc.get("keep") in QC_RULES else None
         if qc.get("keep") and qc_rule is None:
@@ -203,7 +236,7 @@ class ModisCmgBuilder:
         log.info("%s: %d monthly files, years %s", entry["layer_id"], len(files), years)
 
         monthly = climatology(files, params)
-        needed = {r for o in entry["outputs"] for r in OUTPUT_RECIPES[o["layer_id"]][1]}
+        needed = {r for o in entry["outputs"] for r in recipes[o["layer_id"]][1]}
         missing = needed - set(monthly)
         if missing:
             raise ConfigError(f"modis_cmg: params.variables lacks roles {sorted(missing)}")
@@ -214,7 +247,7 @@ class ModisCmgBuilder:
         stage_dir = Path(ctx.stage_dir)
         layers = []
         for o in entry["outputs"]:
-            fn, _roles = OUTPUT_RECIPES[o["layer_id"]]
+            fn, _roles = recipes[o["layer_id"]]
             array = fn(monthly)
             name = f"{o['layer_id']}.tif"
             cells.write_layer(stage_dir / name, array)
