@@ -39,6 +39,8 @@ addopts = "-m 'not online'"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# terramars_v2_project/ is an earlier prototype, not part of the app; scripts/ holds team tooling
+extend-exclude = ["terramars_v2_project", "scripts"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
