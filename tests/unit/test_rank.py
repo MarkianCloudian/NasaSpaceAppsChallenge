@@ -184,7 +184,9 @@ def test_files_written(run):
     assert json.loads((d / "results.json").read_text()) == res
     rr = json.loads((d / "run_record.json").read_text())
     assert rr["profile"]["id"] == "mars-rover-jezero" and rr["dedup_applied"] is False
-    assert rr["placeholder_values"] is True and rr["refinement"]["stop"] == "bound_reached"
+    has_placeholder = any(c.value_status == "placeholder" for c in PROFILE.criteria)
+    assert rr["placeholder_values"] is has_placeholder  # all Jezero targets sourced (T036)
+    assert rr["refinement"]["stop"] == "bound_reached"
     assert rr["percentile_population"]["name"] == "eligible"
     assert {s["source_id"] for s in rr["sources"]} >= {"nasadem-pc", "emit-l2b-min"}
     rows = list(csv.DictReader(open(d / "results.csv", encoding="utf-8")))

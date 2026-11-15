@@ -44,12 +44,19 @@
       "veto": 0.2,
       "rank_in_category": 1,
       "footprint_statistic": "mean",
-      "value_status": "placeholder",
+      "value_status": "measured",
       "sources": {
         "target": [
           {
+            "source_id": "mars-climate-db",
+            "citation": "Mars Climate Database v6.2 web interface (LMD/OU/IAA/ESA/CNES), climatology average solar scenario, 18.44N 77.45E, 10 m above surface, all Ls (0-345 by 15) x all local times; retrieved 2026-11-15: water vapour column annual mean 0.0126 kg/m2 (about 12.6 precipitable micrometres), volume mixing ratio annual mean 1.3e-4; no liquid precipitation in the present-day Mars climate; target = driest end of the Earth population (p* = 0)",
+            "version": "6.2",
+            "accessed": "2026-11-15"
+          },
+          {
             "source_id": "literature",
-            "citation": "Mars has no liquid precipitation; target = driest end of the Earth population (p* = 0)"
+            "citation": "Haberle, R. M. et al. (2001) On the possibility of liquid water on present-day Mars. J. Geophys. Res. 106, doi:10.1029/2000JE001360 (surface liquid water at most transient; evaporation limits it)",
+            "accessed": "2026-11-15"
           }
         ],
         "earth": [
@@ -57,7 +64,8 @@
           "era5-cds"
         ]
       },
-      "justification": "Liquid precipitation on Mars is zero, which no Earth site reproduces in absolute terms; the analogue is the driest Earth land, so the criterion is a percentile of the eligible population (D-021)."
+      "justification": "Liquid precipitation on Mars is zero, which no Earth site reproduces in absolute terms; the analogue is the driest Earth land, so the criterion is a percentile of the eligible population (D-021).",
+      "note": "Design mapping: the Mars value (no liquid precipitation, ~12.6 precipitable micrometres of water vapour) lies below any Earth value, so the target is the driest Earth percentile, as for dry_air."
     },
     {
       "id": "dry_air",
@@ -105,27 +113,35 @@
       "scoring_rule": "trapezoid",
       "target": {
         "min": null,
-        "max": 0.1
+        "max": 0.15
       },
       "tolerance": {
-        "high": 0.05
+        "high": 0.1
       },
       "veto": 0.5,
       "rank_in_category": 1,
       "footprint_statistic": "p90",
-      "value_status": "placeholder",
+      "value_status": "measured",
       "sources": {
         "target": [
           {
             "source_id": "literature",
-            "citation": "Mars surface has no vegetation; NDVI of bare ground (data-model placeholder 0.10)"
+            "citation": "Mars has no vegetation cover; the Mars-equivalent NDVI is that of Earth bare ground",
+            "accessed": "2026-11-15"
+          },
+          {
+            "source_id": "modis-mod13c2",
+            "citation": "Earth bare-ground reference: annual max of the 2023 MOD13C2 v061 monthly NDVI (modis_cmg builder) over land cells with MCD12C1 2023 barren fraction > 0.9, |lat| <= 52: p50 0.106, p90 0.147, p95 0.166, p99 0.222 (n = 644004 cells). Target max = p90 rounded (0.15); tolerance 0.10 puts the veto (score 0.5) at NDVI 0.20, between p95 and p99",
+            "version": "061",
+            "accessed": "2026-11-15"
           }
         ],
         "earth": [
           "modis-mod13c2"
         ]
       },
-      "justification": "A Mars analogue for rover operations and remote sensing must be essentially plant-free; p90 over the footprint catches vegetated patches inside the circle."
+      "justification": "A Mars analogue for rover operations and remote sensing must be essentially plant-free; p90 over the footprint catches vegetated patches inside the circle.",
+      "note": "Was max 0.10 / tolerance 0.05 (data-model placeholder): that vetoed NDVI > 0.125, i.e. about half of MODIS-barren land, incl. Death Valley (footprint p90 0.148) and the MDRS area in Utah (0.149). Vegetated mineral analogs (Lake Salda 0.58, Rio Tinto 0.67, Pilbara 0.30) stay vetoed: this profile targets plant-free terrain for a rover expedition."
     },
     {
       "id": "barren_ground",
@@ -141,24 +157,32 @@
         "max": null
       },
       "tolerance": {
-        "low": 0.2
+        "low": 1.0
       },
-      "veto": 0.25,
+      "veto": null,
       "rank_in_category": 2,
       "footprint_statistic": "mean",
-      "value_status": "placeholder",
+      "value_status": "measured",
       "sources": {
         "target": [
           {
             "source_id": "literature",
-            "citation": "Jezero delta surface is bare rock and regolith (fraction ~1); data-model placeholder min 0.7"
+            "citation": "Jezero is bare rock and regolith with no vegetation, i.e. barren fraction 1 in IGBP terms",
+            "accessed": "2026-11-15"
+          },
+          {
+            "source_id": "modis-mcd12c1",
+            "citation": "Sulla-Menashe, D., Friedl, M. A. User Guide to Collection 6 MODIS Land Cover (MCD12Q1 and MCD12C1) Product, Table 3: IGBP class 16 Barren = at least 60% of area non-vegetated barren (sand, rock, soil) with less than 10% vegetation",
+            "version": "061",
+            "accessed": "2026-11-15"
           }
         ],
         "earth": [
           "modis-mcd12c1"
         ]
       },
-      "justification": "Exposed rock and regolith are needed both for geological analogy and for spectral detection of minerals."
+      "justification": "Exposed rock and regolith are needed both for geological analogy and for spectral detection of minerals.",
+      "note": "Team decision 2026-11-15 (option B): no veto, tolerance low 1.0, so a non-barren footprint lowers the score instead of excluding the site (barren 0 -> 0.3, 0.25 -> 0.55, >= 0.7 -> 1.0; a tolerance <= 0.7 would score 0 and act as a veto through the geometric mean). This keeps sparse, low-NDVI shrublands as candidates; vegetated sites are still excluded by the no_vegetation veto. Check on MCD12C1 2023, 20 km footprint mean: Atacama Yungay 1.00, Sahara 1.00, Namib 1.00, Danakil 1.00, Death Valley 0.92, MDRS Utah 0.73; Lake Salda, Rio Tinto, Pilbara 0.00 (open shrubland/grassland)."
     },
     {
       "id": "thermal_swing",
@@ -414,14 +438,15 @@
       "evaluation_scale": "grid",
       "comparison": "not_comparable",
       "target": {
-        "value": 3.71
+        "value": 3.73
       },
-      "value_status": "placeholder",
+      "value_status": "measured",
       "sources": {
         "target": [
           {
             "source_id": "literature",
-            "citation": "Mars surface gravity 3.71 m/s2 (data-model value; citation to add in T036)"
+            "citation": "NASA NSSDCA Mars Fact Sheet (D. R. Williams), https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html, last updated 19 May 2025: surface gravity (mean) 3.73 m/s2 (equator 3.69, pole 3.73); Earth 9.82",
+            "accessed": "2026-11-15"
           }
         ],
         "earth": []
@@ -438,14 +463,15 @@
       "comparison": "not_comparable",
       "target": {
         "min": 200,
-        "max": 600
+        "max": 450
       },
-      "value_status": "placeholder",
+      "value_status": "measured",
       "sources": {
         "target": [
           {
             "source_id": "literature",
-            "citation": "THEMIS-derived thermal inertia of the Jezero delta (placeholder range from sample-edited.json)"
+            "citation": "Martinez, G. M. et al. (2022) Thermal inertia and albedo at Jezero crater as observed from the Mars 2020 MEDA instrument. 53rd Lunar and Planetary Science Conference, abstract 2024: THEMIS (100 m/px) thermal inertia along the Perseverance traverse 200-450 SI units; MEDA in situ 200 (sand) - 600 (bedrock), first 221 sols",
+            "accessed": "2026-11-15"
           }
         ],
         "earth": []
@@ -467,5 +493,5 @@
       "reason": "No global Earth dataset of pits or lava tubes (FR-005)."
     }
   ],
-  "notes": "v1 profile. Measured targets (T036, 2026-11-15): terrain from T072, mineral classes from published CRISM analyses, climate from the Mars Climate Database v6.2. Still placeholder: hyperarid (design choice: driest Earth end; Mars has no liquid precipitation), no_vegetation, barren_ground, gravity, thermal_inertia. Pending: review of targets, tolerances and vetoes by a second team member (\"reviewed by <initials>, <date>\")."
+  "notes": "v1 profile. All targets sourced (T036, 2026-11-15): terrain from T072 (CTX DTMs, MOLA+HRSC), mineral classes from published CRISM analyses (Goudge et al. 2015; Horgan et al. 2020), climate from the Mars Climate Database v6.2, gravity from the NSSDCA fact sheet, thermal inertia from THEMIS (Martinez et al. 2022); no_vegetation and barren_ground are Earth bare-ground equivalents checked on MODIS 2023 data (see criterion notes). hyperarid, dry_air and thermal_swing are percentile design mappings of Mars values outside the Earth range. Pending: review of targets, tolerances and vetoes by a second team member (\"reviewed by <initials>, <date>\")."
 }
