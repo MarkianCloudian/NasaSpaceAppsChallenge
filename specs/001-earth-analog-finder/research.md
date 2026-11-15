@@ -653,6 +653,10 @@ work.
   `percentile_rank = rank_conservative / #areas that passed screening`; the site is "in the top
   20 %" if `percentile_rank ≤ 0.2` (SC-006). Same rule for `flag_reasons`
   `no_known_analog_in_top_20pct`.
+  Implemented (T077) as `rank_conservative ≤ max(1, ⌊0.2 · #areas⌋)`: identical to
+  `percentile_rank ≤ 0.2` for 5 or more areas; with fewer areas rank 1 still counts (otherwise a
+  site no area can beat would be flagged, which contradicts the T080 scenario "rank 1, no flag").
+  Only in-scope, not vetoed sites with confidence ≥ `min_confidence` count for the test.
 
 ### D-026: Collaboration safeguards for parallel and agent-driven work
 
