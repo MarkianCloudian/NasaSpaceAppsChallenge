@@ -78,10 +78,10 @@ def _nanquantile(vals: np.ndarray, valid: np.ndarray, q: float) -> np.ndarray:
 def _reduce(vals: np.ndarray, w: np.ndarray, statistic: str) -> np.ndarray:
     valid = np.isfinite(vals)
     if statistic in ("mean", "fraction_true"):
-        x = np.where(valid, vals, 0.0)
+        x = np.where(valid, vals, 0.0).astype(np.float64)  # sums in float64: exact for equal values
         if statistic == "fraction_true":
-            x = (x >= 0.5).astype("float64")
-        ww = np.where(valid, w, 0.0)
+            x = (x >= 0.5).astype(np.float64)
+        ww = np.where(valid, w, 0.0).astype(np.float64)
         with np.errstate(invalid="ignore", divide="ignore"):
             return (x * ww).sum(axis=1) / ww.sum(axis=1)
     if statistic == "max":
@@ -114,12 +114,18 @@ def focal_many(
     grid_shape: tuple[int, int] | None = None,
     wrap_lon: bool = True,
     max_elements: int = 4_000_000,
+    targets: np.ndarray | None = None,
 ) -> dict[str, np.ndarray]:
     """Several land-aligned layers in one pass: {name: (values, statistic)} -> {name: values}.
 
     Neighbour indices are gathered once per chunk and reused for every layer (most of the
     cost). A chunk holds at most `max_elements` gathered values, bounding peak memory
-    independently of latitude.
+    independently of latitude. Values are gathered and reduced in float32 (inputs are float32
+    grid layers); results are float64 vectors.
+
+    `targets` (land-aligned bool): compute only these cells (others NaN); neighbours still
+    come from all land cells, so a target cell gets exactly the value of a full pass. Screening
+    uses it to skip cells that fail the profile's latitude range (T047 measurement).
     """
     for name, (_, stat) in layers.items():
         if stat not in STATISTICS:
@@ -127,7 +133,7 @@ def focal_many(
     rows = np.asarray(land.rows, dtype=np.int64)
     cols = np.asarray(land.cols, dtype=np.int64)
     n = rows.size
-    vals_in = {k: np.asarray(v) for k, (v, _) in layers.items()}  # no float64 copies
+    vals_in = {k: np.asarray(v, dtype=np.float32) for k, (v, _) in layers.items()}
     for k, v in vals_in.items():
         if v.shape != (n,):
             raise ValueError(f"{k}: expected a land-aligned vector of length {n}, got {v.shape}")
@@ -146,17 +152,19 @@ def focal_many(
     lookup = np.full((nrows, ncols), -1, dtype=np.int32)
     lookup[rows, cols] = np.arange(n, dtype=np.int32)
     row_lat = lat_top - (np.arange(nrows) + 0.5) * cell_deg
-    row_w = np.cos(np.radians(row_lat))
+    row_w = np.cos(np.radians(row_lat)).astype(np.float32)
     bands = np.floor(row_lat[rows]).astype(int)
-    for b in np.unique(bands):
-        cells = np.nonzero(bands == b)[0]
+    todo = np.ones(n, bool) if targets is None else np.asarray(targets, bool)
+    rows32, cols32 = rows.astype(np.int32), cols.astype(np.int32)
+    for b in np.unique(bands[todo]):
+        cells = np.nonzero((bands == b) & todo)[0]
         dr, dc = kernel_offsets(b + 0.5, radius_km, cell_deg)
         k = dr.size
         chunk = max(1, max_elements // k)
         for s in range(0, cells.size, chunk):
             idx = cells[s : s + chunk]
-            nr = rows[idx, None] + dr[None, :]
-            nc = cols[idx, None] + dc[None, :]
+            nr = rows32[idx, None] + dr.astype(np.int32)[None, :]
+            nc = cols32[idx, None] + dc.astype(np.int32)[None, :]
             if wrap_lon:
                 nc %= ncols
             inside = (nr >= 0) & (nr < nrows) & (nc >= 0) & (nc < ncols)
@@ -166,7 +174,7 @@ def focal_many(
             nb_c = np.maximum(nb, 0)
             w = row_w[nr_c]
             for name, (_, stat) in layers.items():
-                vals = np.where(is_land, vals_in[name][nb_c].astype("float64"), np.nan)
+                vals = np.where(is_land, vals_in[name][nb_c], np.float32(np.nan))
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", RuntimeWarning)
                     res = _reduce(vals, w, stat)
