@@ -818,3 +818,24 @@ earlier real-data figure is the ETOPO `dem_block_stats` full-globe run above (62
 **Optimisation**: none applied — no measured target was missed, and the slowest measured part
 (100 km footprints at ≈ 11 min for seven statistics) is outside the 10-minute grid-build target
 (the footprint pass is part of the run, not of the build). Open item: confirm after real-data timing.
+
+### Known analog sites (T076, 2026-11-15)
+
+`config/known_analogs.json`: the nine seed sites of T076, all `bodies: ["Mars"]`, `purposes: []`
+(relevant to every Mars profile; whether a site is in scope for a profile is decided by
+calibration, T077).
+
+- **References**: each title, journal, volume, pages and DOI was checked against the Crossref
+  metadata of the DOI. Two citations of an earlier draft were replaced because they were not
+  about the site: Lake Salda (Horgan et al. 2020 is about Jezero itself) → Gunes et al. 2024,
+  Geobiology 22, e12619; Haughton (the cited "Overview" title was not found on Crossref) → Osinski et al.
+  2005, MAPS 40, 1859–1877 (impact hydrothermal activity at Haughton).
+- **Coordinates**: Wikipedia/GeoHack coordinates of the named feature, rounded to 0.01°: Lake
+  Salda, Haughton crater, McMurdo Dry Valleys, Mauna Kea, Mars Desert Research Station. Others
+  are area centres, **verify**: Yungay (−24.08, −70.01; literature gives the University of
+  Antofagasta station near the old Yungay mine at ≈ 24°S, 70°W without a clean figure),
+  Río Tinto (Minas de Riotinto headwaters), Pilbara (North Pole Dome / Strelley Pool area),
+  Iceland highlands (central highlands; the Ehlmann et al. 2012 samples come from several
+  localities).
+- **`radius_km`**: project choice per site (20–80 km, roughly the extent of the analog terrain);
+  sites without a value use `known_radius_default_km` (50).
