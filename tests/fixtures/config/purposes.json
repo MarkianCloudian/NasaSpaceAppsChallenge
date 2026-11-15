@@ -1,0 +1,19 @@
+{
+  "purposes": [
+    {
+      "purpose_id": "rover_expedition",
+      "description": "fixture",
+      "weight_method": "roc",
+      "category_ranks": {
+        "operations": 1,
+        "terrain": 2,
+        "geology": 3,
+        "atmosphere": 4,
+        "thermal": 5,
+        "resources": 6,
+        "biology": 7,
+        "subsurface": 8
+      }
+    }
+  ]
+}
