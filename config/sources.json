@@ -97,7 +97,7 @@
       "licence": "NASA open data policy (verify)",
       "citation": "NASA Langley Research Center POWER Project. Prediction Of Worldwide Energy Resources (POWER) data. (verify wording on docs page)",
       "docs_url": "https://power.larc.nasa.gov/docs/services/api/",
-      "notes": "Climatology regional endpoint exists (observed an error asking for a minimum box size: 2 degrees at least). verify maximum regional box size, request limits, dataset version and parameters (research D-008). Base URL itself returns 404; requests go to sub-paths."
+      "notes": "Climatology regional endpoint exists (observed an error asking for a minimum box size: 2 degrees at least). Verified 2026-11-15 from API error messages (research D-008): each side of a regional box must be 2-10 degrees; only 1 parameter per regional request (adapter makes one request per tile and parameter). Rate limit, dataset version, licence wording still to verify. Base URL itself returns 404; requests go to sub-paths."
     },
     {
       "source_id": "etopo-2022",
