@@ -682,3 +682,33 @@ run is done.
 | Terrain-hint validity (D-024) | NOT VERIFIED | Needs refined areas (first real run). Measure the share with 30 m slope p90 < 926 m slope p90; if > 5 %, set `refine.terrain_hint` to `false` in `config/settings.json`. Currently `true` (default, unmeasured). |
 | Refinement counts and stop reason of first real run | NOT VERIFIED | No real run done yet. Record `run_record.refinement` {stop, proven_top, terrain_areas, mineral_areas, emit_covered_areas}. |
 | Settings values (T010) | VERIFIED (read from `config/settings.json`) | `grid.cell_size_deg` 0.05; `lat_range` [-90, 90]; `reference_years` 2019–2023; `screen_min_score` 0.3; `max_area_km2` 2500; `refine` batch 10, max_terrain_areas 200, max_mineral_areas 60, bound_margin 0.05, terrain_hint true; `site_top_n` 30; `stability` draws 500, range 0.25, seed 42, top_k 10; `known_radius_default_km` 50; `cleanup_keep` grids 2, runs 5; `footprint` min_valid_fraction 0.5, benchmark_budget_s 180; `coverage.min_coverage_fraction` 0.5; `emit` min_band_depth 0.02, min_cluster_pixels 4, max_granules_per_area 5; `http.timeout_s` 60. |
+
+### Performance pass (T087, 2026-11-15)
+
+Tool: `scripts/benchmark_perf.py` (`footprint`, `grid`, `disk`). Machine: 2-core CI runner, 7 GB RAM.
+
+**Measured** — footprint pass (T046), synthetic land mask (smoothed random blobs, 30 % land, seed 0),
+band 30–40°N (436,355 land cells), values random float32, `min_valid_fraction` 0.5:
+
+| radius | per statistic (s per 10⁶ land cells) | all 7 statistics in one `focal_many` | peak RSS |
+|---|---|---|---|
+| 20 km (Jezero profile) | 1.0–1.1 | 3.9 s per 10⁶ cells | 440 MB |
+| 100 km | 20–28 (median/p90/p10 slowest: sort) | 90 s per 10⁶ cells | 562 MB |
+
+**Extrapolation (estimate, not measured)** to the whole globe, assuming ≈ 29 % land cells
+(≈ 7.5 M cells; the 29 % is an assumption, not a dataset value) and the 30–40°N cost per cell
+(kernels are larger towards the poles, so the figure is optimistic at high latitude):
+20 km ≈ 0.1 min per criterion (0.5 min for all seven statistics); 100 km ≈ 3 min per criterion
+(≈ 11 min for all seven). Memory is bounded by `max_elements` (4 M gathered values per chunk),
+independent of latitude.
+
+**Not measured here** (need the downloaded sources, NASA Earthdata/Copernicus credentials and
+~GBs of data, which the CI runner does not have): grid build from cached inputs (SC-001),
+`data/` disk use (SC-003), cached and first full run (SC-002). Run
+`uv run python scripts/benchmark_perf.py grid` / `disk` after `analog grid` on a machine with the
+data and record the numbers here; T088 replaces the quickstart _TBD_ values from them. The only
+earlier real-data figure is the ETOPO `dem_block_stats` full-globe run above (620 s, 894 MB peak).
+
+**Optimisation**: none applied — no measured target was missed, and the slowest measured part
+(100 km footprints at ≈ 11 min for seven statistics) is outside the 10-minute grid-build target
+(the footprint pass is part of the run, not of the build). Open item: confirm after real-data timing.
