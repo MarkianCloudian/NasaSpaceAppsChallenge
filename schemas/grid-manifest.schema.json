@@ -155,6 +155,10 @@
             "number",
             "null"
           ]
+        },
+        "qc_rule": {
+          "type": "string",
+          "description": "Quality-control rule applied to the source data (e.g. MODIS QC bit decoding)"
         }
       }
     }
