@@ -661,6 +661,24 @@ work.
 - Note: no `http` source adapter exists yet; the builder calls `source.fetch({"url": endpoint,
   "file": "dem.tif"})` and expects a `.tif` in the returned directory.
 
+### Mars DEM targets for Jezero (T072, 2026-11-15)
+
+- **MOLA + HRSC blended DEM** (`mola-hrsc-blend`): direct file URL recorded as `endpoint` in
+  `config/sources.json` (302 → USGS S3 bucket); 11,384,463,908 bytes; range requests supported
+  (HTTP 206); GeoTIFF int16, geographic on the Mars 2000 sphere (R 3 396 190 m), pixel
+  0.003374120830641° (~200 m), nodata −32768. `planetary/dem.py` reads only the footprint
+  window, area-averaged to 926 m.
+- **CTX DTMs** (`usgs-mars-dtm-stac`, collection `mro_ctx_controlled_usgs_dtms`): items carry a
+  `dtm` asset (COG, float32, nodata −32767, ~20 m, Equirectangular clon = 0); several DTMs are
+  mosaicked over the 20 km footprint and area-averaged to 30 m on a geographic grid.
+- **Measured over the 20 km footprint around the Jezero delta (18.44° N, 77.45° E)**:
+  `regional_slope` slope p90 = 6.21° @ 926 m (coverage 1.00); `traverse_slope` slope p90 =
+  12.00° @ 30 m (8 CTX DTMs, coverage 1.00); `roughness` median RMS of detrended neighbour
+  differences = 0.37 m @ 30 m (same DTMs). The circle includes part of the crater rim, which
+  raises the 30 m slope p90. These are proposals for T036; the profile still holds placeholders
+  until T036 adopts them and a second team member reviews them.
+- Still **verify**: licence and citation of both products.
+
 ### Outcomes for the remaining verify items (T086, 2026-11-15)
 
 Recorded by the T086 task. Status **VERIFIED** = checked against a primary source (named);
