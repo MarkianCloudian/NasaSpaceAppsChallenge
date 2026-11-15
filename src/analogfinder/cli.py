@@ -225,7 +225,51 @@ def _extract(args) -> int:
     return errors.OK
 
 
+def _pipeline(args, until: str) -> int:
+    """`analog run|screen|refine|rank` (contracts/cli.md, research D-011/D-023/D-025)."""
+    import logging
+
+    from .pipeline import Options, print_summary, resolve_ref, run_all
+
+    p = argparse.ArgumentParser(prog=f"analog {args.command}")
+    p.add_argument("--profile", help="frozen profile ID@VER")
+    p.add_argument("--run", dest="run_id", help="base run id")
+    p.add_argument("--latest", action="store_true")
+    p.add_argument("--profiles-dir", default="profiles")
+    if args.command in ("run", "refine"):
+        p.add_argument("--max-terrain-areas", type=int)
+        p.add_argument("--max-mineral-areas", type=int)
+    if args.command == "run":
+        p.add_argument("--skip-refine", action="store_true")
+        p.add_argument("--no-dedup", action="store_true")  # dedup stage not wired yet
+    opts = p.parse_args(args.rest)
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.WARNING if args.quiet else logging.INFO,
+        stream=sys.stderr,
+        format="%(message)s",
+    )
+    ref = resolve_ref(args.data_dir, opts.profile, opts.run_id, opts.latest)
+    res = run_all(
+        ref,
+        Options(
+            config_dir=Path(args.config_dir),
+            data_dir=Path(args.data_dir),
+            profiles_dir=Path(opts.profiles_dir),
+            skip_refine=getattr(opts, "skip_refine", False),
+            max_terrain_areas=getattr(opts, "max_terrain_areas", None),
+            max_mineral_areas=getattr(opts, "max_mineral_areas", None),
+            until=until,
+        ),
+    )
+    print_summary(res)
+    return res.exit_code
+
+
 HANDLERS = {
+    "run": lambda a: _pipeline(a, "rank"),
+    "screen": lambda a: _pipeline(a, "screen"),
+    "refine": lambda a: _pipeline(a, "refine"),
+    "rank": lambda a: _pipeline(a, "rank"),
     "extract": _extract,
     "validate": _validate,
     "freeze": _freeze,

@@ -153,6 +153,7 @@ def rank(
     stage_fingerprints: Mapping[str, str] | None = None,
     started_at: str | None = None,
     sources_config: Mapping[str, Any] | None = None,
+    run_id: str | None = None,
 ) -> dict:
     t0 = time.monotonic()
     started_at = started_at or dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
@@ -249,7 +250,8 @@ def rank(
     if not re.fullmatch(r"[0-9a-f]{16}", fp):
         fp = fingerprint({"stage": "rank", "profile": profile.content_hash, "grid": grid_id})
     run_record = {
-        "run_id": fingerprint(
+        "run_id": run_id
+        or fingerprint(
             {
                 "profile": profile.content_hash,
                 "grid": grid_id,
