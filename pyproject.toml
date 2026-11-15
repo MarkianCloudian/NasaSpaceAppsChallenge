@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "analogfinder"
+version = "0.1.0"
+description = "Earth Analog Finder: rank Earth places resembling a Mars/Moon reference profile"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "scipy",
+    "rasterio",
+    "pyhdf",
+    "h5py",
+    "pystac-client",
+    "planetary-computer",
+    "earthaccess",
+    "cdsapi",
+    "requests",
+    "jsonschema",
+    "jinja2",
+]
+
+[project.scripts]
+analog = "analogfinder.cli:main"
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/analogfinder"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["online: needs network"]
+addopts = "-m 'not online'"

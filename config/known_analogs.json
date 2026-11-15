@@ -1,0 +1,76 @@
+{
+  "sites": [
+    {
+      "site_id": "lake-salda",
+      "name": "Lake Salda, Turkey",
+      "lat": 37.55, "lon": 29.68, "radius_km": 20,
+      "bodies": ["Mars"], "purposes": [],
+      "analog_for": "Jezero crater: Mg-carbonate (hydromagnesite) lake sediments and deltas",
+      "reference": "Horgan, B. H. N. et al. (2020) The mineral diversity of Jezero crater: Evidence for possible lacustrine carbonates on Mars. Icarus 339, 113526"
+    },
+    {
+      "site_id": "atacama-yungay",
+      "name": "Atacama Desert - Yungay, Chile",
+      "lat": -24.08, "lon": -70.01, "radius_km": 50,
+      "bodies": ["Mars"], "purposes": [],
+      "analog_for": "hyperarid Mars-like soils, sulfates and nitrates, dry limit of life",
+      "reference": "Navarro-Gonzalez, R. et al. (2003) Mars-like soils in the Atacama Desert, Chile, and the dry limit of microbial life. Science 302, 1018-1021"
+    },
+    {
+      "site_id": "rio-tinto",
+      "name": "Rio Tinto, Spain",
+      "lat": 37.72, "lon": -6.56, "radius_km": 30,
+      "bodies": ["Mars"], "purposes": [],
+      "analog_for": "Meridiani Planum: acidic jarosite, hematite and Fe-sulfate deposition",
+      "reference": "Fernandez-Remolar, D. C. et al. (2005) The Rio Tinto Basin, Spain: Mineralogy, sedimentary geobiology, and implications for interpretation of outcrop rocks at Meridiani Planum, Mars. Earth Planet. Sci. Lett. 240, 149-167"
+    },
+    {
+      "site_id": "haughton-devon",
+      "name": "Haughton crater - Devon Island, Canada",
+      "lat": 75.38, "lon": -89.68, "radius_km": 20,
+      "bodies": ["Mars"], "purposes": [],
+      "analog_for": "polar desert impact crater, ground ice and impact hydrothermal deposits",
+      "reference": "Osinski, G. R. et al. (2005) The Haughton impact structure, Devon Island, Canada: Overview. Meteoritics & Planetary Science 40, 1759-1776"
+    },
+    {
+      "site_id": "mcmurdo-dry-valleys",
+      "name": "McMurdo Dry Valleys, Antarctica",
+      "lat": -77.5, "lon": 161.8, "radius_km": 50,
+      "bodies": ["Mars"], "purposes": [],
+      "analog_for": "cold hyperarid landforms, patterned ground, microclimate zonation",
+      "reference": "Marchant, D. R. and Head, J. W. (2007) Antarctic dry valleys: Microclimate zonation, variable geomorphic processes, and implications for assessing climate change on Mars. Icarus 192, 187-222"
+    },
+    {
+      "site_id": "pilbara",
+      "name": "Pilbara (Strelley Pool / North Pole Dome), Australia",
+      "lat": -21.15, "lon": 119.4, "radius_km": 50,
+      "bodies": ["Mars"], "purposes": [],
+      "analog_for": "Early Archean stromatolites: biosignature preservation in ancient sediments",
+      "reference": "Allwood, A. C. et al. (2006) Stromatolite reef from the Early Archaean era of Australia. Nature 441, 714-718"
+    },
+    {
+      "site_id": "mauna-kea",
+      "name": "Mauna Kea / Hawaii lava fields, USA",
+      "lat": 19.75, "lon": -155.45, "radius_km": 30,
+      "bodies": ["Mars"], "purposes": [],
+      "analog_for": "palagonitic basaltic tephra (source of the JSC Mars-1 regolith simulant)",
+      "reference": "Allen, C. C. et al. (1998) Martian soil simulant available for scientific, educational study. Eos 79(34), 405-409"
+    },
+    {
+      "site_id": "iceland-highlands",
+      "name": "Iceland highlands",
+      "lat": 64.8, "lon": -18.0, "radius_km": 80,
+      "bodies": ["Mars"], "purposes": [],
+      "analog_for": "altered basalts, hydrothermal and weathering clays (smectite) on volcanic terrain",
+      "reference": "Ehlmann, B. L. et al. (2012) Mineralogy and chemistry of altered Icelandic basalts: Application to clay mineral detection and understanding aqueous environments on Mars. J. Geophys. Res. 117, E00J16"
+    },
+    {
+      "site_id": "mdrs-hanksville",
+      "name": "Mars Desert Research Station area (Hanksville, Utah), USA",
+      "lat": 38.41, "lon": -110.79, "radius_km": 30,
+      "bodies": ["Mars"], "purposes": [],
+      "analog_for": "inverted channels, concretions, rover/EVA operations testing",
+      "reference": "Clarke, J. D. A. and Stoker, C. R. (2011) Concretions in exhumed and inverted channels near Hanksville Utah: implications for Mars. Int. J. Astrobiology 10, 161-175"
+    }
+  ]
+}
