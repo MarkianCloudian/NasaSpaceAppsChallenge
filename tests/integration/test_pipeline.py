@@ -84,7 +84,8 @@ def test_interrupt_in_refine_then_resume(opts, caplog):
 def test_run_directory_and_index(opts):
     res = pipeline.run_all(REF, opts, hooks())
     rdir = opts.data_dir / "runs" / res.run_id
-    assert set(files(rdir)) == {
+    assert (rdir / "site" / "index.html").exists()  # T066
+    assert {f for f in files(rdir) if not f.startswith("site/")} == {
         "_COMPLETE",
         "run_record.json",
         "results.json",

@@ -226,7 +226,9 @@ def _extract(args) -> int:
 
 
 def _pipeline(args, until: str) -> int:
-    """`analog run|screen|refine|rank|calibrate|dedup` (contracts/cli.md, D-011/D-023/D-025)."""
+    """`analog run|screen|refine|rank|calibrate|dedup` (contracts/cli.md, D-011/D-023/D-025).
+
+    `run` also renders the site into `data/runs/<run_id>/site/` (T066)."""
     import logging
 
     from .pipeline import Options, print_summary, resolve_ref, run_all
@@ -306,7 +308,7 @@ def _site(args) -> int:
 HANDLERS = {
     "site": _site,
     "publish": _site,
-    "run": lambda a: _pipeline(a, "dedup"),
+    "run": lambda a: _pipeline(a, "site"),
     "screen": lambda a: _pipeline(a, "screen"),
     "refine": lambda a: _pipeline(a, "refine"),
     "rank": lambda a: _pipeline(a, "rank"),

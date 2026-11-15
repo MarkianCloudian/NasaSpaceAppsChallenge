@@ -13,9 +13,9 @@ against known analogs (no or flagged `calibration.json`) with exit code 8, unles
 `--allow-unvalidated` is given (then every page carries the "Not validated" banner), and
 replaces `public/` as a whole through `public.tmp-<random>`.
 
-Deviation from the T060 text: the site stage is not linked into `data/runs/<run_id>/site/` and
-no new run record is written for it (`analog site` is a standalone stage here, T066 not done);
-the stage directory is printed instead.
+`analog run` renders the site as its last stage and hard-links the stage directory into
+`data/runs/<run_id>/site/` (pipeline, T066). `analog site` on its own renders into the stage
+directory and prints it; neither writes a new run record for the site.
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """Stage orchestration, stage cache and run records (research D-011, D-023, D-025, task T054).
 
 `run_all(profile_ref, options)` executes `check → grid → screen → refine → rank → calibrate →
-dedup` for a frozen
+dedup → site` for a frozen
 profile (`id@version`; drafts are refused). Every stage output lives once in
 `data/stages/<stage>/<stage_fp>/` (atomic, `_COMPLETE`); a complete entry is reused and logged
 "reused". Stage fingerprints follow the D-011 table:
@@ -14,6 +14,9 @@ profile (`id@version`; drafts are refused). Every stage output lives once in
   calibrate ← rank fp, hash of config/known_analogs.json, settings stability.* (T079)
   dedup   ← rank fp, hash of config/known_analogs.json, settings known_radius_default_km (T082;
             skipped with `--no-dedup`)
+  site    ← site/build.py `site_fp` (run, site_inputs snapshot, code); rendered once into
+            `data/stages/site/<fp>/` (own `_COMPLETE`) and hard-linked into
+            `data/runs/<run_id>/site/` (T066)
 
 `run_id` = fingerprint of the ordered (stage, fingerprint) list. `data/runs/<run_id>/` holds
 `run_record.json` (with `stage_fingerprints`) and hard links (or copies) of the final files;
@@ -55,7 +58,7 @@ log = logging.getLogger("analogfinder.pipeline")
 FINAL_FILES = ("results.json", "results.csv")
 CALIBRATION_FILES = ("calibration.json",)
 DEDUP_FILES = ("results.dedup.json",)
-STAGE_ORDER = ("screen", "refine", "rank", "calibrate", "dedup")
+STAGE_ORDER = ("screen", "refine", "rank", "calibrate", "dedup", "site")
 DEFAULT_HOOKS = None  # tests may set a Hooks instance used when run_all gets none
 INDEX = "index.json"
 
@@ -68,7 +71,7 @@ class Options:
     skip_refine: bool = False
     max_terrain_areas: int | None = None
     max_mineral_areas: int | None = None
-    until: str = "dedup"  # last stage to execute: screen | refine | rank | calibrate | dedup
+    until: str = "site"  # last stage: screen | refine | rank | calibrate | dedup | site
     no_dedup: bool = False
 
 
@@ -99,6 +102,7 @@ class Hooks:
     rank: Callable[..., dict] | None = None
     calibrate: Callable[..., dict] | None = None  # (results, screening, ctx, areas=...) -> dict
     dedup: Callable[..., dict] | None = None  # (results, ctx, areas=..., land=...) -> dict
+    site: Callable[..., tuple] | None = None  # (data, config, profiles, run_id) -> (dir, reused)
     sources: Callable[[Options], Any] | None = None  # -> SourceRegistry
 
     def resolved(self) -> Hooks:
@@ -128,6 +132,7 @@ class Hooks:
             rank=self.rank or _import("analogfinder.rank:rank", "T053"),
             calibrate=self.calibrate or _import("analogfinder.calibrate:calibrate", "T077"),
             dedup=self.dedup or _import("analogfinder.dedup:dedup", "T081"),
+            site=self.site or _import("analogfinder.site.build:build_site", "T060"),
             sources=self.sources or sources_default,
         )
 
@@ -288,6 +293,47 @@ class RunResult:
 
 def run_all(profile_ref: str, options: Options, hooks: Hooks | None = None) -> RunResult:
     h = (hooks or DEFAULT_HOOKS or Hooks()).resolved()
+    res = _run_stages(profile_ref, options, h)
+    if res.results is not None and _reaches(options, "site"):
+        _site_stage(res, options, h)
+    return res
+
+
+def _link_tree(src: Path, dst: Path) -> None:
+    shutil.copytree(src, dst, copy_function=lambda a, b: _materialise(Path(a), Path(b)))
+
+
+def _site_stage(res: RunResult, options: Options, h: Hooks) -> None:
+    """Render the run's site (site stage cache) and link it into data/runs/<run_id>/site/."""
+    t0 = time.monotonic()
+    data_dir = Path(options.data_dir)
+    sdir, reused = h.site(
+        data_dir, Path(options.config_dir), Path(options.profiles_dir), res.run_id
+    )
+    sdir = Path(sdir)
+    dst = storage.run_dir(data_dir, res.run_id) / "site"
+    linked = dst / storage.COMPLETE  # holds the stage manifest {stage, fingerprint, run_id}
+    current = linked.exists() and stage_io.read_json(linked).get("fingerprint") == sdir.name
+    if not current:
+        tmp = dst.with_name(f"site.partial-{os.getpid()}")
+        if tmp.exists():
+            shutil.rmtree(tmp)
+        _link_tree(sdir, tmp)
+        if dst.exists():
+            dst.rename(dst.with_name(f"site.partial-stale-{int(time.time())}"))
+        os.replace(tmp, dst)
+    res.stages.append(
+        {
+            "name": "site",
+            "status": "reused" if reused and current else "complete",
+            "seconds": round(time.monotonic() - t0, 3),
+            "fingerprint": sdir.name,
+        }
+    )
+    log.info("site: %s", dst / "index.html")
+
+
+def _run_stages(profile_ref: str, options: Options, h: Hooks) -> RunResult:
     data_dir = Path(options.data_dir)
     profile = load_frozen(profile_ref, options.profiles_dir)  # refuses drafts
     settings = dict(config.load_settings(options.config_dir))
