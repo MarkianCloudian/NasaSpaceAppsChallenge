@@ -137,6 +137,11 @@ def test_d024_example_mediocre_grid_excellent_terrain_wins():
     assert s["A"].aggregate.overall > s["B"].aggregate.overall
     assert summary["confirmed"][0] == "A"
     assert all(x.upper_bound + 1e-12 >= x.aggregate.overall for x in areas)
+    assert summary["values"]["B"]["traverse_slope"] == {
+        "value": 21.0,
+        "source_id": "nasadem-pc",
+        "coverage": 1.0,
+    }
 
 
 def test_no_emit_coverage_finalised_without_emit_pass():

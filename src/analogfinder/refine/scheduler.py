@@ -124,6 +124,18 @@ def _score_group(gr: GroupResult, ids: list[str], crit: dict[str, Criterion]) ->
     return out
 
 
+def _raw_group(gr: GroupResult, ids: list[str], crit: dict[str, Criterion]) -> dict:
+    """criterion_id -> {value, source_id, coverage} for the results table (rank, T053)."""
+    return {
+        cid: {
+            "value": _value_for(crit[cid], gr.values),
+            "source_id": gr.source_id,
+            "coverage": gr.coverage,
+        }
+        for cid in ids
+    }
+
+
 class _Entry:
     __slots__ = ("area", "level", "scores", "emit", "key", "final", "done")
 
@@ -214,6 +226,7 @@ def schedule(
     for e in entries.values():
         rekey(e)
     confirmed: list[str] = []
+    raw: dict[str, dict[str, dict]] = {}  # area_id -> criterion_id -> {value, source_id, coverage}
     n_terrain = n_mineral = n_emit = 0
     stop = "bound_reached"
 
@@ -247,6 +260,7 @@ def schedule(
                 if ids[TERRAIN]:
                     gr = terrain_fn(e.area, ctx)
                     n_terrain += 1
+                    raw.setdefault(e.area.area_id, {}).update(_raw_group(gr, ids[TERRAIN], crit))
                     new = _score_group(gr, ids[TERRAIN], crit)
                     e.scores.update(new)
                     e.area.refined.update(new)
@@ -258,6 +272,7 @@ def schedule(
                         continue
                     gr = mineral_fn(e.area, ctx)
                     n_mineral += 1
+                    raw.setdefault(e.area.area_id, {}).update(_raw_group(gr, ids[MINERAL], crit))
                     new = _score_group(gr, ids[MINERAL], crit)
                     e.scores.update(new)
                     e.area.refined.update(new)
@@ -290,6 +305,7 @@ def schedule(
         "terrain_areas": n_terrain,
         "mineral_areas": n_mineral,
         "emit_covered_areas": n_emit,
+        "values": raw,  # raw refinement values per area (not part of run_record.refinement)
     }
     log.info(
         "refinement stop=%s proven_top=%d terrain=%d mineral=%d",
