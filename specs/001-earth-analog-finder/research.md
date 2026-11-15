@@ -660,3 +660,25 @@ work.
 - Still **verify**: licence, DOI and the fallback choice (`copdem-glo30-pc` vs. GLO-90).
 - Note: no `http` source adapter exists yet; the builder calls `source.fetch({"url": endpoint,
   "file": "dem.tif"})` and expects a `.tif` in the returned directory.
+
+### Outcomes for the remaining verify items (T086, 2026-11-15)
+
+Recorded by the T086 task. Status **VERIFIED** = checked against a primary source (named);
+**NOT VERIFIED** = needs credentials, downloads or a built grid that were not available when this
+was written; nothing below is an invented value, and each open item names its fallback and the
+task whose run must fill it in. Replace a **NOT VERIFIED** line with the measured outcome when the
+run is done.
+
+| Item (task) | Status | Outcome / fallback |
+|---|---|---|
+| POWER regional limits (T022) | VERIFIED | See D-008 *Verified (T022)*: box sides 2°–10°, 1 parameter per request, ≈ 1 750 requests, 1 request / 2 s kept. |
+| ETOPO file URL/size (T042) | VERIFIED | See *ETOPO 2022 30″* above: URL, 1,585,813,987 bytes, cell-registered. Licence, DOI and the GLO-30/GLO-90 fallback choice stay open (see that subsection). |
+| pyhdf wheels per OS (T002) | VERIFIED (PyPI JSON `https://pypi.org/pypi/pyhdf/json`, pyhdf 0.11.7) | CPython 3.11 wheels: Linux `manylinux_2_28_x86_64`, Windows `win_amd64`, macOS **arm64 only** (`macosx_26_0_arm64`). **No** Linux aarch64 and **no** macOS Intel wheel → those machines build from the sdist (needs HDF4 libraries) or use the fallback: conda for pyhdf (D-005). Not installed or tested on macOS/Windows by this task. |
+| MODIS download volume (T038–T040) | NOT VERIFIED | Needs Earthdata login and a real download. D-007 estimate (≈ 120 files × 20–80 MB + 1 MCD12C1 + ETOPO ≈ 1.5 GB, under the 10 GB budget) stands as an estimate. Fallback if exceeded: reduce `grid.reference_years` or use AppEEARS / Planetary Computer COGs (D-007). |
+| CRISM thresholds used (T013/T073) | NOT VERIFIED | `config/mineral_classes.json` `crism_thresholds` still has `"status": "verify"` for all five classes (D2300 0.015, BD2210_2 0.01, MIN2295_2480 0.01, SINDEX2 0.02, OLINDEX3 0.1). Values are provisional and must be checked against Viviano-Beck et al. 2014 (JGR Planets 119, 1403–1431) before use; until then results using them must be labelled provisional. |
+| EMIT version used (T051) | NOT VERIFIED | `config/sources.json` `emit-l2b-min` targets L2B MIN **V002** (docs `https://lpdaac.usgs.gov/products/emitl2bminv002/`); the DOI is still marked "verify" and no CMR search was run (needs network access to Earthdata). Fallback if V002 mineral list differs: update `config/mineral_classes.json` version. |
+| ERA5 CDS request size/time (T043) | NOT VERIFIED | Needs `~/.cdsapirc` (not available; credentials never go in the repo). D-008 estimate (one global 0.25° request, a few hundred MB) stands. Only relevant if the POWER route fails. |
+| Footprint benchmark (T047) | NOT VERIFIED | Needs the built grid (T044). Budget is `footprint.benchmark_budget_s = 180` s. If exceeded, the T047 task describes the fallback (reduce radius or optimise); record the measured time here. |
+| Terrain-hint validity (D-024) | NOT VERIFIED | Needs refined areas (first real run). Measure the share with 30 m slope p90 < 926 m slope p90; if > 5 %, set `refine.terrain_hint` to `false` in `config/settings.json`. Currently `true` (default, unmeasured). |
+| Refinement counts and stop reason of first real run | NOT VERIFIED | No real run done yet. Record `run_record.refinement` {stop, proven_top, terrain_areas, mineral_areas, emit_covered_areas}. |
+| Settings values (T010) | VERIFIED (read from `config/settings.json`) | `grid.cell_size_deg` 0.05; `lat_range` [-90, 90]; `reference_years` 2019–2023; `screen_min_score` 0.3; `max_area_km2` 2500; `refine` batch 10, max_terrain_areas 200, max_mineral_areas 60, bound_margin 0.05, terrain_hint true; `site_top_n` 30; `stability` draws 500, range 0.25, seed 42, top_k 10; `known_radius_default_km` 50; `cleanup_keep` grids 2, runs 5; `footprint` min_valid_fraction 0.5, benchmark_budget_s 180; `coverage.min_coverage_fraction` 0.5; `emit` min_band_depth 0.02, min_cluster_pixels 4, max_granules_per_area 5; `http.timeout_s` 60. |
