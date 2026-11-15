@@ -157,9 +157,9 @@
         "max": null
       },
       "tolerance": {
-        "low": 0.2
+        "low": 1.0
       },
-      "veto": 0.25,
+      "veto": null,
       "rank_in_category": 2,
       "footprint_statistic": "mean",
       "value_status": "measured",
@@ -182,7 +182,7 @@
         ]
       },
       "justification": "Exposed rock and regolith are needed both for geological analogy and for spectral detection of minerals.",
-      "note": "Target min 0.7 with tolerance 0.2 keeps full credit for MODIS-barren footprints. Check on MCD12C1 2023, 20 km footprint mean: Atacama Yungay 1.00, Sahara 1.00, Namib 1.00, Danakil 1.00, Death Valley 0.92, MDRS Utah 0.73 (all full score); Lake Salda, Rio Tinto, Pilbara 0.00 (open shrubland/grassland, vetoed, consistent with no_vegetation)."
+      "note": "Team decision 2026-11-15 (option B): no veto, tolerance low 1.0, so a non-barren footprint lowers the score instead of excluding the site (barren 0 -> 0.3, 0.25 -> 0.55, >= 0.7 -> 1.0; a tolerance <= 0.7 would score 0 and act as a veto through the geometric mean). This keeps sparse, low-NDVI shrublands as candidates; vegetated sites are still excluded by the no_vegetation veto. Check on MCD12C1 2023, 20 km footprint mean: Atacama Yungay 1.00, Sahara 1.00, Namib 1.00, Danakil 1.00, Death Valley 0.92, MDRS Utah 0.73; Lake Salda, Rio Tinto, Pilbara 0.00 (open shrubland/grassland)."
     },
     {
       "id": "thermal_swing",

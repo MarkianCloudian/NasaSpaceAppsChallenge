@@ -721,7 +721,9 @@ Closes the placeholders left after the CRISM/terrain/climate part of T036. Sourc
   The orbital range matches the footprint scale better than the in-situ range (old placeholder).
 - **`hyperarid`**: Mars side sourced (MCD v6.2 water column ≈ 12.6 pr-µm; Haberle et al. 2001,
   doi:10.1029/2000JE001360, surface liquid water at most transient); p* = 0 stays a design mapping.
-- **`barren_ground`** (min 0.7, tolerance 0.2, veto 0.25 unchanged): IGBP class 16 *Barren* =
+- **`barren_ground`** (min 0.7; team decision, option B: veto 0.25 dropped and tolerance low
+  widened 0.2 → 1.0, so non-barren footprints lose score instead of being excluded; a tolerance
+  ≤ 0.7 would still give 0 at barren 0 and act as a veto through the geometric mean). IGBP class 16 *Barren* =
   ≥ 60 % non-vegetated area with < 10 % vegetation (Sulla-Menashe & Friedl, Collection 6 MODIS
   Land Cover user guide, Table 3). Real MCD12C1 2023, 20 km footprint mean: Atacama (Yungay) 1.00,
   Sahara (Tanezrouft) 1.00, Namib 1.00, Danakil 1.00, Death Valley 0.92, MDRS Utah 0.73;
