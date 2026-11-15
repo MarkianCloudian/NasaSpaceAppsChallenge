@@ -78,3 +78,64 @@ def test_dedup_labels_synthetic_run(tmp_path):
     assert rr["dedup"]["known_analogs"] >= 1 and rr["dedup"]["note"]  # < 3 new on this grid
     on_disk = json.loads((tmp_path / "dd" / "results.dedup.json").read_text())
     assert on_disk == json.loads(json.dumps(out))
+
+
+def test_run_with_dedup_site_shows_both_sections(tmp_path):
+    """T082: `analog run` on the synthetic fixture runs dedup; the site shows new and known."""
+    from analogfinder.site import build
+
+    cfg = tmp_path / "config"
+    shutil.copytree(ROOT / "config", cfg)
+    prof = tmp_path / "profiles"
+    prof.mkdir()
+    shutil.copy(ROOT / "profiles" / "mars-rover-jezero.json", prof)
+    freeze(prof / "mars-rover-jezero.json", cfg, prof)
+    opts = pipeline.Options(config_dir=cfg, data_dir=tmp_path / "data", profiles_dir=prof)
+
+    # first run: find the best area, then declare a known analog site there
+    first = pipeline.run_all(REF, opts, synthetic_hooks())
+    best = next(c for c in first.results["candidates"] if c["rank"] == 1)
+    assert sum(c["status"] == "ranked" for c in first.results["candidates"]) >= 2
+    known = json.loads((cfg / "known_analogs.json").read_text())
+    known["sites"].append(
+        {
+            "site_id": "best",
+            "name": "Synthetic known site",
+            "lat": best["representative"]["lat"],
+            "lon": best["representative"]["lon"],
+            "radius_km": 10,
+            "bodies": ["Mars"],
+            "analog_for": "test",
+            "reference": "test",
+        }
+    )
+    (cfg / "known_analogs.json").write_text(json.dumps(known))
+
+    res = pipeline.run_all(REF, opts, synthetic_hooks())
+    st = {s["name"]: s["status"] for s in res.stages}
+    assert st["screen"] == st["refine"] == st["rank"] == "reused"
+    assert st["calibrate"] == st["dedup"] == "complete"
+    rdir = opts.data_dir / "runs" / res.run_id
+    dd = json.loads((rdir / "results.dedup.json").read_text())
+    assert json.loads((rdir / "results.json").read_text())["run_record"]["dedup_applied"] is False
+    assert json.loads((rdir / "run_record.json").read_text())["dedup_applied"] is True
+    labels = {c["area_id"]: c["label"] for c in dd["candidates"]}
+    assert labels[best["area_id"]] == "known_analog"
+    assert "new_candidate" in labels.values()
+
+    d, _ = build.build_site(opts.data_dir, cfg, prof, res.run_id)
+    index = (d / "index.html").read_text()
+    assert 'id="new"' in index and 'id="known"' in index
+    assert "Synthetic known site" in index
+    assert "Deduplication not applied" not in index
+    assert 'class="known_analog"' in index and 'class="new_candidate"' in index
+
+    # --no-dedup: a different run without labels, the site says dedup was not applied
+    nd = pipeline.run_all(
+        REF, pipeline.Options(**{**opts.__dict__, "no_dedup": True}), synthetic_hooks()
+    )
+    assert nd.run_id != res.run_id
+    assert {s["name"]: s["status"] for s in nd.stages}["dedup"] == "skipped"
+    assert not (opts.data_dir / "runs" / nd.run_id / "results.dedup.json").exists()
+    d2, _ = build.build_site(opts.data_dir, cfg, prof, nd.run_id)
+    assert "Deduplication not applied" in (d2 / "index.html").read_text()

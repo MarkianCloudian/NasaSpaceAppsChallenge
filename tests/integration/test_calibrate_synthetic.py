@@ -174,7 +174,7 @@ def test_run_writes_calibration_and_about_page_shows_it(tmp_path):
     freeze(prof / "mars-rover-jezero.json", cfg, prof)
     opts = pipeline.Options(config_dir=cfg, data_dir=tmp_path / "data", profiles_dir=prof)
     res = pipeline.run_all(REF, opts, synthetic_hooks())
-    assert [s["name"] for s in res.stages][-1] == "calibrate"
+    assert [s["name"] for s in res.stages][-2:] == ["calibrate", "dedup"]
     cal_path = opts.data_dir / "runs" / res.run_id / "calibration.json"
     cal = json.loads(cal_path.read_text())
     assert cal == res.calibration

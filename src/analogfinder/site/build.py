@@ -71,10 +71,23 @@ def latest_run_id(data_dir) -> str:
 
 
 def load_results(data_dir, run_id: str) -> dict:
-    path = storage.run_dir(data_dir, run_id) / "results.json"
+    """`results.dedup.json` when the dedup stage ran (T082), else `results.json`.
+
+    The embedded `run_record` is replaced by the run directory's `run_record.json`: runs that
+    share a stage-cache entry (e.g. with and without dedup) share its results file, whose record
+    names the run that first computed it.
+    """
+    rdir = storage.run_dir(data_dir, run_id)
+    path = rdir / "results.dedup.json"
+    if not path.exists():
+        path = rdir / "results.json"
     if not path.exists():
         raise errors.ValidationError(f"run {run_id}: no results.json (partial run?)")
-    return stage_io.read_json(path)
+    results = stage_io.read_json(path)
+    rec = rdir / "run_record.json"
+    if rec.exists():
+        results["run_record"] = {**results["run_record"], **stage_io.read_json(rec)}
+    return results
 
 
 # --- snapshot (research D-023) -----------------------------------------------------------
