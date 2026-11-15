@@ -51,6 +51,8 @@ thead th { background: var(--head); }
 th[data-sort] { cursor: pointer; }
 th.sorted-asc::after { content: " ▲"; } th.sorted-desc::after { content: " ▼"; }
 tr.state-unknown td { color: var(--muted); }
+table.results tr.new_candidate td:first-child { border-left: 4px solid var(--new); }
+table.results tr.known_analog td:first-child { border-left: 4px solid var(--known); }
 tr.state-not_comparable td { color: var(--muted); font-style: italic; }
 .badge { display: inline-block; padding: 0 0.35rem; border: 1px solid var(--line); border-radius: 3px;
   font-size: 0.75rem; }
