@@ -1,7 +1,7 @@
 """Stage orchestration, stage cache and run records (research D-011, D-023, D-025, task T054).
 
-`run_all(profile_ref, options)` executes `check → grid → screen → refine → rank → calibrate`
-for a frozen
+`run_all(profile_ref, options)` executes `check → grid → screen → refine → rank → calibrate →
+dedup` for a frozen
 profile (`id@version`; drafts are refused). Every stage output lives once in
 `data/stages/<stage>/<stage_fp>/` (atomic, `_COMPLETE`); a complete entry is reused and logged
 "reused". Stage fingerprints follow the D-011 table:
@@ -12,6 +12,8 @@ profile (`id@version`; drafts are refused). Every stage output lives once in
             refine.* (after CLI overrides), site_top_n
   rank    ← refine fp (with `--skip-refine`: screen fp + "skipped")
   calibrate ← rank fp, hash of config/known_analogs.json, settings stability.* (T079)
+  dedup   ← rank fp, hash of config/known_analogs.json, settings known_radius_default_km (T082;
+            skipped with `--no-dedup`)
 
 `run_id` = fingerprint of the ordered (stage, fingerprint) list. `data/runs/<run_id>/` holds
 `run_record.json` (with `stage_fingerprints`) and hard links (or copies) of the final files;
@@ -20,12 +22,13 @@ already complete prints "reused <run_id>" and writes nothing. Stage code only re
 output directory through `StageContext.stage_dir` and never builds paths itself.
 
 `--skip-refine` = screening preview (D-025): no refinement, `refinement.stop = "skipped"`,
-every area `screened_only` with its `upper_bound`, nothing ranked, `calibrate` skipped.
+every area `screened_only` with its `upper_bound`, nothing ranked, `calibrate` and `dedup`
+skipped.
 
 The stage functions are replaceable (`Hooks`) so tests can run the orchestration on synthetic
 data; by default they are `grid.build.build_grid`, `screening.run` + `grouping.group` (T048,
-T049), `refine.scheduler.schedule` (T052), `rank.rank` (T053) and `calibrate.calibrate`
-(T077, T078). The `check` stage runs
+T049), `refine.scheduler.schedule` (T052), `rank.rank` (T053), `calibrate.calibrate`
+(T077, T078) and `dedup.dedup` (T081). The `check` stage runs
 `sources.check.run(ctx)` (T023) when that module exists, else it is reported as skipped.
 """
 
@@ -51,6 +54,8 @@ log = logging.getLogger("analogfinder.pipeline")
 
 FINAL_FILES = ("results.json", "results.csv")
 CALIBRATION_FILES = ("calibration.json",)
+DEDUP_FILES = ("results.dedup.json",)
+STAGE_ORDER = ("screen", "refine", "rank", "calibrate", "dedup")
 DEFAULT_HOOKS = None  # tests may set a Hooks instance used when run_all gets none
 INDEX = "index.json"
 
@@ -63,7 +68,8 @@ class Options:
     skip_refine: bool = False
     max_terrain_areas: int | None = None
     max_mineral_areas: int | None = None
-    until: str = "calibrate"  # last stage to execute: screen | refine | rank | calibrate
+    until: str = "dedup"  # last stage to execute: screen | refine | rank | calibrate | dedup
+    no_dedup: bool = False
 
 
 def _missing(name: str, task: str):
@@ -92,6 +98,7 @@ class Hooks:
     refine: Callable[..., tuple] | None = None  # (areas, ctx) -> (areas, summary)
     rank: Callable[..., dict] | None = None
     calibrate: Callable[..., dict] | None = None  # (results, screening, ctx, areas=...) -> dict
+    dedup: Callable[..., dict] | None = None  # (results, ctx, areas=..., land=...) -> dict
     sources: Callable[[Options], Any] | None = None  # -> SourceRegistry
 
     def resolved(self) -> Hooks:
@@ -120,6 +127,7 @@ class Hooks:
             refine=self.refine or _import("analogfinder.refine.scheduler:schedule", "T052"),
             rank=self.rank or _import("analogfinder.rank:rank", "T053"),
             calibrate=self.calibrate or _import("analogfinder.calibrate:calibrate", "T077"),
+            dedup=self.dedup or _import("analogfinder.dedup:dedup", "T081"),
             sources=self.sources or sources_default,
         )
 
@@ -183,6 +191,20 @@ def calibrate_fp(rank: str, settings, known_analogs) -> str:
             "stability": settings["stability"],
         }
     )
+
+
+def dedup_fp(rank: str, settings, known_analogs) -> str:
+    return storage.fingerprint(
+        {
+            "rank": rank,
+            "known_analogs": storage.fingerprint(known_analogs),
+            "known_radius_default_km": settings["known_radius_default_km"],
+        }
+    )
+
+
+def _reaches(options: Options, stage: str) -> bool:
+    return STAGE_ORDER.index(options.until) >= STAGE_ORDER.index(stage)
 
 
 def run_id_of(stage_fps: list[tuple[str, str]]) -> str:
@@ -361,10 +383,14 @@ def run_all(profile_ref: str, options: Options, hooks: Hooks | None = None) -> R
 
     kfp = rank_fp(rfp, sfp)
     fps.append(("rank", kfp))
-    cfp = None
-    if refine_dir is not None and options.until == "calibrate":  # preview: skipped (D-025)
-        cfp = calibrate_fp(kfp, settings, config.load_known_analogs(options.config_dir))
+    cfp = dfp = None
+    if refine_dir is not None and _reaches(options, "calibrate"):  # preview: skipped (D-025)
+        known = config.load_known_analogs(options.config_dir)
+        cfp = calibrate_fp(kfp, settings, known)
         fps.append(("calibrate", cfp))
+        if _reaches(options, "dedup") and not options.no_dedup:
+            dfp = dedup_fp(kfp, settings, known)
+            fps.append(("dedup", dfp))
     run_id = run_id_of(fps)
     if storage.is_complete(storage.run_dir(data_dir, run_id)):
         log.info("reused %s", run_id)
@@ -411,6 +437,7 @@ def run_all(profile_ref: str, options: Options, hooks: Hooks | None = None) -> R
     if cfp is None:
         if refine_dir is None:
             stages.append({"name": "calibrate", "status": "skipped", "fingerprint": kfp})
+            stages.append({"name": "dedup", "status": "skipped", "fingerprint": kfp})
         return _finish(profile_ref, profile, data_dir, fps, stages, kdir, started)
 
     def do_calibrate(tmp: Path) -> None:
@@ -431,7 +458,29 @@ def run_all(profile_ref: str, options: Options, hooks: Hooks | None = None) -> R
             "fingerprint": cfp,
         }
     )
-    return _finish(profile_ref, profile, data_dir, fps, stages, kdir, started, cdir)
+    if dfp is None:
+        if options.no_dedup and _reaches(options, "dedup"):
+            stages.append({"name": "dedup", "status": "skipped", "fingerprint": kfp})
+        return _finish(profile_ref, profile, data_dir, fps, stages, kdir, started, cdir)
+
+    def do_dedup(tmp: Path) -> None:
+        h.dedup(
+            stage_io.read_json(kdir / "results.json"),
+            replace(ctx, stage="dedup", stage_dir=tmp),
+            areas=stage_io.load_areas(refine_dir / "areas.json"),
+            land=stage_io.load_screening(sdir).land,
+        )
+
+    ddir, reused, secs = _stage(data_dir, "dedup", dfp, do_dedup)
+    stages.append(
+        {
+            "name": "dedup",
+            "status": "reused" if reused else "complete",
+            "seconds": secs,
+            "fingerprint": dfp,
+        }
+    )
+    return _finish(profile_ref, profile, data_dir, fps, stages, kdir, started, cdir, ddir)
 
 
 def _exit(results: dict | None) -> int:
@@ -442,7 +491,7 @@ def _exit(results: dict | None) -> int:
     return exit_code(results)
 
 
-def _finish(ref, profile, data_dir, fps, stages, kdir, started, cdir=None) -> RunResult:
+def _finish(ref, profile, data_dir, fps, stages, kdir, started, cdir=None, ddir=None):
     run_id = run_id_of(fps)
     rdir = storage.run_dir(data_dir, run_id)
     results = stage_io.read_json(kdir / "results.json") if kdir else None
@@ -455,6 +504,9 @@ def _finish(ref, profile, data_dir, fps, stages, kdir, started, cdir=None) -> Ru
         rdir.rename(rdir.with_name(f"{rdir.name}.partial-stale-{int(time.time())}"))
     if results is not None:
         record = dict(results["run_record"])
+        if ddir is not None:  # the run record describes the deduplicated results
+            dd = stage_io.read_json(ddir / DEDUP_FILES[0])["run_record"]
+            record.update({k: dd[k] for k in ("dedup_applied", "dedup") if k in dd})
     else:  # a partial run (`screen` / `refine` alone): record of the stages only
         record = {
             "profile": {
@@ -481,6 +533,9 @@ def _finish(ref, profile, data_dir, fps, stages, kdir, started, cdir=None) -> Ru
         for name in CALIBRATION_FILES if cdir else ():
             if (cdir / name).exists():
                 _materialise(cdir / name, tmp / name)
+        for name in DEDUP_FILES if ddir else ():
+            if (ddir / name).exists():
+                _materialise(ddir / name, tmp / name)
     _write_index(data_dir, ref, run_id)
     log.info("run: %s", run_id)
     return RunResult(run_id, False, stages, results, _exit(results), calibration)

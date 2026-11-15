@@ -226,7 +226,7 @@ def _extract(args) -> int:
 
 
 def _pipeline(args, until: str) -> int:
-    """`analog run|screen|refine|rank|calibrate` (contracts/cli.md, research D-011/D-023/D-025)."""
+    """`analog run|screen|refine|rank|calibrate|dedup` (contracts/cli.md, D-011/D-023/D-025)."""
     import logging
 
     from .pipeline import Options, print_summary, resolve_ref, run_all
@@ -241,7 +241,7 @@ def _pipeline(args, until: str) -> int:
         p.add_argument("--max-mineral-areas", type=int)
     if args.command == "run":
         p.add_argument("--skip-refine", action="store_true")
-        p.add_argument("--no-dedup", action="store_true")  # dedup stage not wired yet
+        p.add_argument("--no-dedup", action="store_true")
     opts = p.parse_args(args.rest)
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.WARNING if args.quiet else logging.INFO,
@@ -259,6 +259,7 @@ def _pipeline(args, until: str) -> int:
             max_terrain_areas=getattr(opts, "max_terrain_areas", None),
             max_mineral_areas=getattr(opts, "max_mineral_areas", None),
             until=until,
+            no_dedup=getattr(opts, "no_dedup", False),
         ),
     )
     print_summary(res)
@@ -305,11 +306,12 @@ def _site(args) -> int:
 HANDLERS = {
     "site": _site,
     "publish": _site,
-    "run": lambda a: _pipeline(a, "calibrate"),
+    "run": lambda a: _pipeline(a, "dedup"),
     "screen": lambda a: _pipeline(a, "screen"),
     "refine": lambda a: _pipeline(a, "refine"),
     "rank": lambda a: _pipeline(a, "rank"),
     "calibrate": lambda a: _pipeline(a, "calibrate"),
+    "dedup": lambda a: _pipeline(a, "dedup"),
     "extract": _extract,
     "validate": _validate,
     "freeze": _freeze,
