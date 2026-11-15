@@ -185,7 +185,48 @@ def _status(args) -> int:
     return errors.OK
 
 
+def _extract(args) -> int:
+    """`analog extract --profile FILE [--criteria ID,...]`: print target proposals (T074)."""
+    import json
+
+    from . import config
+    from .planetary.extract import load_profile, propose
+
+    p = argparse.ArgumentParser(prog="analog extract")
+    p.add_argument("--profile", required=True)
+    p.add_argument("--criteria", default=None, help="comma-separated criterion ids")
+    p.add_argument("--min-class-fraction", type=float, default=0.001)
+    p.add_argument("--max-crism-obs", type=int, default=3)
+    opts = p.parse_args(args.rest)
+    crit = [c.strip() for c in opts.criteria.split(",")] if opts.criteria else None
+    rows = propose(
+        load_profile(opts.profile),
+        config.load_sources(args.config_dir),
+        config.load_mineral_classes(args.config_dir),
+        criteria=crit,
+        data_dir=args.data_dir,
+        min_class_fraction=opts.min_class_fraction,
+        max_crism_obs=opts.max_crism_obs,
+    )
+    if args.json:
+        print(json.dumps(rows, indent=1, ensure_ascii=False))
+        return errors.OK
+    for r in rows:
+        print(f"== {r['criterion']}")
+        if "error" in r:
+            print(f"   not available: {r['error']}")
+            continue
+        print(f"   measured: {json.dumps(r['measured'], ensure_ascii=False)}")
+        print(f"   current target: {json.dumps(r['current_target'], ensure_ascii=False)}")
+        print("   proposed (paste into the criterion):")
+        print(
+            "   " + json.dumps(r["proposed"], indent=1, ensure_ascii=False).replace("\n", "\n   ")
+        )
+    return errors.OK
+
+
 HANDLERS = {
+    "extract": _extract,
     "validate": _validate,
     "freeze": _freeze,
     "grid": _grid,
