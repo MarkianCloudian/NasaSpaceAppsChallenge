@@ -184,13 +184,8 @@
       "source_id": "nasa-power",
       "params": {
         "parameters": {
-          "T2M": "t2m_mean",
-          "T2M_MIN": "t2m_min",
-          "T2M_MAX": "t2m_max",
           "RH2M": "rh2m_mean",
-          "WS10M": "ws10m_mean",
-          "PRECTOTCORR": "precip_annual",
-          "ALLSKY_SFC_SW_DWN": "insolation_mean"
+          "PRECTOTCORR": "precip_annual"
         },
         "unit_conversions": {
           "precip_annual": {
@@ -203,33 +198,9 @@
       "resampling": "bilinear",
       "outputs": [
         {
-          "layer_id": "t2m_mean",
-          "quantity": "t2m_mean",
-          "unit": "degC",
-          "statistic": "annual mean"
-        },
-        {
-          "layer_id": "t2m_min",
-          "quantity": "t2m_min",
-          "unit": "degC",
-          "statistic": "annual minimum"
-        },
-        {
-          "layer_id": "t2m_max",
-          "quantity": "t2m_max",
-          "unit": "degC",
-          "statistic": "annual maximum"
-        },
-        {
           "layer_id": "rh2m_mean",
           "quantity": "rh2m_mean",
           "unit": "percent",
-          "statistic": "annual mean"
-        },
-        {
-          "layer_id": "ws10m_mean",
-          "quantity": "ws10m_mean",
-          "unit": "m/s",
           "statistic": "annual mean"
         },
         {
@@ -237,12 +208,6 @@
           "quantity": "precip_annual",
           "unit": "mm/yr",
           "statistic": "annual total"
-        },
-        {
-          "layer_id": "insolation_mean",
-          "quantity": "insolation_mean",
-          "unit": "kWh/m2/day",
-          "statistic": "annual mean"
         }
       ],
       "fallback": {
@@ -263,7 +228,8 @@
           },
           "reference_years": "settings:grid.reference_years"
         }
-      }
+      },
+      "notes": "Demo (2026-11-15): only the parameters used by the Mars profile (PRECTOTCORR -> precip_annual, RH2M -> rh2m_mean) to cut POWER requests from ~3070 to ~880; restore T2M, T2M_MIN, T2M_MAX, WS10M, ALLSKY_SFC_SW_DWN when a profile needs them."
     },
     {
       "layer_id": "etopo_terrain",
