@@ -710,6 +710,35 @@ Geosciences Node *CRISM Summary Parameter Calculation Reference* (July 2026).
   from the PDS reference (1210–1330 nm); MTRDR `_SU` files carry the delivered values, so
   `planetary/crism.py` is not affected.
 
+### Remaining Jezero targets (T036, 2026-11-15)
+
+Closes the placeholders left after the CRISM/terrain/climate part of T036. Sources:
+
+- **`gravity`** = 3.73 m/s² (was 3.71): NASA NSSDCA Mars Fact Sheet, last updated 19 May 2025,
+  "Surface gravity (mean)" 3.73 (equator 3.69). 3.71 appears only in older versions of the sheet.
+- **`thermal_inertia`** = 200–450 SI: Martínez et al. 2022, LPSC 53, abstract 2024 — THEMIS
+  (100 m/px) along the Perseverance traverse 200–450; MEDA in situ 200 (sand) to 600 (bedrock).
+  The orbital range matches the footprint scale better than the in-situ range (old placeholder).
+- **`hyperarid`**: Mars side sourced (MCD v6.2 water column ≈ 12.6 pr-µm; Haberle et al. 2001,
+  doi:10.1029/2000JE001360, surface liquid water at most transient); p* = 0 stays a design mapping.
+- **`barren_ground`** (min 0.7; team decision, option B: veto 0.25 dropped and tolerance low
+  widened 0.2 → 1.0, so non-barren footprints lose score instead of being excluded; a tolerance
+  ≤ 0.7 would still give 0 at barren 0 and act as a veto through the geometric mean). IGBP class 16 *Barren* =
+  ≥ 60 % non-vegetated area with < 10 % vegetation (Sulla-Menashe & Friedl, Collection 6 MODIS
+  Land Cover user guide, Table 3). Real MCD12C1 2023, 20 km footprint mean: Atacama (Yungay) 1.00,
+  Sahara (Tanezrouft) 1.00, Namib 1.00, Danakil 1.00, Death Valley 0.92, MDRS Utah 0.73;
+  Lake Salda, Río Tinto, Pilbara 0.00 (shrubland/grassland), Mauna Kea 0.25.
+- **`no_vegetation`** changed from max 0.10 / tolerance 0.05 to **max 0.15 / tolerance 0.10**.
+  Real MOD13C2 2023 annual-max NDVI over land cells with barren fraction > 0.9 (|lat| ≤ 52°,
+  n = 644 004): p50 0.106, p90 0.147, p95 0.166, p99 0.222. The old values vetoed NDVI > 0.125,
+  i.e. about half of MODIS-barren land, including Death Valley (footprint p90 0.148) and MDRS
+  (0.149). New veto point (score 0.5) is NDVI 0.20. Literature gives bare land NDVI ≈ 0.1–0.2 and
+  no universal cutoff, hence the data-based value. Vegetated mineral analogs stay vetoed (Lake
+  Salda 0.58, Río Tinto 0.67, Pilbara 0.30): the rover-expedition profile targets plant-free
+  terrain; a mineral-analog purpose would need its own profile.
+- Site coordinates used for these checks are approximate area centres; one reference year only
+  (2023). Re-check once the full 2019–2023 grid exists.
+
 ### Outcomes for the remaining verify items (T086, 2026-11-15)
 
 Recorded by the T086 task. Status **VERIFIED** = checked against a primary source (named);

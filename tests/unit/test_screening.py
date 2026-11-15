@@ -64,7 +64,8 @@ def test_veto_counts_and_selectivity(result):
     scr, g, _ = result
     by = scr.counts["rejected_by_criterion"]
     assert set(by) == {c.id for c in screening.grid_criteria(PROFILE) if c.veto is not None}
-    assert by["no_vegetation"] + by["barren_ground"] > 0
+    # barren_ground has no veto since T036 option B; .get keeps the test valid either way
+    assert by.get("no_vegetation", 0) + by.get("barren_ground", 0) > 0
     # the first veto applied removes at least as many cells as any later one
     vals = list(by.values())
     assert vals[0] == max(vals)
