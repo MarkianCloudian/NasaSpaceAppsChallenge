@@ -106,7 +106,7 @@
       "dataset_version": "2022",
       "body": "Earth",
       "route": "http",
-      "endpoint": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+      "endpoint": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/30s/30s_surface_elev_gtif/ETOPO_2022_v1_30s_N90W180_surface.tif",
       "login": "none",
       "request_unit": "file",
       "format": "GeoTIFF",
@@ -121,7 +121,7 @@
       "licence": "verify (NOAA NCEI data licence)",
       "citation": "NOAA National Centers for Environmental Information. 2022: ETOPO 2022 15 Arc-Second Global Relief Model. NOAA NCEI. (verify; 30 arc-second surface variant)",
       "docs_url": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
-      "notes": "endpoint is the product page, not a file URL: verify the exact 30 arc-second surface GeoTIFF download URL (tile naming / single file), file size and DOI before use. Fallback chain per D-007 mentions Copernicus GLO-90; verify fallback choice."
+      "notes": "Verified 2026-11-15 (T042): endpoint is the single global 30 arc-second surface-elevation GeoTIFF (HTTP 200, Content-Length 1585813987 bytes = 1.48 GiB, 43200 x 21600, float32, origin -180/90, pixel 1/120 deg = cell-registered). Licence, DOI and fallback choice (copdem-glo30-pc vs. GLO-90) remain verify."
     },
     {
       "source_id": "nasadem-pc",
